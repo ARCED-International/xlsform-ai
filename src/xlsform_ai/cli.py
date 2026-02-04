@@ -92,62 +92,39 @@ def check_cli_installation() -> bool:
         return False
 
 
-def prompt_agent_selection() -> list:
-    """Prompt user to select AI agent(s) interactively.
+def prompt_agent_selection() -> str:
+    """Prompt user to select AI agent interactively.
 
     Returns:
-        List of selected agent names
+        Selected agent key (single agent)
     """
     from .agents import get_supported_agents, get_agent
 
     agents = get_supported_agents()
 
-    # Build choices for questionary - ALWAYS prompt
+    # Build choices for questionary select
     choices = []
     for agent_key in agents:
         agent_info = get_agent(agent_key)
         name = agent_info['name']
         description = agent_info.get('description', 'AI assistant')
         choices.append(questionary.Choice(
-            title=f"{name} - {description}",
+            title=f"{agent_key} ({name})",
             value=agent_key,
-            checked=(agent_key == agents[0])  # First agent checked by default
         ))
 
-    # Always prompt - even for single agent
-    if len(agents) == 1:
-        # Single agent: use confirm instead of checkbox
-        agent_info = get_agent(agents[0])
-        response = questionary.confirm(
-            f"Use {agent_info['name']} ({agent_info.get('description', 'AI assistant')})?",
-            default=True,
-        ).ask()
-        if response:
-            return agents
-        else:
-            print_warning("Agent selection cancelled. Using default: claude")
-            return ["claude"]
-    else:
-        # Multiple agents: use checkbox
-        selections = questionary.checkbox(
-            "Which AI agent(s) would you like to use?",
-            choices=choices,
-            validate=lambda x: len(x) > 0 or "You must select at least one agent"
-        ).ask()
+    # Use select for single agent choice (Speckit-style)
+    selection = questionary.select(
+        "Choose your AI assistant:",
+        choices=choices,
+        instruction="Use ↑/↓ to navigate, Enter to select, Esc to cancel"
+    ).ask()
 
-        if not selections or len(selections) == 0:
-            print_warning("No agent selected. Using default: claude")
-            return ["claude"]
+    if not selection:
+        print_warning("Agent selection cancelled. Using default: claude")
+        return "claude"
 
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_selections = []
-        for agent in selections:
-            if agent not in seen:
-                seen.add(agent)
-                unique_selections.append(agent)
-
-        return unique_selections
+    return selection
 
 
 def init_project(
@@ -169,26 +146,17 @@ def init_project(
 
     # Determine which agents to use
     if ai is None:
-        # Prompt for agent selection
-        selected_agents = prompt_agent_selection()
+        # Prompt for agent selection (returns single agent)
+        selected_agent = prompt_agent_selection()
     else:
-        # Parse comma-separated agents
-        selected_agents = [a.strip() for a in ai.split(',')]
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_agents = []
-        for agent in selected_agents:
-            if agent not in seen:
-                seen.add(agent)
-                unique_agents.append(agent)
-        selected_agents = unique_agents
+        # Use the specified agent (first one if comma-separated)
+        selected_agent = ai.split(',')[0].strip()
 
-    # Validate all selected agents
-    for agent in selected_agents:
-        if not validate_agent(agent):
-            print_error(f"Agent '{agent}' is not supported")
-            console.print(f"\nSupported agents: {', '.join(get_supported_agents())}")
-            sys.exit(1)
+    # Validate the selected agent
+    if not validate_agent(selected_agent):
+        print_error(f"Agent '{selected_agent}' is not supported")
+        console.print(f"\nSupported agents: {', '.join(get_supported_agents())}")
+        sys.exit(1)
 
     # Determine project path
     if here:
@@ -196,36 +164,45 @@ def init_project(
     else:
         project_path = Path.cwd() / project_name
 
-    # Check if directory exists
-    if project_path.exists() and not here:
-        response = questionary.confirm(
-            f"Directory '{project_name}' already exists. Continue?",
-            default=False,
-        ).ask()
+    # Check if directory exists and warn like Speckit does
+    if project_path.exists():
+        # Count items in directory
+        items = list(project_path.iterdir())
+        if items:
+            console.print(f"[yellow]Warning: Current directory is not empty ({len(items)} item(s))[/yellow]")
+            console.print("[yellow]Template files will be merged with existing content and may overwrite existing files[/yellow]")
 
-        if not response:
-            print_warning("Initialization cancelled")
-            return
+            response = questionary.confirm(
+                "Do you want to continue?",
+                default=False,
+            ).ask()
+
+            if not response:
+                print_warning("Initialization cancelled")
+                return
 
     # Speckit-style project setup box
     project_name_display = project_path.name if here else project_name
     console.print("\n")
     console.print(Panel(
         f"[bold cyan]Project[/bold cyan]         {project_name_display}\n"
-        f"[bold cyan]Working Path[/bold cyan]    {project_path}\n"
-        f"[bold cyan]Selected AI[/bold cyan]     {', '.join(selected_agents).upper()}",
+        f"[bold cyan]Working Path[/bold cyan]    {project_path}\n",
         title="[bold cyan]XLSForm Project Setup[/bold cyan]",
         border_style="cyan",
         padding=(1, 2),
     ))
     console.print("")
 
-    # Show selected agent
-    for agent in selected_agents:
-        agent_info = get_agent(agent)
-        console.print(f"[dim]Selected AI assistant: {agent_info['name']}[/dim]")
-
+    # Speckit-style agent selection panel
+    agent_info = get_agent(selected_agent)
+    console.print(Panel(
+        f"  ▶    {selected_agent} ({agent_info['name']})\n",
+        title=f"[bold cyan]Choose your AI assistant:[/bold cyan]",
+        border_style="cyan",
+        padding=(0, 2),
+    ))
     console.print("")
+
     console.print("[bold]Initialize XLSForm AI Project[/bold]")
 
     # Initialize project
@@ -239,13 +216,13 @@ def init_project(
             console.print(f"├── ● Check required tools ([green]ok[/green])")
 
             steps.append(("Select AI assistant", True))
-            console.print(f"├── ● Select AI assistant ([cyan]{', '.join(selected_agents)}[/cyan])")
+            console.print(f"├── ● Select AI assistant ([cyan]{selected_agent}[/cyan])")
 
             steps.append(("Create project structure", True))
 
             success = tm.init_project(
                 project_path=project_path,
-                agents=selected_agents,
+                agents=[selected_agent],
                 overwrite=force,
             )
 
