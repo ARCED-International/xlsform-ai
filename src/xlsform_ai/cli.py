@@ -55,8 +55,14 @@ def check_cli_installation() -> bool:
         tm = TemplateManager()
         template_path = tm.get_template_path()
 
+        # Debug: Show where we're looking for templates
+        print(f"Looking for templates at: {template_path}")
+        print(f"Templates exist: {template_path.exists()}")
+
         if not template_path.exists():
             print_warning("Template files not found")
+            print_warning("This may be because templates weren't included in the package build")
+            print_warning("Try reinstalling with: uv tool install xlsform-ai-cli --from git+https://github.com/ARCED-International/xlsform-ai.git --reinstall")
             return False
 
         # Check for key template components
