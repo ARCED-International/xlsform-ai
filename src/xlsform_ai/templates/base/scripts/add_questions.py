@@ -27,16 +27,23 @@ except ImportError:
 
 
 # Column mapping for XLSForm survey sheet
+# Note: Column numbers may vary based on your XLSForm template
 COLUMNS = {
     "type": 1,
     "name": 2,
     "label": 3,
     "hint": 4,
     "required": 5,
-    "relevant": 6,
-    "constraint": 9,
-    "constraint_message": 10,
-    "required_message": 11,
+    "calculation": 6,
+    "relevant": 7,
+    "constraint": 8,
+    "constraint_message": 9,
+    "required_message": 10,
+    "appearance": 11,
+    "default": 12,          # For default values in select/select_one
+    "media::image": 13,     # For image filenames
+    "media::audio": 14,     # For audio filenames
+    "media::video": 15,     # For video filenames
 }
 
 
@@ -50,11 +57,20 @@ def get_best_practices(question_type, question_name):
     Returns:
         dict with constraint, constraint_message, required, required_message
     """
+    # Field types that should NOT be required (computed/read-only fields)
+    non_input_types = {
+        'calculate', 'hidden', 'note', 'imei', 'deviceid', 'subscriberid',
+        'simserial', 'phonenumber', 'username', 'start', 'end', 'today',
+        'audit', 'barcode', 'qrcode', 'image', 'audio', 'video', 'file'
+    }
+
+    is_non_input = question_type.lower() in non_input_types
+
     result = {
         "constraint": "",
         "constraint_message": "",
-        "required": "yes",
-        "required_message": "This field is required"
+        "required": "" if is_non_input else "yes",
+        "required_message": "" if is_non_input else "This field is required"
     }
 
     # Name fields: no numbers, special chars
@@ -62,8 +78,8 @@ def get_best_practices(question_type, question_name):
         result.update({
             "constraint": "regex(., '^[a-zA-Z\\\\s\\\\-\\\\\\\\.']$)",
             "constraint_message": "Please enter a valid name (letters only)",
-            "required": "yes",
-            "required_message": "Name is required"
+            "required": "" if is_non_input else "yes",
+            "required_message": "" if is_non_input else "Name is required"
         })
 
     # Age fields: reasonable range
@@ -71,8 +87,8 @@ def get_best_practices(question_type, question_name):
         result.update({
             "constraint": ". >= 0 and . <= 130",
             "constraint_message": "Age must be between 0 and 130",
-            "required": "yes",
-            "required_message": "Age is required"
+            "required": "" if is_non_input else "yes",
+            "required_message": "" if is_non_input else "Age is required"
         })
 
     # Integer fields: non-negative by default
@@ -80,8 +96,8 @@ def get_best_practices(question_type, question_name):
         result.update({
             "constraint": ". >= 0",
             "constraint_message": "Value must be zero or positive",
-            "required": "yes",
-            "required_message": "This field is required"
+            "required": "" if is_non_input else "yes",
+            "required_message": "" if is_non_input else "This field is required"
         })
 
     # Decimal fields: positive by default
@@ -89,23 +105,25 @@ def get_best_practices(question_type, question_name):
         result.update({
             "constraint": ". > 0",
             "constraint_message": "Value must be positive",
-            "required": "yes",
-            "required_message": "This field is required"
+            "required": "" if is_non_input else "yes",
+            "required_message": "" if is_non_input else "This field is required"
         })
 
-    # Text fields: required by default
+    # Text fields: required by default (unless non-input type)
     elif question_type == "text":
-        result.update({
-            "required": "yes",
-            "required_message": "This field is required"
-        })
+        if not is_non_input:
+            result.update({
+                "required": "yes",
+                "required_message": "This field is required"
+            })
 
-    # Select questions: always required
+    # Select questions: always required (unless non-input type)
     elif question_type.startswith("select_"):
-        result.update({
-            "required": "yes",
-            "required_message": "Please select an option"
-        })
+        if not is_non_input:
+            result.update({
+                "required": "yes",
+                "required_message": "Please select an option"
+            })
 
     return result
 
@@ -183,11 +201,12 @@ def add_questions(questions_data, survey_file=None):
             required = q.get("required", practices["required"])
             required_msg = q.get("required_message", practices["required_message"])
 
-            # Set values using column mapping
+            # Set core values
             ws.cell(current_row, COLUMNS["type"], q_type)
             ws.cell(current_row, COLUMNS["name"], q_name)
             ws.cell(current_row, COLUMNS["label"], q_label)
 
+            # Set constraint fields
             if constraint:
                 ws.cell(current_row, COLUMNS["constraint"], constraint)
             if constraint_msg:
@@ -196,6 +215,29 @@ def add_questions(questions_data, survey_file=None):
                 ws.cell(current_row, COLUMNS["required"], required)
             if required_msg:
                 ws.cell(current_row, COLUMNS["required_message"], required_msg)
+
+            # Handle additional fields dynamically
+            # This supports: hint, calculation, relevant, appearance, default, media::image, media::audio, media::video, etc.
+            for key, value in q.items():
+                if key not in ["type", "name", "label", "constraint", "constraint_message", "required", "required_message"]:
+                    # Check if we have a column mapping for this key
+                    if key in COLUMNS:
+                        ws.cell(current_row, COLUMNS[key], value)
+                    elif key == "hint" and "hint" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["hint"], value)
+                    elif key == "calculation" and "calculation" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["calculation"], value)
+                    elif key == "relevant" and "relevant" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["relevant"], value)
+                    elif key == "appearance" and "appearance" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["appearance"], value)
+                    elif key == "default" and "default" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["default"], value)
+                    elif key.startswith("media::"):
+                        media_type = key.split("::")[1]  # e.g., "image" from "media::image"
+                        media_column = f"media::{media_type}"
+                        if media_column in COLUMNS:
+                            ws.cell(current_row, COLUMNS[media_column], value)
 
             added.append({
                 "row": current_row,

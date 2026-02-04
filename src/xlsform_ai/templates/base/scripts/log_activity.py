@@ -35,23 +35,56 @@ class ActivityLogger:
     def _find_log_file(self) -> Path:
         """Find existing log file or determine new log file path.
 
+        Ensures only ONE activity log file exists per project.
+        If multiple are found, keeps the most recent and deletes the others.
+
         Returns:
             Path to log file
         """
-        # Check for existing log files with our tag
-        for file in self.project_dir.glob("*.html"):
+        # Use a fixed filename - no timestamps
+        log_filename = "activity_log.html"
+        log_path = self.project_dir / log_filename
+
+        # Find all existing activity log files (including old timestamped ones)
+        existing_logs = []
+        for file in self.project_dir.glob("activity_log*.html"):
             try:
                 with open(file, 'r', encoding='utf-8') as f:
                     # Check first 1000 chars for tag
                     content = f.read(1000)
                     if LOG_FILE_TAG in content:
-                        return file
+                        existing_logs.append(file)
             except:
                 pass
 
-        # No existing log found, create new one
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        return self.project_dir / f"activity_log_{timestamp}.html"
+        if not existing_logs:
+            # No existing log found, return the new file path
+            return log_path
+
+        # Sort existing logs by modification time (most recent first)
+        existing_logs.sort(key=lambda f: f.stat().st_mtime, reverse=True)
+
+        # Keep the most recent log file
+        most_recent_log = existing_logs[0]
+
+        # If the most recent log is not named "activity_log.html", rename it
+        if most_recent_log.name != log_filename:
+            try:
+                most_recent_log.rename(log_path)
+                return log_path
+            except Exception:
+                # If rename fails, use the most recent log as-is
+                return most_recent_log
+
+        # Delete any older log files (there should only be one now)
+        for old_log in existing_logs[1:]:
+            try:
+                if old_log != log_path and old_log.exists():
+                    old_log.unlink()
+            except Exception:
+                pass  # Ignore errors when cleaning up old logs
+
+        return log_path
 
     def log_action(self, action_type: str, description: str, details: str = "",
                    author: Optional[str] = None, location: Optional[str] = None):
