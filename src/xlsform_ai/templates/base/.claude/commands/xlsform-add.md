@@ -78,6 +78,29 @@ If any validation fails:
 
 ## Implementation
 
+### Use Helper Script for Adding Questions
+
+Instead of inline Python commands that may have encoding issues on Windows, use the `scripts/add_questions.py` helper:
+
+**For simple text questions:**
+```bash
+python scripts/add_questions.py '[{"type":"text","name":"first_name","label":"First Name"}]'
+```
+
+**For multiple questions:**
+```bash
+python scripts/add_questions.py '[{"type":"text","name":"first_name","label":"First Name"},{"type":"text","name":"last_name","label":"Last Name"}]'
+```
+
+**For questions with constraints:**
+```bash
+python scripts/add_questions.py '[{"type":"integer","name":"age","label":"Age","constraint":".>=0 and .<=120","constraint_message":"Age must be between 0 and 120"}]'
+```
+
+**For select questions, you need to manually add choices to the choices sheet:**
+1. Add the question using the helper script
+2. Manually add the choice list to the choices sheet using openpyxl or xlwings
+
 ### Adding to Survey Sheet
 
 For each question to add:
