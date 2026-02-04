@@ -1,0 +1,133 @@
+"""Configuration management for XLSForm AI projects."""
+
+import json
+from datetime import datetime
+from pathlib import Path
+from typing import Optional
+
+
+DEFAULT_CONFIG = {
+    "version": "1.0",
+    "project_name": "",
+    "xlsform_file": "survey.xlsx",
+    "created": None,
+    "last_modified": None,
+    "settings": {
+        "auto_validate": True,
+        "log_activity": True,
+        "backup_before_changes": False
+    }
+}
+
+
+class ProjectConfig:
+    """Manage project-specific XLSForm AI configuration."""
+
+    def __init__(self, project_dir: Optional[Path] = None):
+        """Initialize configuration manager.
+
+        Args:
+            project_dir: Project directory. Defaults to current working directory.
+        """
+        self.project_dir = Path(project_dir) if project_dir else Path.cwd()
+        self.config_file = self.project_dir / "xlsform-ai.json"
+        self._config = None
+
+    def load(self) -> dict:
+        """Load configuration from file.
+
+        Returns:
+            Configuration dictionary
+        """
+        if self._config is not None:
+            return self._config
+
+        if not self.config_file.exists():
+            # Create default config
+            self._config = DEFAULT_CONFIG.copy()
+            self._config["created"] = datetime.now().isoformat()
+            self.save()
+        else:
+            try:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    self._config = json.load(f)
+            except (json.JSONDecodeError, IOError):
+                # Fallback to defaults if config is corrupt
+                self._config = DEFAULT_CONFIG.copy()
+
+        return self._config
+
+    def save(self):
+        """Save configuration to file."""
+        self._config["last_modified"] = datetime.now().isoformat()
+
+        with open(self.config_file, 'w', encoding='utf-8') as f:
+            json.dump(self._config, f, indent=2)
+
+    def get_xlsform_file(self) -> str:
+        """Get the configured XLSForm file name.
+
+        Returns:
+            File name (e.g., "survey.xlsx")
+        """
+        config = self.load()
+        return config.get("xlsform_file", "survey.xlsx")
+
+    def set_xlsform_file(self, filename: str):
+        """Set the XLSForm file name.
+
+        Args:
+            filename: New file name to use
+        """
+        config = self.load()
+        config["xlsform_file"] = filename
+        self.save()
+
+    def get_full_xlsform_path(self) -> Path:
+        """Get full path to XLSForm file.
+
+        Returns:
+            Path object pointing to XLSForm file
+        """
+        return self.project_dir / self.get_xlsform_file()
+
+    def get_project_name(self) -> str:
+        """Get the project name.
+
+        Returns:
+            Project name string
+        """
+        config = self.load()
+        return config.get("project_name", self.project_dir.name)
+
+    def set_project_name(self, name: str):
+        """Set the project name.
+
+        Args:
+            name: New project name
+        """
+        config = self.load()
+        config["project_name"] = name
+        self.save()
+
+
+if __name__ == "__main__":
+    # Test configuration management
+    import sys
+
+    config = ProjectConfig()
+
+    if len(sys.argv) > 1 and sys.argv[1] == "get":
+        # Get current configuration
+        print(f"Config file: {config.config_file}")
+        print(f"Project name: {config.get_project_name()}")
+        print(f"XLSForm file: {config.get_xlsform_file()}")
+        print(f"Full path: {config.get_full_xlsform_path()}")
+    elif len(sys.argv) > 2 and sys.argv[1] == "set-file":
+        # Set XLSForm file name
+        config.set_xlsform_file(sys.argv[2])
+        print(f"XLSForm file set to: {config.get_xlsform_file()}")
+    else:
+        # Display all configuration
+        data = config.load()
+        print(json.dumps(data, indent=2))

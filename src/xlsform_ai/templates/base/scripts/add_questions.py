@@ -11,6 +11,20 @@ try:
 except ImportError:
     LOGGING_AVAILABLE = False
 
+# Try to import config, fail gracefully if not available
+try:
+    from config import ProjectConfig
+    CONFIG_AVAILABLE = True
+except ImportError:
+    CONFIG_AVAILABLE = False
+
+# Try to import form structure, fail gracefully if not available
+try:
+    from form_structure import find_insertion_point, freeze_top_row, find_header_row
+    FORM_STRUCTURE_AVAILABLE = True
+except ImportError:
+    FORM_STRUCTURE_AVAILABLE = False
+
 
 # Column mapping for XLSForm survey sheet
 COLUMNS = {
@@ -96,17 +110,27 @@ def get_best_practices(question_type, question_name):
     return result
 
 
-def add_questions(questions_data, survey_file="survey.xlsx"):
+def add_questions(questions_data, survey_file=None):
     """Add questions to XLSForm with best practices.
 
     Args:
         questions_data: List of dicts with keys: type, name, label
-        survey_file: Path to survey XLSForm file
+        survey_file: Path to survey XLSForm file (optional, uses config if not specified)
 
     Returns:
         dict with success status and details
     """
     try:
+        # Determine file to use
+        if survey_file is None:
+            if CONFIG_AVAILABLE:
+                config = ProjectConfig()
+                survey_file = config.get_full_xlsform_path()
+            else:
+                survey_file = Path("survey.xlsx")
+        else:
+            survey_file = Path(survey_file)
+
         # Load workbook
         wb = openpyxl.load_workbook(survey_file)
 
@@ -117,25 +141,34 @@ def add_questions(questions_data, survey_file="survey.xlsx"):
         ws = wb["survey"]
 
         # Find header row
-        header_row = None
-        for row_idx in range(1, min(10, ws.max_row + 1)):
-            cell_value = ws.cell(row_idx, 1).value
-            if cell_value and str(cell_value).strip().lower() == "type":
-                header_row = row_idx
-                break
+        if FORM_STRUCTURE_AVAILABLE:
+            header_row = find_header_row(ws)
+        else:
+            header_row = None
+            for row_idx in range(1, min(10, ws.max_row + 1)):
+                cell_value = ws.cell(row_idx, 1).value
+                if cell_value and str(cell_value).strip().lower() == "type":
+                    header_row = row_idx
+                    break
 
         if header_row is None:
             return {"success": False, "error": "Could not find header row with 'type' column"}
 
-        # Find last data row
-        last_row = ws.max_row
-        for row_idx in range(ws.max_row, header_row, -1):
-            if ws.cell(row_idx, 2).value:  # Check if 'name' column has value
-                last_row = row_idx
-                break
+        # Find insertion point using smart logic (or fallback to simple logic)
+        if FORM_STRUCTURE_AVAILABLE:
+            insertion_row = find_insertion_point(ws, header_row, questions_data)
+        else:
+            # Fallback: find last data row
+            insertion_row = ws.max_row
+            for row_idx in range(ws.max_row, header_row, -1):
+                if ws.cell(row_idx, 2).value:  # Check if 'name' column has value
+                    insertion_row = row_idx
+                    break
+            insertion_row += 1
 
         # Add questions
         added = []
+        current_row = insertion_row
         for q in questions_data:
             q_type = q.get("type", "text")
             q_name = q.get("name", "")
@@ -150,25 +183,22 @@ def add_questions(questions_data, survey_file="survey.xlsx"):
             required = q.get("required", practices["required"])
             required_msg = q.get("required_message", practices["required_message"])
 
-            # Insert row
-            insert_row = last_row + 1
-
             # Set values using column mapping
-            ws.cell(insert_row, COLUMNS["type"], q_type)
-            ws.cell(insert_row, COLUMNS["name"], q_name)
-            ws.cell(insert_row, COLUMNS["label"], q_label)
+            ws.cell(current_row, COLUMNS["type"], q_type)
+            ws.cell(current_row, COLUMNS["name"], q_name)
+            ws.cell(current_row, COLUMNS["label"], q_label)
 
             if constraint:
-                ws.cell(insert_row, COLUMNS["constraint"], constraint)
+                ws.cell(current_row, COLUMNS["constraint"], constraint)
             if constraint_msg:
-                ws.cell(insert_row, COLUMNS["constraint_message"], constraint_msg)
+                ws.cell(current_row, COLUMNS["constraint_message"], constraint_msg)
             if required:
-                ws.cell(insert_row, COLUMNS["required"], required)
+                ws.cell(current_row, COLUMNS["required"], required)
             if required_msg:
-                ws.cell(insert_row, COLUMNS["required_message"], required_msg)
+                ws.cell(current_row, COLUMNS["required_message"], required_msg)
 
             added.append({
-                "row": insert_row,
+                "row": current_row,
                 "type": q_type,
                 "name": q_name,
                 "label": q_label,
@@ -176,7 +206,15 @@ def add_questions(questions_data, survey_file="survey.xlsx"):
                 "constraint": constraint
             })
 
-            last_row = insert_row
+            current_row += 1
+
+        # Freeze the header row for better usability
+        if FORM_STRUCTURE_AVAILABLE:
+            try:
+                freeze_top_row(ws, header_row)
+            except Exception as e:
+                # Fail gracefully if freeze panes doesn't work
+                pass
 
         # Save workbook
         wb.save(survey_file)
@@ -192,20 +230,23 @@ def add_questions(questions_data, survey_file="survey.xlsx"):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python add_questions.py <question_data_json>")
-        print("Example: python add_questions.py '{\"type\":\"text\",\"name\":\"first_name\",\"label\":\"First Name\"}'")
-        sys.exit(1)
+    import argparse
 
-    import json
+    parser = argparse.ArgumentParser(description='Add questions to XLSForm')
+    parser.add_argument('questions', help='JSON string of questions to add')
+    parser.add_argument('--file', '-f',
+                       help='Override XLSForm file name (default: use config or survey.xlsx)')
+
+    args = parser.parse_args()
 
     # Parse question data from command line argument
+    import json
     try:
-        questions = json.loads(sys.argv[1])
+        questions = json.loads(args.questions)
         if not isinstance(questions, list):
             questions = [questions]
 
-        result = add_questions(questions)
+        result = add_questions(questions, survey_file=args.file)
 
         if result["success"]:
             # Structured output

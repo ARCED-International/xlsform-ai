@@ -7,6 +7,9 @@ arguments:
   - name: location
     description: Where to move it (position, after/before another question, into group/repeat)
     required: true
+  - name: file
+    description: Override XLSForm file name (default: use xlsform-ai.json config or survey.xlsx)
+    required: false
 ---
 
 # Move XLSForm Questions

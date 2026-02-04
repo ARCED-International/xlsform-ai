@@ -7,6 +7,7 @@ from typing import Dict, List, Optional
 AGENTS: Dict[str, Dict] = {
     "claude": {
         "name": "Claude",
+        "description": "Anthropic's AI assistant - Best for complex reasoning and natural language understanding",
         "commands_dir": ".claude/commands",
         "skills_dir": ".claude/skills",
         "memory_file": ".claude/CLAUDE.md",
@@ -16,6 +17,7 @@ AGENTS: Dict[str, Dict] = {
     # Future agents can be added here
     # "cursor": {
     #     "name": "Cursor",
+    #     "description": "AI code editor - Great for code generation and refactoring",
     #     "commands_dir": ".cursor/rules",
     #     "skills_dir": ".cursor/skills",
     #     "memory_file": ".cursor/MEMORY.md",

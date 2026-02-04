@@ -10,6 +10,9 @@ arguments:
   - name: sheet
     description: Sheet name for Excel files
     required: false
+  - name: file
+    description: Override target XLSForm file name (default: use xlsform-ai.json config or survey.xlsx)
+    required: false
 ---
 
 # Import Questions from File

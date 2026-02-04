@@ -23,13 +23,63 @@ The main XLSForm file is `survey.xlsx` in the project root.
 
 **Important:** Never close the Excel file when using xlwings - let the user close it.
 
+### Configuration
+
+Project settings are stored in `xlsform-ai.json` in the project root:
+
+```json
+{
+  "version": "1.0",
+  "project_name": "My Survey Project",
+  "xlsform_file": "survey.xlsx",
+  "created": "2025-02-04T10:30:00",
+  "last_modified": "2025-02-04T14:15:00",
+  "settings": {
+    "auto_validate": true,
+    "log_activity": true,
+    "backup_before_changes": false
+  }
+}
+```
+
+**Configuration options:**
+- `xlsform_file`: Name of the main XLSForm file (default: survey.xlsx)
+- `project_name`: Project identifier for activity logs
+- `auto_validate`: Automatically validate after changes
+- `log_activity`: Enable activity logging
+- `backup_before_changes`: Create backups before modifications
+
+**Using custom file names:**
+```bash
+# Check current configuration
+cat xlsform-ai.json
+
+# Change the XLSForm file name
+python scripts/config.py set-file my_custom_form.xlsx
+
+# Override per command (uses config or survey.xlsx by default)
+/xlsform-add Add a question --file custom_form.xlsx
+```
+
+**Re-init protection:**
+When re-initializing a project, the following files are **never overwritten**:
+- XLSForm survey file (e.g., survey.xlsx)
+- Activity log files (activity_log_*.html)
+
+This protects your work during project updates.
+
 ## File Structure
 
 ```
 .
 ├── survey.xlsx              # Main XLSForm file (edit this!)
+├── xlsform-ai.json          # Project configuration
 ├── package.json             # npm scripts for watch/reload
 ├── scripts/                 # Utility scripts
+│   ├── config.py            # Configuration management
+│   ├── form_structure.py    # Form parsing and smart insertion
+│   ├── add_questions.py     # Question addition (with smart insertion)
+│   ├── log_activity.py      # Activity logging (with filterable UI)
 │   ├── parse_pdf.py         # PDF question extraction
 │   ├── parse_docx.py        # Word question extraction
 │   ├── parse_xlsx.py        # Excel question extraction

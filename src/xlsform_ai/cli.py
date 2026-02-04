@@ -2,6 +2,7 @@
 
 import sys
 from pathlib import Path
+from typing import List, Optional
 
 import questionary
 import requests
@@ -87,10 +88,58 @@ def check_cli_installation() -> bool:
         return False
 
 
+def prompt_agent_selection() -> list:
+    """Prompt user to select AI agent(s) interactively.
+
+    Returns:
+        List of selected agent names
+    """
+    from .agents import get_supported_agents, get_agent
+
+    agents = get_supported_agents()
+
+    # If only one agent, return it without prompting
+    if len(agents) == 1:
+        return agents
+
+    # Build choices for questionary checkbox
+    choices = []
+    for agent_key in agents:
+        agent_info = get_agent(agent_key)
+        name = agent_info['name']
+        description = agent_info.get('description', 'AI assistant')
+        choices.append(questionary.Choice(
+            title=f"{name} - {description}",
+            value=agent_key,
+            checked=(agent_key == agents[0])  # First agent checked by default
+        ))
+
+    # Prompt user with checkbox for multi-select
+    selections = questionary.checkbox(
+        "Which AI agent(s) would you like to use?",
+        choices=choices,
+        validate=lambda x: len(x) > 0 or "You must select at least one agent"
+    ).ask()
+
+    if not selections or len(selections) == 0:
+        print_warning("No agent selected. Using default: claude")
+        return ["claude"]
+
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_selections = []
+    for agent in selections:
+        if agent not in seen:
+            seen.add(agent)
+            unique_selections.append(agent)
+
+    return unique_selections
+
+
 def init_project(
     project_name: str,
     here: bool = False,
-    ai: str = "claude",
+    ai: Optional[str] = None,
     force: bool = False,
 ):
     """Initialize a new XLSForm AI project.
@@ -98,14 +147,31 @@ def init_project(
     Args:
         project_name: Name of the project (or . for --here)
         here: Initialize in current directory
-        ai: AI agent to configure for
+        ai: AI agent(s) to configure for (comma-separated list)
         force: Overwrite existing files
     """
-    # Validate agent
-    if not validate_agent(ai):
-        print_error(f"Agent '{ai}' is not supported")
-        console.print(f"\nSupported agents: {', '.join(get_supported_agents())}")
-        sys.exit(1)
+    # Determine which agents to use
+    if ai is None:
+        # Prompt for agent selection
+        selected_agents = prompt_agent_selection()
+    else:
+        # Parse comma-separated agents
+        selected_agents = [a.strip() for a in ai.split(',')]
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_agents = []
+        for agent in selected_agents:
+            if agent not in seen:
+                seen.add(agent)
+                unique_agents.append(agent)
+        selected_agents = unique_agents
+
+    # Validate all selected agents
+    for agent in selected_agents:
+        if not validate_agent(agent):
+            print_error(f"Agent '{agent}' is not supported")
+            console.print(f"\nSupported agents: {', '.join(get_supported_agents())}")
+            sys.exit(1)
 
     # Determine project path
     if here:
@@ -139,7 +205,7 @@ def init_project(
 
             success = tm.init_project(
                 project_path=project_path,
-                agent=ai,
+                agents=selected_agents,
                 overwrite=force,
             )
 
@@ -273,10 +339,10 @@ def app():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  xlsform-ai init my-survey           Create new project directory
-  xlsform-ai init .                   Initialize in current directory
-  xlsform-ai init --here              Same as 'init .'
-  xlsform-ai init . --ai claude       Specify AI agent
+  xlsform-ai init my-survey           Create new project (prompts for agent selection)
+  xlsform-ai init . --ai claude       Skip prompt, use single agent
+  xlsform-ai init . --ai claude,cursor Use multiple agents
+  xlsform-ai init --here              Same as 'init .' (initialize in current directory)
   xlsform-ai check                     Check installation
   xlsform-ai info                      Show information
         """,
@@ -298,8 +364,8 @@ Examples:
     )
     init_parser.add_argument(
         "--ai",
-        default="claude",
-        help="AI agent to configure for (default: claude)",
+        default=None,
+        help="AI agent(s) to configure for (comma-separated, prompts if not specified)",
     )
     init_parser.add_argument(
         "--force",

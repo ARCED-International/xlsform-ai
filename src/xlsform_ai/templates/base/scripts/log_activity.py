@@ -21,6 +21,15 @@ class ActivityLogger:
             project_dir: Project directory. Defaults to current working directory.
         """
         self.project_dir = Path(project_dir) if project_dir else Path.cwd()
+
+        # Try to load project name from config
+        try:
+            from config import ProjectConfig
+            config = ProjectConfig(self.project_dir)
+            self.project_name = config.get_project_name()
+        except:
+            self.project_name = self.project_dir.name
+
         self.log_file = self._find_log_file()
 
     def _find_log_file(self) -> Path:
@@ -88,7 +97,7 @@ class ActivityLogger:
         default_data = {
             "version": LOG_VERSION,
             "tag": LOG_FILE_TAG,
-            "project_name": self.project_dir.name,
+            "project_name": self.project_name,
             "created": datetime.now().isoformat(),
             "last_updated": datetime.now().isoformat(),
             "total_actions": 0,
@@ -130,7 +139,7 @@ class ActivityLogger:
             f.write(html)
 
     def _generate_html(self, data: dict) -> str:
-        """Generate HTML content for activity log.
+        """Generate HTML content for activity log with filtering.
 
         Args:
             data: Log data dictionary
@@ -140,6 +149,11 @@ class ActivityLogger:
         """
         # Reverse entries for newest-first display
         entries = list(reversed(data["entries"]))
+
+        # Extract unique values for filters
+        action_types = sorted(set(entry.get("action_type", "") for entry in data["entries"]))
+        authors = sorted(set(entry.get("author", "") for entry in data["entries"]))
+        dates = sorted(set(entry.get("date", "") for entry in data["entries"]), reverse=True)
 
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -223,6 +237,64 @@ class ActivityLogger:
             margin-top: 5px;
         }}
 
+        .filters {{
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 2px solid #e9ecef;
+        }}
+
+        .filter-group {{
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }}
+
+        .filter-group label {{
+            display: block;
+            font-weight: 600;
+            color: #2a5298;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }}
+
+        .filter-group select, .filter-group input[type="date"], .filter-group input[type="text"] {{
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.9em;
+            background: white;
+            min-width: 150px;
+            cursor: pointer;
+        }}
+
+        .filter-group select:focus, .filter-group input:focus {{
+            outline: none;
+            border-color: #667eea;
+        }}
+
+        .search-box {{
+            width: 300px;
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 25px;
+            font-size: 0.95em;
+            margin-left: 20px;
+        }}
+
+        .search-box:focus {{
+            outline: none;
+            border-color: #667eea;
+        }}
+
+        .results-count {{
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-left: 20px;
+        }}
+
         .content {{
             padding: 40px;
         }}
@@ -249,6 +321,10 @@ class ActivityLogger:
             background: #f8f9fa;
             border-radius: 8px;
             border-left: 4px solid #667eea;
+        }}
+
+        .entry.hidden {{
+            display: none;
         }}
 
         .entry::before {{
@@ -322,6 +398,21 @@ class ActivityLogger:
             gap: 5px;
         }}
 
+        .no-results {{
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+            font-size: 1.2em;
+            display: none;
+        }}
+
+        .no-results::before {{
+            content: "🔍";
+            display: block;
+            font-size: 4em;
+            margin-bottom: 20px;
+        }}
+
         .footer {{
             background: #2a5298;
             color: white;
@@ -346,6 +437,12 @@ class ActivityLogger:
 
             h1 {{
                 font-size: 1.8em;
+            }}
+
+            .search-box {{
+                width: 100%;
+                margin-left: 0;
+                margin-top: 10px;
             }}
         }}
     </style>
@@ -373,15 +470,52 @@ class ActivityLogger:
             </div>
         </div>
 
+        <div class="filters">
+            <div class="filter-group">
+                <label>Action Type</label>
+                <select id="filter-action-type">
+                    <option value="">All Types</option>
+                    {"".join(f'<option value="{at}">{at}</option>' for at in action_types)}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Author</label>
+                <select id="filter-author">
+                    <option value="">All Authors</option>
+                    {"".join(f'<option value="{author}">{author}</option>' for author in authors)}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>From Date</label>
+                <input type="date" id="filter-date-from" min="{min(dates) if dates else ''}">
+            </div>
+
+            <div class="filter-group">
+                <label>To Date</label>
+                <input type="date" id="filter-date-to" max="{max(dates) if dates else ''}">
+            </div>
+
+            <input type="text" class="search-box" id="filter-search" placeholder="Search descriptions and details...">
+            <div class="results-count" id="results-count">{len(data["entries"])} shown</div>
+        </div>
+
         <div class="content">
             <h2 style="margin-bottom: 20px; color: #2a5298;">Activity Timeline</h2>
-            <div class="timeline">
+            <div class="timeline" id="timeline">
 """
 
-        # Add entries
+        # Add entries with data attributes for filtering
+        entries_html = ""
         for entry in entries:
-            html += f"""
-                <div class="entry">
+            entries_html += f"""
+                <div class="entry"
+                     data-action-type="{entry.get('action_type', '')}"
+                     data-author="{entry.get('author', '')}"
+                     data-date="{entry.get('date', '')}"
+                     data-description="{entry.get('description', '').lower()}"
+                     data-details="{entry.get('details', '').lower()}">
                     <div class="entry-header">
                         <span class="entry-type">{entry["action_type"]}</span>
                         <span class="entry-date">{entry["date"]} at {entry["time"]}</span>
@@ -390,13 +524,16 @@ class ActivityLogger:
                     {f'<div class="entry-details">{entry["details"]}</div>' if entry["details"] else ''}
                     <div class="entry-meta">
                         <span>👤 {entry["author"]}</span>
-                        {f'<span>📍 {entry["location"]}</span>' if entry["location"] != "Unknown" else ''}
+                        {f'<span>📍 {entry["location"]}</span>' if entry.get("location") and entry["location"] != "Unknown" else ''}
                     </div>
                 </div>
             """
 
-        # Add footer
+        # Complete the HTML
         html += f"""
+            </div>
+            <div class="no-results" id="no-results">
+                No entries match your filters
             </div>
         </div>
 
@@ -407,6 +544,70 @@ class ActivityLogger:
             </p>
         </div>
     </div>
+
+    <script>
+        // Filter functionality
+        const entries = document.querySelectorAll('.entry');
+        const resultsCount = document.getElementById('results-count');
+        const noResults = document.getElementById('no-results');
+
+        function applyFilters() {{
+            const actionType = document.getElementById('filter-action-type').value.toLowerCase();
+            const author = document.getElementById('filter-author').value.toLowerCase();
+            const dateFrom = document.getElementById('filter-date-from').value;
+            const dateTo = document.getElementById('filter-date-to').value;
+            const searchText = document.getElementById('filter-search').value.toLowerCase();
+
+            let visibleCount = 0;
+
+            entries.forEach(entry => {{
+                const entryActionType = entry.dataset.actionType.toLowerCase();
+                const entryAuthor = entry.dataset.author.toLowerCase();
+                const entryDate = entry.dataset.date;
+                const entryDescription = entry.dataset.description;
+                const entryDetails = entry.dataset.details;
+
+                // Check each filter
+                const matchesActionType = !actionType || entryActionType === actionType;
+                const matchesAuthor = !author || entryAuthor === author;
+                const matchesDateFrom = !dateFrom || entryDate >= dateFrom;
+                const matchesDateTo = !dateTo || entryDate <= dateTo;
+                const matchesSearch = !searchText ||
+                    entryDescription.includes(searchText) ||
+                    entryDetails.includes(searchText);
+
+                const isVisible = matchesActionType && matchesAuthor && matchesDateFrom && matchesDateTo && matchesSearch;
+
+                entry.classList.toggle('hidden', !isVisible);
+                if (isVisible) visibleCount++;
+            }});
+
+            // Update UI
+            resultsCount.textContent = `${{visibleCount}} shown`;
+            noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+        }}
+
+        // Add event listeners
+        document.getElementById('filter-action-type').addEventListener('change', applyFilters);
+        document.getElementById('filter-author').addEventListener('change', applyFilters);
+        document.getElementById('filter-date-from').addEventListener('change', applyFilters);
+        document.getElementById('filter-date-to').addEventListener('change', applyFilters);
+        document.getElementById('filter-search').addEventListener('input', applyFilters);
+
+        // Clear filters button
+        const clearBtn = document.createElement('button');
+        clearBtn.textContent = 'Clear Filters';
+        clearBtn.style.cssText = 'margin-left: 10px; padding: 8px 15px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer;';
+        clearBtn.onclick = () => {{
+            document.getElementById('filter-action-type').value = '';
+            document.getElementById('filter-author').value = '';
+            document.getElementById('filter-date-from').value = '';
+            document.getElementById('filter-date-to').value = '';
+            document.getElementById('filter-search').value = '';
+            applyFilters();
+        }};
+        document.querySelector('.filters').appendChild(clearBtn);
+    </script>
 
     <!-- XLSFORM_AI_DATA_START -->
     {json.dumps(data, indent=2)}
