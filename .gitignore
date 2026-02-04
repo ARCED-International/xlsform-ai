@@ -66,4 +66,4 @@ Thumbs.db
 
 # Project specific
 *.xlsx
-!.claude/skills/xlsform-core/assets/xlsform-template.xlsx
+!src/xlsform_ai/templates/base/.claude/skills/xlsform-core/assets/xlsform-template.xlsx
