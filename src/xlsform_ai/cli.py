@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
+from rich.text import Text
 
 from . import __version__
 from .agents import get_supported_agents, validate_agent
@@ -33,17 +34,18 @@ def print_banner():
 
 def print_success(message: str):
     """Print success message."""
-    console.print(f"[green][OK] {message}[/green]")
+    console.print(Text("[OK] ", style="bold green") + Text(message, style="green"))
 
 
 def print_error(message: str):
     """Print error message."""
-    console.print(f"[red][X] {message}[/red]")
+    # Use Text object to avoid markup parsing conflicts
+    console.print(Text("[X] ", style="bold red") + Text(str(message), style="red"))
 
 
 def print_warning(message: str):
     """Print warning message."""
-    console.print(f"[yellow][!] {message}[/yellow]")
+    console.print(Text("[!] ", style="bold yellow") + Text(message, style="yellow"))
 
 
 def check_cli_installation() -> bool:
@@ -205,18 +207,41 @@ def init_project(
             print_warning("Initialization cancelled")
             return
 
-    console.print(f"\n[bold]Initializing XLSForm AI project...[/bold]\n")
+    # Speckit-style project setup box
+    project_name_display = project_path.name if here else project_name
+    console.print("\n")
+    console.print(Panel(
+        f"[bold cyan]Project[/bold cyan]         {project_name_display}\n"
+        f"[bold cyan]Working Path[/bold cyan]    {project_path}\n"
+        f"[bold cyan]Selected AI[/bold cyan]     {', '.join(selected_agents).upper()}",
+        title="[bold cyan]XLSForm Project Setup[/bold cyan]",
+        border_style="cyan",
+        padding=(1, 2),
+    ))
+    console.print("")
+
+    # Show selected agent
+    for agent in selected_agents:
+        agent_info = get_agent(agent)
+        console.print(f"[dim]Selected AI assistant: {agent_info['name']}[/dim]")
+
+    console.print("")
+    console.print("[bold]Initialize XLSForm AI Project[/bold]")
 
     # Initialize project
     tm = TemplateManager()
 
     try:
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,
-        ) as progress:
-            task = progress.add_task("Creating project structure...", total=None)
+        # Track steps manually like Speckit does
+        steps = []
+        try:
+            steps.append(("Check required tools", True))
+            console.print(f"├── ● Check required tools ([green]ok[/green])")
+
+            steps.append(("Select AI assistant", True))
+            console.print(f"├── ● Select AI assistant ([cyan]{', '.join(selected_agents)}[/cyan])")
+
+            steps.append(("Create project structure", True))
 
             success = tm.init_project(
                 project_path=project_path,
@@ -224,22 +249,35 @@ def init_project(
                 overwrite=force,
             )
 
-            progress.remove_task(task)
+            if success:
+                steps.append(("Finalize", True))
+                console.print(f"└── ● Finalize ([green]project ready[/green])")
+                console.print("")
+                console.print("[green]Project ready.[/green]\n")
 
-        if success:
-            # Calculate relative path for display
-            if here:
-                relative_path = "."
+                # Speckit-style success boxes
+                console.print(Panel(
+                    f"[bold cyan]1.[/bold cyan] You're already in the project directory!\n"
+                    f"[bold cyan]2.[/bold cyan] Open [yellow]survey.xlsx[/yellow] in Excel to start designing your form\n"
+                    f"[bold cyan]3.[/bold cyan] Use Claude Code with slash commands:\n"
+                    f"     [cyan]3.1[/cyan] [yellow]/xlsform-add[/yellow] - Add questions to your form\n"
+                    f"     [cyan]3.2[/cyan] [yellow]/xlsform-import[/yellow] - Import from PDF/Word\n"
+                    f"     [cyan]3.3[/cyan] [yellow]/xlsform-validate[/yellow] - Validate your form\n"
+                    f"     [cyan]3.4[/cyan] [yellow]/xlsform-export[/yellow] - Export to XLSForm\n\n"
+                    f"[dim]Your activity log will be preserved across re-installations.[/dim]",
+                    title="[bold green]Next Steps[/bold green]",
+                    border_style="green",
+                    padding=(1, 2),
+                ))
             else:
-                relative_path = str(project_path.relative_to(Path.cwd()))
+                console.print(f"└── ○ Finalize ([red]failed[/red])")
+                print_error("Failed to initialize project")
+                sys.exit(1)
 
-            print_init_success(
-                location=str(project_path),
-                relative_path=relative_path
-            )
-        else:
-            print_error("Failed to initialize project")
-            sys.exit(1)
+        except Exception as init_error:
+            steps.append(("Finalize", False))
+            console.print(f"└── ○ Finalize ([red]failed[/red])")
+            raise init_error
 
     except KeyboardInterrupt:
         print_warning("\nInitialization cancelled")
