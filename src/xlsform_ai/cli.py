@@ -69,7 +69,7 @@ def _check_ai_files(project_path: Path) -> List[str]:
         ai_indicators.append("scripts/")
 
     # Agent-specific directories (check all configured agents)
-    for agent_name in get_all_agents():
+    for agent_name in get_supported_agents():
         agent = get_agent(agent_name)
         if agent:
             # Check commands directory
