@@ -1,0 +1,25 @@
+{
+  "version": "1.0",
+  "project_name": "test_multi_agent_project",
+  "xlsform_file": "survey.xlsx",
+  "created": "2026-02-04T18:13:18.200228",
+  "last_modified": null,
+  "settings": {
+    "auto_validate": true,
+    "log_activity": true,
+    "backup_before_changes": false,
+    "parallel_execution": {
+      "enabled": true,
+      "question_threshold": 50,
+      "page_threshold": 10,
+      "size_threshold_mb": 1.0,
+      "user_preference": "auto"
+    }
+  },
+  "enabled_agents": [
+    "claude",
+    "cursor-agent",
+    "copilot"
+  ],
+  "primary_agent": "claude"
+}

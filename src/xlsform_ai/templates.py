@@ -130,28 +130,6 @@ class TemplateManager:
             # Find existing activity log files
             existing_activity_logs = list(project_path.glob("activity_log_*.html"))
 
-            # Copy .claude directory
-            claude_src = self.base_template / ".claude"
-            claude_dst = project_path / ".claude"
-
-            if claude_dst.exists():
-                if overwrite:
-                    shutil.rmtree(claude_dst)
-                else:
-                    print(f"Note: .claude directory already exists, skipping...")
-
-            if not claude_dst.exists() or overwrite:
-                shutil.copytree(claude_src, claude_dst)
-                print(f"✓ Created .claude directory")
-
-            # For each agent, copy agent-specific files if they exist
-            for agent in agents:
-                agent_template_dir = self.template_dir / agent
-
-                if agent_template_dir.exists():
-                    self._merge_agent_config(claude_dst, agent_template_dir)
-                    print(f"✓ Added {agent} configuration")
-
             # Copy scripts directory
             scripts_src = self.base_template / "scripts"
             scripts_dst = project_path / "scripts"
@@ -164,7 +142,7 @@ class TemplateManager:
 
             if not scripts_dst.exists() or overwrite:
                 shutil.copytree(scripts_src, scripts_dst)
-                print(f"✓ Created scripts directory")
+                print(f"[OK] Created scripts directory")
 
             # Copy package.json if it exists
             package_json_src = self.base_template / "package.json"
@@ -175,9 +153,59 @@ class TemplateManager:
                     print(f"Note: package.json already exists, skipping...")
                 else:
                     shutil.copy2(package_json_src, package_json_dst)
-                    print(f"✓ Created package.json")
+                    print(f"[OK] Created package.json")
 
-            # Create configuration file
+            # Copy shared/ directory resources to each agent's directory
+            shared_src = self.base_template / "shared"
+            if shared_src.exists():
+                for agent in agents:
+                    agent_config = get_agent(agent)
+                    if not agent_config:
+                        continue
+
+                    # Get agent-specific directory paths
+                    agent_dir = project_path / agent_config.get("skills_dir", "").rstrip("/skills")
+                    agent_commands_dir = project_path / agent_config.get("commands_dir", "")
+                    agent_skills_dir = agent_dir / "skills"
+
+                    # Create agent directories
+                    agent_commands_dir.mkdir(parents=True, exist_ok=True)
+                    agent_skills_dir.mkdir(parents=True, exist_ok=True)
+
+                    # Copy shared commands
+                    shared_commands = shared_src / "commands"
+                    if shared_commands.exists():
+                        for cmd_file in shared_commands.glob("*.md"):
+                            dest = agent_commands_dir / cmd_file.name
+                            if not dest.exists() or overwrite:
+                                shutil.copy2(cmd_file, dest)
+
+                    # Copy shared skills (including xlsform-core and sub-agents)
+                    shared_skills = shared_src / "skills"
+                    if shared_skills.exists():
+                        for skill_dir in shared_skills.iterdir():
+                            if skill_dir.is_dir():
+                                dest = agent_skills_dir / skill_dir.name
+                                if dest.exists():
+                                    if overwrite:
+                                        shutil.rmtree(dest)
+                                    else:
+                                        continue
+                                shutil.copytree(skill_dir, dest)
+
+                    # Copy shared CLAUDE.md (agent-specific memory file)
+                    shared_claude = shared_src / "CLAUDE.md"
+                    if shared_claude.exists():
+                        memory_file = agent_config.get("memory_file")
+                        if memory_file:
+                            memory_path = project_path / memory_file
+                            if not memory_path.exists() or overwrite:
+                                memory_path.parent.mkdir(parents=True, exist_ok=True)
+                                shutil.copy2(shared_claude, memory_path)
+
+                    print(f"[OK] Configured {agent} assistant")
+
+            # Create configuration file with multi-agent support
             config_file = project_path / "xlsform-ai.json"
             if not config_file.exists() or overwrite:
                 try:
@@ -185,16 +213,27 @@ class TemplateManager:
                     config_data["project_name"] = project_path.name
                     config_data["created"] = datetime.now().isoformat()
 
+                    # Add multi-agent configuration
+                    config_data["enabled_agents"] = agents
+                    config_data["primary_agent"] = agents[0] if agents else "claude"
+                    config_data["settings"]["parallel_execution"] = {
+                        "enabled": True,
+                        "question_threshold": 50,
+                        "page_threshold": 10,
+                        "size_threshold_mb": 1.0,
+                        "user_preference": "auto"
+                    }
+
                     with open(config_file, 'w', encoding='utf-8') as f:
                         json.dump(config_data, f, indent=2)
 
-                    print(f"✓ Created xlsform-ai.json configuration")
+                    print(f"[OK] Created xlsform-ai.json configuration")
                 except Exception as e:
                     print(f"Note: Could not create config file: {e}")
 
             # Create example XLSForm file - NEVER overwrite if it exists
             if not survey_xlsx.exists():
-                template_xlsx = self.base_template / ".claude" / "skills" / "xlsform-core" / "assets" / "xlsform-template.xlsx"
+                template_xlsx = self.base_template / "shared" / "skills" / "xlsform-core" / "assets" / "xlsform-template.xlsx"
                 if template_xlsx.exists():
                     shutil.copy2(template_xlsx, survey_xlsx)
                     # Apply freeze panes
@@ -211,7 +250,7 @@ class TemplateManager:
                         print(f"Note: Could not apply freeze panes: {e}")
                 else:
                     survey_xlsx.touch()
-                print(f"✓ Created {survey_file_name}")
+                print(f"[OK] Created {survey_file_name}")
             else:
                 print(f"Note: {survey_file_name} already exists, preserving data...")
 

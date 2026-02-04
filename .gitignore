@@ -67,3 +67,4 @@ Thumbs.db
 # Project specific
 *.xlsx
 !src/xlsform_ai/templates/base/.claude/skills/xlsform-core/assets/xlsform-template.xlsx
+MULTI_AGENT_IMPLEMENTATION_SUMMARY.md

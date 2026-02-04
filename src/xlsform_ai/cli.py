@@ -48,6 +48,43 @@ def print_warning(message: str):
     console.print(Text("[!] ", style="bold yellow") + Text(message, style="yellow"))
 
 
+def _check_ai_files(project_path: Path) -> List[str]:
+    """Check for XLSForm AI-specific files only.
+
+    Args:
+        project_path: Path to project directory
+
+    Returns:
+        List of AI-specific file/directory names found
+    """
+    ai_indicators = []
+
+    # XLSForm AI files
+    for file in ["survey.xlsx", "xlsform-ai.json", "package.json"]:
+        if (project_path / file).exists():
+            ai_indicators.append(file)
+
+    # Scripts directory
+    if (project_path / "scripts").exists():
+        ai_indicators.append("scripts/")
+
+    # Agent-specific directories (check all configured agents)
+    for agent_name in get_all_agents():
+        agent = get_agent(agent_name)
+        if agent:
+            # Check commands directory
+            commands_dir = Path(agent["commands_dir"])
+            if (project_path / commands_dir).exists():
+                ai_indicators.append(f"{commands_dir}/")
+
+            # Check skills directory
+            skills_dir = Path(agent["skills_dir"])
+            if (project_path / skills_dir).exists():
+                ai_indicators.append(f"{skills_dir}/")
+
+    return ai_indicators
+
+
 def check_cli_installation() -> bool:
     """Check if CLI is properly installed.
 
@@ -166,10 +203,10 @@ def init_project(
 
     # Check if directory exists and warn like Speckit does
     if project_path.exists():
-        # Count items in directory
-        items = list(project_path.iterdir())
-        if items:
-            console.print(f"[yellow]Warning: Current directory is not empty ({len(items)} item(s))[/yellow]")
+        # Only warn if XLSForm AI-specific files exist
+        ai_files = _check_ai_files(project_path)
+        if ai_files:
+            console.print(f"[yellow]Warning: Current directory is not empty ({len(ai_files)} XLSForm AI file(s))[/yellow]")
             console.print("[yellow]Template files will be merged with existing content and may overwrite existing files[/yellow]")
 
             response = questionary.confirm(
