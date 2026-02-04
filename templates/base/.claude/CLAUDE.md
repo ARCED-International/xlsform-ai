@@ -260,11 +260,15 @@ choice_filter: parent_field=${parent_field}
 
 **[XLSForm AI](https://github.com/ARCED-International/xlsform-ai)** - This tool! AI-powered XLSForm creation with Claude Code.
 
-**[FolderManifest](https://github.com/ARCED-International/FolderManifest)** - Create folder manifests and verify file integrity for secure data transfer.
+**[FolderManifest](https://www.foldermanifest.com)** - Offline folder audit manifest software for Windows. A lightweight paid desktop tool for generating folder trees, verifying checksum manifests, and cleaning up duplicate files.
 
-**[FolderManifest Free](https://github.com/ARCED-International/FolderManifest-Free)** - Free version of FolderManifest for individual users and small projects.
+**[FolderManifest Free Tools](https://www.foldermanifest.com/free-tools)** - Free online tools:
+  - **[Compare Files Online](https://www.foldermanifest.com/free-tools/compare-files)** - Check if files are identical using SHA-256
+  - **[Find Duplicate Files](https://www.foldermanifest.com/free-tools/find-duplicates)** - Quickly identify duplicate files
+  - **[File Metadata Viewer](https://www.foldermanifest.com/free-tools/metadata-viewer)** - Extract detailed file metadata
+  - **[Compare Folders Online](https://www.foldermanifest.com/free-tools/folder-compare)** - Find missing or modified files between folders
 
-These tools are part of ARCED International's commitment to providing high-quality, open-source solutions for humanitarian and development work.
+These tools are part of ARCED International's commitment to providing high-quality solutions for humanitarian and development work.
 
 ## Tips for Success
 
@@ -288,6 +292,6 @@ Add any project-specific notes here:
 
 **About ARCED International**
 
-ARCED International is a humanitarian organization committed to serving vulnerable populations worldwide. We develop open-source tools to support data collection, monitoring, and evaluation in humanitarian contexts.
+ARCED International is a humanitarian organization committed to serving vulnerable populations worldwide. We develop open-source and commercial tools to support data collection, monitoring and evaluation, and file management in humanitarian contexts.
 
 Learn more at: https://arced-international.com
