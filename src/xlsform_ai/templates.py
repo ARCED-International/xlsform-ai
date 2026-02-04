@@ -21,9 +21,28 @@ class TemplateManager:
             template_dir: Directory containing templates. Defaults to templates/ in package.
         """
         if template_dir is None:
-            # Get the package root
-            package_root = Path(__file__).parent.parent.parent
-            template_dir = package_root / "templates"
+            # Try to find templates in the package installation first
+            import importlib.resources as resources
+
+            try:
+                # If templates are bundled with the package
+                with resources.files("xlsform_ai") as pkg_files:
+                    templates_path = pkg_files / "templates"
+                    if templates_path.is_dir():
+                        template_dir = Path(str(templates_path))
+            except Exception:
+                pass
+
+            # Fallback to relative path from package root
+            if template_dir is None:
+                package_root = Path(__file__).parent.parent
+                # Try installed package location
+                template_dir = package_root / "templates"
+
+                # If not found, try development location (3 levels up)
+                if not template_dir.exists():
+                    template_dir = Path(__file__).parent.parent.parent / "templates"
+
         self.template_dir = Path(template_dir)
         self.base_template = self.template_dir / "base"
 
