@@ -225,13 +225,29 @@ if __name__ == "__main__":
     # Test form structure parsing
     import sys
     import openpyxl
+    from pathlib import Path
 
     if len(sys.argv) < 2:
         print("Usage: python form_structure.py <xlsx_file>")
         sys.exit(1)
 
     xlsx_file = sys.argv[1]
-    wb = openpyxl.load_workbook(xlsx_file)
+
+    # Check if file exists
+    if not Path(xlsx_file).exists():
+        print(f"Error: File '{xlsx_file}' not found")
+        sys.exit(1)
+
+    # Check if file has content (not empty)
+    if Path(xlsx_file).stat().st_size == 0:
+        print(f"Error: File '{xlsx_file}' is empty")
+        sys.exit(1)
+
+    try:
+        wb = openpyxl.load_workbook(xlsx_file)
+    except Exception as e:
+        print(f"Error: Could not load Excel file: {e}")
+        sys.exit(1)
 
     if "survey" not in wb.sheetnames:
         print("Error: 'survey' sheet not found")
