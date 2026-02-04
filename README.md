@@ -85,12 +85,13 @@ xlsform-ai check
 ### Create a New Project
 
 ```bash
-# Create new project
+# Option 1: Create new project directory
 xlsform-ai init my-survey
-
-# Or initialize in existing directory
 cd my-survey
-xlsform-ai init --here
+
+# Option 2: Initialize existing directory
+mkdir my-survey && cd my-survey
+xlsform-ai init .    # or: xlsform-ai init --here
 ```
 
 This creates:
@@ -401,9 +402,17 @@ Every time you use XLSForm AI commands (add, update, validate, import), the acti
 Initialize a new XLSForm AI project.
 
 ```bash
-xlsform-ai init <PROJECT_NAME>    # Create new project
-xlsform-ai init --here              # Initialize in current directory
-xlsform-ai init . --ai claude      # Specify AI agent
+xlsform-ai init <PROJECT_NAME>     # Create new project directory
+xlsform-ai init .                   # Initialize in current directory
+xlsform-ai init --here              # Same as "init ."
+xlsform-ai init . --ai claude       # Specify AI agent
+```
+
+**Quick start in current directory:**
+```bash
+mkdir my-survey && cd my-survey
+xlsform-ai init .   # Initialize current directory
+# Now you can use /xlsform-add commands
 ```
 
 ### `xlsform-ai check`

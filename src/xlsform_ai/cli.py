@@ -273,9 +273,10 @@ def app():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  xlsform-ai init my-survey           Create new project
-  xlsform-ai init --here               Initialize in current directory
-  xlsform-ai init . --ai claude        Specify AI agent
+  xlsform-ai init my-survey           Create new project directory
+  xlsform-ai init .                   Initialize in current directory
+  xlsform-ai init --here              Same as 'init .'
+  xlsform-ai init . --ai claude       Specify AI agent
   xlsform-ai check                     Check installation
   xlsform-ai info                      Show information
         """,
@@ -288,12 +289,12 @@ Examples:
     init_parser.add_argument(
         "project_name",
         nargs="?",
-        help="Name of the project (use '.' with --here)",
+        help="Name of the project (use '.' for current directory)",
     )
     init_parser.add_argument(
         "--here",
         action="store_true",
-        help="Initialize in current directory",
+        help="Initialize in current directory (same as using '.')",
     )
     init_parser.add_argument(
         "--ai",
@@ -328,13 +329,16 @@ Examples:
 
     # Execute command
     if args.command == "init":
-        if not args.project_name and not args.here:
+        # Support both "init ." and "init --here" for current directory
+        here = args.here or args.project_name == "."
+
+        if not args.project_name and not here:
             print_error("Please specify a project name or use --here")
             sys.exit(1)
 
         init_project(
             project_name=args.project_name or ".",
-            here=args.here,
+            here=here,
             ai=args.ai,
             force=args.force,
         )
