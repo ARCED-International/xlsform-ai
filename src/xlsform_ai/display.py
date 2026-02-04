@@ -26,54 +26,45 @@ def _get_banner():
 # Main banner
 BANNER = _get_banner()
 
+
+def _get_header(title: str, color: str = "cyan") -> str:
+    """Generate a formatted header.
+
+    Args:
+        title: Header title text
+        color: Rich color name
+
+    Returns:
+        Formatted header string
+    """
+    border = "+" + "=" * 78 + "+"
+    return f"[bold {color}]{border}\n|                                                                      |\n|                          [{color}]{title}[/{color}]                            |\n|                                                                      |\n{border}[/{color}]"
+
+
 # Clean headers using simple ASCII borders
-INIT_SUCCESS = """[bold cyan]+{'=' * 78}+
-|                                                                      |
-|                       [bold green][OK] PROJECT INITIALIZED[/bold green]                      |
-|                                                                      |
-+{'=' * 78}+[/bold cyan]"""
+def get_init_success_header():
+    return _get_header("[OK] PROJECT INITIALIZED", "green")
 
-ADD_QUESTIONS_HEADER = """[bold cyan]+{'=' * 78}+
-|                                                                      |
-|                          [bold yellow]ADD QUESTIONS[/bold yellow]                            |
-|                                                                      |
-+{'=' * 78}+[/bold cyan]"""
+def get_add_questions_header():
+    return _get_header("ADD QUESTIONS", "yellow")
 
-VALIDATE_HEADER = """[bold cyan]+{'=' * 78}+
-|                                                                      |
-|                           [bold magenta]VALIDATE FORM[/bold magenta]                        |
-|                                                                      |
-+{'=' * 78}+[/bold cyan]"""
+def get_validate_header():
+    return _get_header("VALIDATE FORM", "magenta")
 
-IMPORT_HEADER = """[bold cyan]+{'=' * 78}+
-|                                                                      |
-|                           [bold blue]IMPORT QUESTIONS[/bold blue]                          |
-|                                                                      |
-+{'=' * 78}+[/bold cyan]"""
+def get_import_header():
+    return _get_header("IMPORT QUESTIONS", "blue")
 
-CLEANUP_HEADER = """[bold cyan]+{'=' * 78}+
-|                                                                      |
-|                            [bold red]CLEANUP PROJECT[/bold red]                              |
-|                                                                      |
-+{'=' * 78}+[/bold cyan]"""
+def get_cleanup_header():
+    return _get_header("CLEANUP PROJECT", "red")
 
-INFO_HEADER = """[bold cyan]+{'=' * 78}+
-|                                                                      |
-|                          [bold white]PROJECT INFORMATION[/bold white]                        |
-|                                                                      |
-+{'=' * 78}+[/bold cyan]"""
+def get_info_header():
+    return _get_header("PROJECT INFORMATION", "white")
 
-ERROR_HEADER = """[bold red]+{'=' * 78}+
-|                                                                      |
-|                             [bold white]ERROR OCCURRED[/bold white]                            |
-|                                                                      |
-+{'=' * 78}+[/bold red]"""
+def get_error_header():
+    return _get_header("ERROR OCCURRED", "red")
 
-WARNING_HEADER = """[bold yellow]+{'=' * 78}+
-|                                                                      |
-|                            [bold white]WARNING NOTICE[/bold white]                          |
-|                                                                      |
-+{'=' * 78}+[/bold yellow]"""
+def get_warning_header():
+    return _get_header("WARNING NOTICE", "yellow")
 
 
 def print_main_banner():
@@ -88,7 +79,7 @@ def print_init_success(location: str, relative_path: str = "."):
         location: Full path to the project
         relative_path: Relative path from current directory
     """
-    console.print(INIT_SUCCESS)
+    console.print(get_init_success_header())
 
     console.print(Panel.fit(
         f"[bold green][OK] Project initialized successfully![/bold green]\n\n"
@@ -112,7 +103,7 @@ def print_questions_added(count: int, questions: list):
         count: Number of questions added
         questions: List of added question info
     """
-    console.print(ADD_QUESTIONS_HEADER)
+    console.print(get_add_questions_header())
 
     # Create a table for the questions
     table = Table(show_header=True, header_style="bold cyan", border_style="cyan")
@@ -139,7 +130,7 @@ def print_validation_results(results: dict):
     Args:
         results: Validation results dictionary
     """
-    console.print(VALIDATE_HEADER)
+    console.print(get_validate_header())
 
     if results.get("valid"):
         console.print(Panel(
@@ -167,7 +158,7 @@ def print_import_results(results: dict):
     Args:
         results: Import results dictionary
     """
-    console.print(IMPORT_HEADER)
+    console.print(get_import_header())
 
     if results.get("success"):
         count = results.get("count", 0)
@@ -213,7 +204,7 @@ def print_cleanup_results(results: dict, dry_run: bool = False):
         results: Cleanup results dictionary
         dry_run: Whether this was a dry run
     """
-    console.print(CLEANUP_HEADER)
+    console.print(get_cleanup_header())
 
     if dry_run:
         console.print("[yellow]Dry run mode - showing what would be removed:[/yellow]\n")
@@ -257,7 +248,7 @@ def print_info_panel(info: dict):
     Args:
         info: Information dictionary
     """
-    console.print(INFO_HEADER)
+    console.print(get_info_header())
 
     # Installation status
     console.print("\n[bold]Installation Status[/bold]")
@@ -288,7 +279,7 @@ def print_error(message: str, details: str = ""):
         message: Error message
         details: Additional error details
     """
-    console.print(ERROR_HEADER)
+    console.print(get_error_header())
 
     content = f"[bold red][X] {message}[/bold red]"
     if details:
@@ -307,5 +298,5 @@ def print_warning(message: str):
     Args:
         message: Warning message
     """
-    console.print(WARNING_HEADER)
+    console.print(get_warning_header())
     console.print(f"[bold yellow][!] {message}[/bold yellow]")
