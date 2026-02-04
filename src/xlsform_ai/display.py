@@ -10,164 +10,75 @@ from . import __version__
 console = Console()
 
 
-def _get_logo_with_version():
-    """Get the ARCED logo with version number - using simple ASCII for compatibility."""
-    return """
-[bold cyan]
-╔═══════════════════════════════════════════════════════════════════════╗
-║                                                                       ║
-║     ██████╗ ███████╗ ██████╗██╗  ██╗    ██████╗ ██╗   ██╗██╗██████╗  ║
-║     ██╔══██╗██╔════╝██╔════╝██║ ██╔╝    ██╔══██╗██║   ██║██║██╔══██╗ ║
-║     ██████╔╝█████╗  ██║     █████╔╝     ██████╔╝██║   ██║██║██████╔╝ ║
-║     ██╔══██╗██╔══╝  ██║     ██╔═██╗     ██╔═══╝ ██║   ██║██║██╔══██╗ ║
-║     ██║  ██║███████╗╚██████╗██║  ██╗    ██║     ╚██████╔╝██║██║  ██║ ║
-║     ╚═╝  ╚═╝╚══════╝ ╚═════╝╚═╝  ╚═╝    ╚═╝      ╚═════╝ ╚═╝╚═╝  ╚═╝ ║
-║                                                                       ║
-║                        [bold yellow]XLSForm AI[/bold yellow]                        ║
-║                     [dim]v{0} - AI-Powered XLSForm[/dim]              ║
-║                                                                       ║
-║                     [green]by ARCED International[/green]                 ║
-║                                                                       ║
-╚═══════════════════════════════════════════════════════════════════════╝
-[/bold cyan]
-""".format(__version__)
+def _get_banner():
+    """Get the XLSForm AI banner - clean, simple design."""
+    return f"""[bold cyan]+{'=' * 78}+
+|                                                                      |
+|                          [bold yellow]XLSForm AI v{__version__}[/bold yellow]                      |
+|                                                                      |
+|                       [bold green]AI-Powered XLSForm Creation[/bold green]                    |
+|                                                                      |
+|                          [dim]by ARCED International[/dim]                   |
+|                                                                      |
++{'=' * 78}+[/bold cyan]"""
 
 
-# Fun ASCII art for variety
-FUN_ART = """
-[bold cyan]
-     .--.                  .--.
-    |o_o |                | _ |
-    |:_/ |                |( )|
-   //   \\               //   \\
-  (|     |)             (|     |)
- /'\\_   _/`\\           /\\_   _/ \\
- \\___)=(___/           \\___)=(___/)
-[bold yellow]  XLSForm AI              v{0} - Creating Forms with AI[/bold yellow]
-[/bold cyan]
-"""
+# Main banner
+BANNER = _get_banner()
 
-SURVEY_ART = """
-[bold cyan]
-    .----------------.
-   | .--------------. |
-   | |      _       | |
-   | |     | |      | |
-   | | ___| |___   | |
-   | ||___   ___|  | |
-   | |     | |     | |
-   | |     | |     | |
-   | |     |_|     | |
-   | |              | |
-   | '--------------' |
-    '----------------'
-  [bold yellow]XLSForm AI v{0} - Survey Form Builder[/bold yellow]
-[/bold cyan]
-"""
+# Clean headers using simple ASCII borders
+INIT_SUCCESS = """[bold cyan]+{'=' * 78}+
+|                                                                      |
+|                       [bold green][OK] PROJECT INITIALIZED[/bold green]                      |
+|                                                                      |
++{'=' * 78}+[/bold cyan]"""
 
-ROBOT_ART = """
-[bold cyan]
-     _____   _____    _____    _____
-    |  _  | |  __ \\  / ____|  / ____|
-    | |_| | | |__) || (___   | (___
-    |  _  | |  _  /  \\___ \\   \\___ \\
-    | | | | | | \\ \\  ____) |  ____) |
-    |_| |_| |_|  \\_\\|_____/  |_____/
-    [bold yellow]XLSForm AI v{0} - Your Form Assistant[/bold yellow]
-[/bold cyan]
-"""
+ADD_QUESTIONS_HEADER = """[bold cyan]+{'=' * 78}+
+|                                                                      |
+|                          [bold yellow]ADD QUESTIONS[/bold yellow]                            |
+|                                                                      |
++{'=' * 78}+[/bold cyan]"""
 
+VALIDATE_HEADER = """[bold cyan]+{'=' * 78}+
+|                                                                      |
+|                           [bold magenta]VALIDATE FORM[/bold magenta]                        |
+|                                                                      |
++{'=' * 78}+[/bold cyan]"""
 
-# ARCED International branded ASCII art (will be generated with version)
-ARCED_LOGO = _get_logo_with_version()
+IMPORT_HEADER = """[bold cyan]+{'=' * 78}+
+|                                                                      |
+|                           [bold blue]IMPORT QUESTIONS[/bold blue]                          |
+|                                                                      |
++{'=' * 78}+[/bold cyan]"""
 
-INIT_SUCCESS = """
-[bold cyan]
-+======================================================================+
+CLEANUP_HEADER = """[bold cyan]+{'=' * 78}+
 |                                                                      |
-|                      [bold green]*** PROJECT INITIALIZED ***[/bold green]                    |
+|                            [bold red]CLEANUP PROJECT[/bold red]                              |
 |                                                                      |
-+======================================================================+
-"""
++{'=' * 78}+[/bold cyan]"""
 
-ADD_QUESTIONS_HEADER = """
-[bold cyan]
-+======================================================================+
+INFO_HEADER = """[bold cyan]+{'=' * 78}+
 |                                                                      |
-|                       [bold yellow]*** ADD QUESTIONS ***[/bold yellow]                     |
+|                          [bold white]PROJECT INFORMATION[/bold white]                        |
 |                                                                      |
-+======================================================================+
-"""
++{'=' * 78}+[/bold cyan]"""
 
-VALIDATE_HEADER = """
-[bold cyan]
-+======================================================================+
+ERROR_HEADER = """[bold red]+{'=' * 78}+
 |                                                                      |
-|                        [bold magenta]*** VALIDATE FORM ***[/bold magenta]                  |
+|                             [bold white]ERROR OCCURRED[/bold white]                            |
 |                                                                      |
-+======================================================================+
-"""
++{'=' * 78}+[/bold red]"""
 
-IMPORT_HEADER = """
-[bold cyan]
-+======================================================================+
+WARNING_HEADER = """[bold yellow]+{'=' * 78}+
 |                                                                      |
-|                        [bold blue]*** IMPORT QUESTIONS ***[/bold blue]                 |
+|                            [bold white]WARNING NOTICE[/bold white]                          |
 |                                                                      |
-+======================================================================+
-"""
-
-CLEANUP_HEADER = """
-[bold cyan]
-+======================================================================+
-|                                                                      |
-|                         [bold red]*** CLEANUP PROJECT ***[/bold red]                   |
-|                                                                      |
-+======================================================================+
-"""
-
-INFO_HEADER = """
-[bold cyan]
-+======================================================================+
-|                                                                      |
-|                      [bold white]*** PROJECT INFORMATION ***[/bold white]                |
-|                                                                      |
-+======================================================================+
-"""
-
-ERROR_HEADER = """
-[bold red]
-+======================================================================+
-|                                                                      |
-|                         [bold white]*** ERROR OCCURRED ***[/bold white]                  |
-|                                                                      |
-+======================================================================+
-"""
-
-WARNING_HEADER = """
-[bold yellow]
-+======================================================================+
-|                                                                      |
-|                          [bold white]*** WARNING NOTICE ***[/bold white]                 |
-|                                                                      |
-+======================================================================+
-"""
++{'=' * 78}+[/bold yellow]"""
 
 
 def print_main_banner():
-    """Print the main XLSForm AI banner with ARCED branding."""
-    import random
-    # Randomly choose between different banner styles for variety
-    banner_style = random.choice(['logo', 'fun', 'survey', 'robot'])
-
-    if banner_style == 'logo':
-        console.print(ARCED_LOGO)
-    elif banner_style == 'fun':
-        console.print(FUN_ART.format(__version__))
-    elif banner_style == 'survey':
-        console.print(SURVEY_ART.format(__version__))
-    else:  # robot
-        console.print(ROBOT_ART.format(__version__))
+    """Print the main XLSForm AI banner."""
+    console.print(BANNER)
 
 
 def print_init_success(location: str, relative_path: str = "."):

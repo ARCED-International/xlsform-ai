@@ -100,8 +100,12 @@ def prompt_agent_selection() -> list:
 
     agents = get_supported_agents()
 
-    # If only one agent, return it without prompting
+    # If only one agent, inform user and return it
     if len(agents) == 1:
+        agent_key = agents[0]
+        agent_info = get_agent(agent_key)
+        console.print(f"\n[bold cyan]Configuring for:[/bold cyan] [bold yellow]{agent_info['name']}[/bold yellow]")
+        console.print(f"[dim]{agent_info.get('description', 'AI assistant')}[/dim]\n")
         return agents
 
     # Build choices for questionary checkbox
