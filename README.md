@@ -277,29 +277,41 @@ This will:
 
 ## Previewing Your Form
 
-### Option 1: VSCode with Live Preview
+### Option 1: Excel in VSCode (Recommended)
 
-**Recommended for quick testing:**
+**Built-in Excel viewing:**
 
-1. **Install XLSForm Offline extension** (VSCode):
-   ```
-   ext install xlsform.xlsform-offline
-   ```
+1. **Open your survey.xlsx in VSCode**
+   - Just right-click the file and "Open with... → Excel"
+   - Or use VSCode's built-in Excel viewer
 
-2. **Open your survey.xlsx in VSCode**
-
-3. **Use the command palette** (`Ctrl+Shift+P` or `Cmd+Shift+P`):
-   - Type "XLSForm: Preview"
-   - Select your survey.xlsx file
-   - Preview opens in a side panel
+2. **Edit while viewing**
+   - Make changes with Claude Code commands
+   - See updates in Excel preview instantly
+   - No extensions needed!
 
 **Benefits:**
 - Works offline
-- Instant preview as you edit
-- Shows validation errors
-- No server setup required
+- No extensions required
+- Fast and lightweight
+- Direct Excel file viewing
 
-### Option 2: ODK Central Online
+### Option 2: Database Client Extension
+
+**For advanced preview:**
+
+1. **Install Database Client** for VSCode:
+   ```
+   ext install cweijan.vscode-database-client
+   ```
+   Visit: [database-client.com](https://database-client.com)
+
+2. **Open and preview your Excel files**
+   - Handles large datasets well
+   - Query and filter capabilities
+   - Professional database tools
+
+### Option 3: ODK Central Online
 
 **For full testing with submissions:**
 
@@ -308,7 +320,7 @@ This will:
 3. Preview in web browser
 4. Test submissions on mobile devices
 
-### Option 3: Enketo Express
+### Option 4: Enketo Express
 
 **For quick online preview:**
 
