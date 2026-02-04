@@ -33,17 +33,17 @@ def print_banner():
 
 def print_success(message: str):
     """Print success message."""
-    console.print(f"[green]✓[/green] {message}")
+    console.print(f"[green][OK] {message}[/green]")
 
 
 def print_error(message: str):
     """Print error message."""
-    console.print(f"[red]✗[/red] {message}")
+    console.print(f"[red][X] {message}[/red]")
 
 
 def print_warning(message: str):
     """Print warning message."""
-    console.print(f"[yellow]⚠[/yellow] {message}")
+    console.print(f"[yellow][!] {message}[/yellow]")
 
 
 def check_cli_installation() -> bool:
@@ -100,15 +100,7 @@ def prompt_agent_selection() -> list:
 
     agents = get_supported_agents()
 
-    # If only one agent, inform user and return it
-    if len(agents) == 1:
-        agent_key = agents[0]
-        agent_info = get_agent(agent_key)
-        console.print(f"\n[bold cyan]Configuring for:[/bold cyan] [bold yellow]{agent_info['name']}[/bold yellow]")
-        console.print(f"[dim]{agent_info.get('description', 'AI assistant')}[/dim]\n")
-        return agents
-
-    # Build choices for questionary checkbox
+    # Build choices for questionary - ALWAYS prompt
     choices = []
     for agent_key in agents:
         agent_info = get_agent(agent_key)
@@ -120,26 +112,40 @@ def prompt_agent_selection() -> list:
             checked=(agent_key == agents[0])  # First agent checked by default
         ))
 
-    # Prompt user with checkbox for multi-select
-    selections = questionary.checkbox(
-        "Which AI agent(s) would you like to use?",
-        choices=choices,
-        validate=lambda x: len(x) > 0 or "You must select at least one agent"
-    ).ask()
+    # Always prompt - even for single agent
+    if len(agents) == 1:
+        # Single agent: use confirm instead of checkbox
+        agent_info = get_agent(agents[0])
+        response = questionary.confirm(
+            f"Use {agent_info['name']} ({agent_info.get('description', 'AI assistant')})?",
+            default=True,
+        ).ask()
+        if response:
+            return agents
+        else:
+            print_warning("Agent selection cancelled. Using default: claude")
+            return ["claude"]
+    else:
+        # Multiple agents: use checkbox
+        selections = questionary.checkbox(
+            "Which AI agent(s) would you like to use?",
+            choices=choices,
+            validate=lambda x: len(x) > 0 or "You must select at least one agent"
+        ).ask()
 
-    if not selections or len(selections) == 0:
-        print_warning("No agent selected. Using default: claude")
-        return ["claude"]
+        if not selections or len(selections) == 0:
+            print_warning("No agent selected. Using default: claude")
+            return ["claude"]
 
-    # Remove duplicates while preserving order
-    seen = set()
-    unique_selections = []
-    for agent in selections:
-        if agent not in seen:
-            seen.add(agent)
-            unique_selections.append(agent)
+        # Remove duplicates while preserving order
+        seen = set()
+        unique_selections = []
+        for agent in selections:
+            if agent not in seen:
+                seen.add(agent)
+                unique_selections.append(agent)
 
-    return unique_selections
+        return unique_selections
 
 
 def init_project(

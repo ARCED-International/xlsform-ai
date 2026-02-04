@@ -11,16 +11,25 @@ console = Console()
 
 
 def _get_banner():
-    """Get the XLSForm AI banner - clean, simple design."""
-    return f"""[bold cyan]+{'=' * 78}+
-|                                                                      |
-|                          [bold yellow]XLSForm AI v{__version__}[/bold yellow]                      |
-|                                                                      |
-|                       [bold green]AI-Powered XLSForm Creation[/bold green]                    |
-|                                                                      |
-|                          [dim]by ARCED International[/dim]                   |
-|                                                                      |
-+{'=' * 78}+[/bold cyan]"""
+    """Get the XLSForm AI banner - Speckit-inspired professional design."""
+    # XLSFORM ASCII art
+    xlsform_art = """[bold cyan]
+ █████ █████ █████        █████████  ███████████                                         █████████   █████
+░░███ ░░███ ░░███        ███░░░░░███░░███░░░░░░█                                        ███░░░░░███ ░░███
+ ░░███ ███   ░███       ░███    ░░░  ░███   █ ░   ██████  ████████  █████████████      ░███    ░███  ░███
+  ░░█████    ░███       ░░█████████  ░███████    ███░░███░░███░░███░░███░░███░░███     ░███████████  ░███
+   ███░███   ░███        ░░░░░░░░███ ░███░░░█   ░███ ░███ ░███ ░░░  ░███ ░███ ░███     ░███░░░░░███  ░███
+  ███ ░░███  ░███      █ ███    ░███ ░███  ░    ░███ ░███ ░███      ░███ ░███ ░███     ░███    ░███  ░███
+ █████ █████ ███████████░░█████████  █████      ░░██████  █████     █████░███ █████    █████   █████ █████
+░░░░░ ░░░░░ ░░░░░░░░░░░  ░░░░░░░░░  ░░░░░        ░░░░░░  ░░░░░     ░░░░░ ░░░ ░░░░░    ░░░░░   ░░░░░ ░░░░░[/bold cyan]"""
+
+    return f"""{xlsform_art}
+
+
+[dim]                    AI-Powered Survey & Form Creation Toolkit[/dim]
+[dim]                            by ARCED International[/dim]
+
+"""
 
 
 # Main banner
