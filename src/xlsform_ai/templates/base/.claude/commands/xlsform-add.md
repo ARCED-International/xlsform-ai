@@ -14,6 +14,24 @@ arguments:
 
 # Add XLSForm Questions
 
+## Key Principles
+
+1. **Best Practices by Default**: Always add appropriate constraints and required fields
+   - Name fields: letters only (regex)
+   - Age fields: 0-130 range
+   - Integer fields: non-negative
+   - Decimal fields: positive
+   - All fields: required by default (unless "optional" specified)
+
+2. **Structured Output**: Keep output concise and scannable
+   ```
+   ✓ Added 2 questions
+     Row 2: text | first_name | "First Name"
+   ```
+   Avoid verbose explanations, use structured lists
+
+3. **Use Helper Script**: Always use `scripts/add_questions.py` to avoid encoding issues
+
 ## Understanding Your Request
 
 First, analyze what you're being asked to add:
@@ -36,18 +54,24 @@ Before adding, read the current XLSForm file:
 
 ## Proposed Changes
 
-Present a clear summary of what will be added:
+Present a clear summary of what will be added, **including best practices that will be applied**:
 
 ```
-I will add the following question(s):
+Adding 2 questions to survey sheet:
 
-Survey Sheet:
-  [ ] Row N: text respondent_name "Respondent's name"
+  Row 2: text | first_name | "First Name"
+    Required: yes (best practice)
+    Constraint: regex(., '^[a-zA-Z\s\-\.']$') (letters only)
 
-Choices Sheet (if needed):
-  (no new choices needed)
+  Row 3: text | last_name | "Last Name"
+    Required: yes (best practice)
+    Constraint: regex(., '^[a-zA-Z\s\-\.']$') (letters only)
 
-Location: End of survey sheet
+Best practices applied automatically:
+- Name fields: letters only, no numbers/special characters
+- Age fields: range 0-130 years
+- Integer fields: non-negative values
+- All questions: required by default (unless optional implied)
 ```
 
 For select questions, show:
@@ -218,9 +242,27 @@ choices: strongly_agree, agree, neutral, disagree, strongly_disagree
 ## After Adding
 
 1. **Verify** the changes were applied correctly
-2. **Show a summary** of what was added
-3. **Suggest running `/xlsform-validate`** to check for any issues
-4. **Remind user to save** the Excel file
+2. **Show a concise summary** with this format:
+```
+✓ Added 2 questions
+
+  Row 2: text | first_name | "First Name"
+    Required: yes
+    Constraint: regex(., '^[a-zA-Z\s\-\.']$)
+    Constraint Message: Please enter a valid name (letters only)
+
+  Row 3: text | last_name | "Last Name"
+    Required: yes
+    Constraint: regex(., '^[a-zA-Z\s\-\.']$')
+    Constraint Message: Please enter a valid name (letters only)
+```
+
+3. **Next step suggestion** (one line):
+```
+Next: Run /xlsform-validate to check the form
+```
+
+**Keep output brief and structured. Avoid verbose explanations.**
 
 ## Example Usage
 
