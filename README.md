@@ -6,7 +6,9 @@
 
 **AI-powered XLSForm creation tool with Claude Code integration.**
 
-[An Open Source Project by ARCED International](https://arced-international.com)
+<img src="https://www.arced-international.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Farced-int_logo.5040257d.png&w=3840&q=75" alt="ARCED International Logo" width="200">
+
+**An Open Source Project by [ARCED International](https://arced-international.com)**
 
 XLSForm AI helps you create, modify, and validate XLSForms intelligently. Parse forms from PDF/Word/Excel, auto-detect question types, and manage complex form logic with ease.
 
@@ -273,6 +275,47 @@ This will:
 - Upload to ODK Central when changes are detected
 - Reload the browser preview
 
+## Previewing Your Form
+
+### Option 1: VSCode with Live Preview
+
+**Recommended for quick testing:**
+
+1. **Install XLSForm Offline extension** (VSCode):
+   ```
+   ext install xlsform.xlsform-offline
+   ```
+
+2. **Open your survey.xlsx in VSCode**
+
+3. **Use the command palette** (`Ctrl+Shift+P` or `Cmd+Shift+P`):
+   - Type "XLSForm: Preview"
+   - Select your survey.xlsx file
+   - Preview opens in a side panel
+
+**Benefits:**
+- Works offline
+- Instant preview as you edit
+- Shows validation errors
+- No server setup required
+
+### Option 2: ODK Central Online
+
+**For full testing with submissions:**
+
+1. Set up ODK Central (see Configuration section)
+2. Upload your form
+3. Preview in web browser
+4. Test submissions on mobile devices
+
+### Option 3: Enketo Express
+
+**For quick online preview:**
+
+1. Go to [https://enketoeexpress.preview.app](https://enketoeexpress.preview.app)
+2. Upload your `survey.xlsx`
+3. Test your form immediately
+
 ### xlwings Setup (Optional)
 
 For live Excel editing:
@@ -290,7 +333,8 @@ pip install xlwings
 
 ```
 .
-├── survey.xlsx              # Main XLSForm file
+├── survey.xlsx              # Main XLSForm file (your work output)
+├── activity_log_*.html      # Activity log (auto-generated)
 ├── .claude/                 # Claude Code configuration
 │   ├── commands/            # Slash commands (.md files)
 │   │   ├── xlsform-add.md
@@ -307,10 +351,36 @@ pip install xlwings
 │   ├── parse_pdf.py         # PDF parser
 │   ├── parse_docx.py        # Word parser
 │   ├── parse_xlsx.py        # Excel parser
+│   ├── add_questions.py     # Add questions with best practices
+│   ├── log_activity.py      # Activity logger
+│   ├── cleanup.py           # Cleanup utility
 │   ├── xlwings_helper.py    # Excel editing
 │   └── validate_form.py     # Validation
 └── package.json             # npm scripts
 ```
+
+## Activity Logging
+
+**All actions are automatically logged to a beautiful HTML file!**
+
+Every time you use XLSForm AI commands (add, update, validate, import), the activity is logged with:
+- Date and time
+- Action type
+- Description and details
+- Changes made
+- Row numbers affected
+
+**View your activity log:**
+- Open `activity_log_*.html` in your browser
+- Beautiful timeline UI with ARCED International branding
+- Shows complete history of all changes
+- Useful for auditing and tracking progress
+
+**Log file features:**
+- Auto-created on first action
+- Persistent across sessions
+- Survives cleanup (keeps your work history)
+- Can be renamed - XLSForm AI will find it by tag
 
 ## CLI Reference
 
@@ -339,6 +409,31 @@ Show installation information.
 ```bash
 xlsform-ai info
 ```
+
+### `xlsform-ai cleanup`
+
+Clean up XLSForm AI files from a project, keeping only your work outputs.
+
+```bash
+xlsform-ai cleanup              # Remove .claude/, scripts/, package.json
+xlsform-ai cleanup --dry-run    # Preview what would be removed
+```
+
+**What gets removed:**
+- `.claude/` - Claude Code configuration
+- `scripts/` - Helper scripts
+- `package.json` - npm configuration
+
+**What gets kept:**
+- `survey.xlsx` - Your form (output)
+- `*.xlsx` - Any Excel files
+- `activity_log_*.html` - Your activity history
+
+**Use cases:**
+- Clean up a completed project
+- Prepare project for handoff
+- Free up space while keeping outputs
+- Reinstall XLSForm AI fresh (log will be reused)
 
 ## Documentation
 

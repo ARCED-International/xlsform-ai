@@ -4,6 +4,13 @@ import sys
 import openpyxl
 from pathlib import Path
 
+# Try to import logger, fail gracefully if not available
+try:
+    from log_activity import ActivityLogger
+    LOGGING_AVAILABLE = True
+except ImportError:
+    LOGGING_AVAILABLE = False
+
 
 # Column mapping for XLSForm survey sheet
 COLUMNS = {
@@ -209,6 +216,23 @@ if __name__ == "__main__":
                     print(f"    Required: {q['required']}")
                 if q['constraint']:
                     print(f"    Constraint: {q['constraint']}")
+
+            # Log activity
+            if LOGGING_AVAILABLE:
+                try:
+                    logger = ActivityLogger()
+                    questions_summary = ", ".join([f"{q['name']} ({q['type']})" for q in result["added"]])
+                    logger.log_action(
+                        action_type="add_questions",
+                        description=f"Added {result['total']} question(s)",
+                        details=f"Questions: {questions_summary}\nRows: {', '.join([str(q['row']) for q in result['added']])}",
+                        author="Claude Code"
+                    )
+                    log_file = logger.log_file
+                    print(f"\nActivity logged to: {log_file.name}")
+                except Exception as e:
+                    print(f"\nNote: Could not log activity: {e}")
+
             sys.exit(0)
         else:
             print(f"ERROR: {result['error']}")

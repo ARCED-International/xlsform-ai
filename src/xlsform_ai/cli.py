@@ -195,8 +195,71 @@ def show_info():
         console.print(f"  ODK config: [dim]Not configured[/dim]")
 
     console.print(f"\n[bold]Documentation[/bold]\n")
-    console.print(f"  GitHub: https://github.com/yourusername/xlsform-ai")
+    console.print(f"  GitHub: https://github.com/ARCED-International/xlsform-ai")
     console.print(f"  XLSForm: https://xlsform.org")
+
+
+def cleanup_project(dry_run: bool = False):
+    """Clean up XLSForm AI files from current directory.
+
+    Args:
+        dry_run: Show what would be removed without actually removing
+    """
+    import sys
+    sys.path.insert(0, Path.cwd())
+
+    try:
+        from scripts.cleanup import cleanup_project as cp
+    except ImportError:
+        print_error("Cleanup script not found. Are you in an XLSForm AI project?")
+        sys.exit(1)
+
+    console.print("\n[bold]Cleaning up XLSForm AI files...[/bold]\n")
+
+    if dry_run:
+        console.print("[yellow]Dry run mode - showing what would be removed:[/yellow]\n")
+
+    result = cp(dry_run=dry_run)
+
+    if dry_run:
+        if result["removed"]:
+            console.print("[bold]Would remove:[/bold]")
+            for item in result["removed"]:
+                console.print(f"  - {item}")
+
+        if result["errors"]:
+            console.print("\n[red]Would have errors:[/red]")
+            for error in result["errors"]:
+                console.print(f"  - {error}")
+    else:
+        if result["removed"]:
+            console.print("[bold]Removed:[/bold]")
+            for item in result["removed"]:
+                console.print(f"  - {item}")
+
+        if result["errors"]:
+            console.print("\n[red]Errors:[/red]")
+            for error in result["errors"]:
+                console.print(f"  - {error}")
+
+    console.print("\n[bold]Kept (output files):[/bold]")
+    for item in result["kept"]:
+        console.print(f"  - {item}")
+
+    if result["log_files"]:
+        console.print("\n[bold cyan]Log files (preserved):[/bold cyan]")
+        for log in result["log_files"]:
+            console.print(f"  - {log}")
+        console.print("\n[dim]Note: Your activity log will be reused if you reinstall XLSForm AI.[/dim]")
+
+    if not dry_run and not result["errors"] and result["removed"]:
+        console.print(Panel.fit(
+            "[bold green]Cleanup complete![/bold green]\n\n"
+            "Your output files (survey.xlsx, activity logs) are safe.\n\n"
+            "[bold]To reinstall XLSForm AI:[/bold]\n"
+            "  xlsform-ai init --here",
+            border_style="green"
+        ))
 
 
 # Note: We're using a stub function here since we can't import typer in plan mode
@@ -249,6 +312,15 @@ Examples:
     # Info command
     subparsers.add_parser("info", help="Show installation information")
 
+    # Cleanup command
+    cleanup_parser = subparsers.add_parser("cleanup", help="Remove XLSForm AI files, keeping outputs")
+    cleanup_parser.add_argument(
+        "--dry-run",
+        "-n",
+        action="store_true",
+        help="Show what would be removed without actually removing"
+    )
+
     # Version
     parser.add_argument("--version", action="version", version=f"%(prog)s v{__version__}")
 
@@ -270,6 +342,8 @@ Examples:
         check_cli_installation()
     elif args.command == "info":
         show_info()
+    elif args.command == "cleanup":
+        cleanup_project(dry_run=args.dry_run)
     else:
         parser.print_help()
 
