@@ -263,12 +263,13 @@ choice_filter: parent_field=${parent_field}
 **[FolderManifest](https://www.foldermanifest.com)** - Offline folder audit manifest software for Windows. A lightweight paid desktop tool for generating folder trees, verifying checksum manifests, and cleaning up duplicate files.
 
 **[FolderManifest Free Tools](https://www.foldermanifest.com/free-tools)** - Free online tools:
-  - **[Compare Files Online](https://www.foldermanifest.com/free-tools/compare-files)** - Check if files are identical using SHA-256
-  - **[Find Duplicate Files](https://www.foldermanifest.com/free-tools/find-duplicates)** - Quickly identify duplicate files
-  - **[File Metadata Viewer](https://www.foldermanifest.com/free-tools/metadata-viewer)** - Extract detailed file metadata
-  - **[Compare Folders Online](https://www.foldermanifest.com/free-tools/folder-compare)** - Find missing or modified files between folders
 
-These tools are part of ARCED International's commitment to providing high-quality solutions for humanitarian and development work.
+- **[Compare Files Online](https://www.foldermanifest.com/free-tools/compare-files)** - Check if files are identical using SHA-256
+- **[Find Duplicate Files](https://www.foldermanifest.com/free-tools/find-duplicates)** - Quickly identify duplicate files
+- **[File Metadata Viewer](https://www.foldermanifest.com/free-tools/metadata-viewer)** - Extract detailed file metadata
+- **[Compare Folders Online](https://www.foldermanifest.com/free-tools/folder-compare)** - Find missing or modified files between folders
+
+These tools are part of ARCED International's commitment to providing high-quality solutions for research, learning, and development work.
 
 ## Tips for Success
 
@@ -292,6 +293,8 @@ Add any project-specific notes here:
 
 **About ARCED International**
 
-ARCED International is a humanitarian organization committed to serving vulnerable populations worldwide. We develop open-source and commercial tools to support data collection, monitoring and evaluation, and file management in humanitarian contexts.
+ARCED International is a Global Research & Learning Studio. We partner with institutions, governments, and growth-stage ventures to design and implement research, and build technical products that deliver lasting impact across emerging markets.
+
+With 12+ years of evidence-led execution, serving 40+ countries, and impacting 5M+ lives, we develop purpose-built platforms that deliver clarity to research and learning teams.
 
 Learn more at: https://arced-international.com

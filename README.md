@@ -451,25 +451,27 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## About ARCED International
 
-[ARCED International](https://arced-international.com) is a humanitarian organization committed to serving vulnerable populations worldwide. We develop open-source and commercial tools to support data collection, monitoring and evaluation, and file management in humanitarian contexts.
+[ARCED International](https://arced-international.com) is a Global Research & Learning Studio. We partner with institutions, governments, and growth-stage ventures to design and implement research, and build technical products that deliver lasting impact across emerging markets.
+
+With 12+ years of evidence-led execution, serving 40+ countries, and impacting 5M+ lives, we develop purpose-built platforms that deliver clarity to research and learning teams.
 
 ### Other ARCED International Tools
 
 **[FolderManifest](https://www.foldermanifest.com)** - Offline folder audit manifest software for Windows. Generate folder trees, verify checksum manifests, and clean up duplicate files. A lightweight paid desktop tool for professionals who need robust file auditing capabilities.
 
 **[FolderManifest Free Tools](https://www.foldermanifest.com/free-tools)** - Free online tools for everyone:
-  - **Compare Files Online** - Upload 2 files to instantly check if they are identical using SHA-256 checksums
-  - **Find Duplicate Files** - Upload up to 10 files to quickly identify duplicates
-  - **File Metadata Viewer** - Extract detailed metadata from your files
-  - **Compare Folders Online** - Upload 2 folders to find missing, modified, or duplicate files
 
-These tools are part of ARCED International's commitment to providing high-quality, open-source solutions for the humanitarian and development sector.
+- **[Compare Files Online](https://www.foldermanifest.com/free-tools/compare-files)** - Upload 2 files to instantly check if they are identical using SHA-256 checksums
+- **[Find Duplicate Files](https://www.foldermanifest.com/free-tools/find-duplicates)** - Upload up to 10 files to quickly identify duplicates
+- **[File Metadata Viewer](https://www.foldermanifest.com/free-tools/metadata-viewer)** - Extract detailed metadata from your files
+- **[Compare Folders Online](https://www.foldermanifest.com/free-tools/folder-compare)** - Upload 2 folders to find missing, modified, or duplicate files
+
+These tools are part of ARCED International's commitment to providing high-quality solutions for research, learning, and development work.
 
 ## Acknowledgments
 
 - [XLSForm](https://xlsform.org/) for the form specification
 - [ODK](https://odk.org/) for the XForm standard
-- [Spec Kit](https://github.com/github/spec-kit) for CLI tool inspiration
 - [Claude Code](https://claude.ai/code) for the AI-powered development environment
 
 ## Support
