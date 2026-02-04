@@ -13,7 +13,7 @@ from rich.table import Table
 from rich.text import Text
 
 from . import __version__
-from .agents import get_supported_agents, validate_agent
+from .agents import get_supported_agents, validate_agent, get_agent
 from .templates import TemplateManager
 from .display import (
     print_main_banner,
