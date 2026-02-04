@@ -16,6 +16,13 @@ except ImportError:
     print("Error: openpyxl is required. Install with: pip install openpyxl")
     sys.exit(1)
 
+# Try to import display module, fail gracefully if not available
+try:
+    from display import print_validation_results
+    DISPLAY_AVAILABLE = True
+except ImportError:
+    DISPLAY_AVAILABLE = False
+
 
 def validate_xlsxform(xlsx_path):
     """Validate XLSForm Excel file."""
@@ -129,23 +136,34 @@ def main():
     print(f"Validating {args.xlsx_file}...\n")
     errors, warnings, suggestions = validate_xlsxform(args.xlsx_file)
 
-    # Print results
-    print(f"# Validation Report\n")
+    # Build results dict
+    results = {
+        "valid": len(errors) == 0,
+        "errors": errors,
+        "warnings": warnings
+    }
 
-    if errors:
-        print(f"❌ {len(errors)} Critical Error(s):\n")
-        for error in errors:
-            print(f"  - {error}")
-        print()
+    # Use beautiful display if available
+    if DISPLAY_AVAILABLE:
+        print_validation_results(results)
+    else:
+        # Fallback to simple text output
+        print(f"# Validation Report\n")
 
-    if warnings:
-        print(f"⚠️  {len(warnings)} Warning(s):\n")
-        for warning in warnings:
-            print(f"  - {warning}")
-        print()
+        if errors:
+            print(f"❌ {len(errors)} Critical Error(s):\n")
+            for error in errors:
+                print(f"  - {error}")
+            print()
 
-    if not errors and not warnings:
-        print("✓ All checks passed! No errors found.\n")
+        if warnings:
+            print(f"⚠️  {len(warnings)} Warning(s):\n")
+            for warning in warnings:
+                print(f"  - {warning}")
+            print()
+
+        if not errors and not warnings:
+            print("✓ All checks passed! No errors found.\n")
 
     # Exit code
     sys.exit(1 if errors else 0)

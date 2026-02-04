@@ -14,19 +14,21 @@ from rich.table import Table
 from . import __version__
 from .agents import get_supported_agents, validate_agent
 from .templates import TemplateManager
+from .display import (
+    print_main_banner,
+    print_init_success,
+    print_info_panel,
+    print_cleanup_results,
+    print_error as display_error,
+    print_warning as display_warning,
+)
 
 console = Console()
 
 
 def print_banner():
     """Print welcome banner."""
-    banner = """
-[bold cyan]╔══════════════════════════════════════════╗
-║     [white]XLSForm AI [dim]v{version}[/dim]            [bold cyan]║
-║     [white]AI-Powered XLSForm Creation        [bold cyan]║
-╚══════════════════════════════════════════╝
-""".format(version=__version__)
-    console.print(banner)
+    print_main_banner()
 
 
 def print_success(message: str):
@@ -150,6 +152,9 @@ def init_project(
         ai: AI agent(s) to configure for (comma-separated list)
         force: Overwrite existing files
     """
+    # Show the beautiful banner at the start
+    print_banner()
+
     # Determine which agents to use
     if ai is None:
         # Prompt for agent selection
@@ -212,17 +217,16 @@ def init_project(
             progress.remove_task(task)
 
         if success:
-            console.print(Panel.fit(
-                f"[bold green]Project initialized successfully![/bold green]\n\n"
-                f"Location: [cyan]{project_path}[/cyan]\n\n"
-                f"[bold]Next steps:[/bold]\n"
-                f"1. cd {project_path.relative_to(Path.cwd()) if not here else '.'}\n"
-                f"2. Open survey.xlsx in Excel\n"
-                f"3. Use Claude Code with /xlsform-add commands\n"
-                f"4. Or use /xlsform-import to import from PDF/Word",
-                title="✓ Success",
-                border_style="green",
-            ))
+            # Calculate relative path for display
+            if here:
+                relative_path = "."
+            else:
+                relative_path = str(project_path.relative_to(Path.cwd()))
+
+            print_init_success(
+                location=str(project_path),
+                relative_path=relative_path
+            )
         else:
             print_error("Failed to initialize project")
             sys.exit(1)
@@ -239,30 +243,19 @@ def show_info():
     """Show installation and configuration information."""
     print_banner()
 
-    # Installation check
-    console.print("\n[bold]Installation Status[/bold]\n")
-    check_cli_installation()
-
-    # Supported agents
-    console.print(f"\n[bold]Supported Agents[/bold]\n")
-    for agent in get_supported_agents():
-        console.print(f"  • [cyan]{agent}[/cyan]")
+    # Gather information for display
+    info = {
+        "installed": check_cli_installation(),
+        "agents": get_supported_agents(),
+    }
 
     # Configuration
-    console.print(f"\n[bold]Configuration[/bold]\n")
     from .config import Config
     config = Config()
-    console.print(f"  Config directory: [cyan]{config.config_dir}[/cyan]")
+    info["config_dir"] = str(config.config_dir)
 
-    pyodk_config = config.get_pyodk_config()
-    if pyodk_config:
-        console.print(f"  ODK config: [green]{pyodk_config}[/green]")
-    else:
-        console.print(f"  ODK config: [dim]Not configured[/dim]")
-
-    console.print(f"\n[bold]Documentation[/bold]\n")
-    console.print(f"  GitHub: https://github.com/ARCED-International/xlsform-ai")
-    console.print(f"  XLSForm: https://xlsform.org")
+    # Display the info panel
+    print_info_panel(info)
 
 
 def cleanup_project(dry_run: bool = False):
@@ -287,45 +280,8 @@ def cleanup_project(dry_run: bool = False):
 
     result = cp(dry_run=dry_run)
 
-    if dry_run:
-        if result["removed"]:
-            console.print("[bold]Would remove:[/bold]")
-            for item in result["removed"]:
-                console.print(f"  - {item}")
-
-        if result["errors"]:
-            console.print("\n[red]Would have errors:[/red]")
-            for error in result["errors"]:
-                console.print(f"  - {error}")
-    else:
-        if result["removed"]:
-            console.print("[bold]Removed:[/bold]")
-            for item in result["removed"]:
-                console.print(f"  - {item}")
-
-        if result["errors"]:
-            console.print("\n[red]Errors:[/red]")
-            for error in result["errors"]:
-                console.print(f"  - {error}")
-
-    console.print("\n[bold]Kept (output files):[/bold]")
-    for item in result["kept"]:
-        console.print(f"  - {item}")
-
-    if result["log_files"]:
-        console.print("\n[bold cyan]Log files (preserved):[/bold cyan]")
-        for log in result["log_files"]:
-            console.print(f"  - {log}")
-        console.print("\n[dim]Note: Your activity log will be reused if you reinstall XLSForm AI.[/dim]")
-
-    if not dry_run and not result["errors"] and result["removed"]:
-        console.print(Panel.fit(
-            "[bold green]Cleanup complete![/bold green]\n\n"
-            "Your output files (survey.xlsx, activity logs) are safe.\n\n"
-            "[bold]To reinstall XLSForm AI:[/bold]\n"
-            "  xlsform-ai init --here",
-            border_style="green"
-        ))
+    # Use the beautiful display module for results
+    print_cleanup_results(result, dry_run=dry_run)
 
 
 # Note: We're using a stub function here since we can't import typer in plan mode

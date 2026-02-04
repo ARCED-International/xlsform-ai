@@ -25,6 +25,13 @@ try:
 except ImportError:
     FORM_STRUCTURE_AVAILABLE = False
 
+# Try to import display module, fail gracefully if not available
+try:
+    from display import print_questions_added
+    DISPLAY_AVAILABLE = True
+except ImportError:
+    DISPLAY_AVAILABLE = False
+
 
 # Column mapping for XLSForm survey sheet
 # Note: Column numbers may vary based on your XLSForm template
@@ -291,14 +298,18 @@ if __name__ == "__main__":
         result = add_questions(questions, survey_file=args.file)
 
         if result["success"]:
-            # Structured output
-            print(f"SUCCESS: Added {result['total']} question(s)")
-            for q in result["added"]:
-                print(f"  Row {q['row']}: {q['type']} | {q['name']} | \"{q['label']}\"")
-                if q['required']:
-                    print(f"    Required: {q['required']}")
-                if q['constraint']:
-                    print(f"    Constraint: {q['constraint']}")
+            # Use beautiful display if available
+            if DISPLAY_AVAILABLE:
+                print_questions_added(result['total'], result['added'])
+            else:
+                # Fallback to simple text output
+                print(f"SUCCESS: Added {result['total']} question(s)")
+                for q in result["added"]:
+                    print(f"  Row {q['row']}: {q['type']} | {q['name']} | \"{q['label']}\"")
+                    if q['required']:
+                        print(f"    Required: {q['required']}")
+                    if q['constraint']:
+                        print(f"    Constraint: {q['constraint']}")
 
             # Log activity
             if LOGGING_AVAILABLE:
