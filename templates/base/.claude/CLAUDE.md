@@ -2,6 +2,8 @@
 
 This is an XLSForm project with AI-assisted development capabilities using Claude Code.
 
+**An open source project by [ARCED International](https://arced-international.com)**
+
 ## Project Overview
 
 This project uses the **xlsform-core** skill to help you create, modify, and validate XLSForms efficiently. The skill provides comprehensive knowledge about XLSForm syntax, question types, and best practices.
@@ -248,10 +250,21 @@ choice_filter: parent_field=${parent_field}
 
 ## Getting Help
 
+### XLSForm Resources
 - **XLSForm documentation:** https://xlsform.org/en/
 - **ODK documentation:** https://docs.getodk.org/
 - **Question types:** https://docs.getodk.org/form-question-types/
 - **Form logic:** https://docs.getodk.org/form-logic/
+
+### ARCED International Tools
+
+**[XLSForm AI](https://github.com/ARCED-International/xlsform-ai)** - This tool! AI-powered XLSForm creation with Claude Code.
+
+**[FolderManifest](https://github.com/ARCED-International/FolderManifest)** - Create folder manifests and verify file integrity for secure data transfer.
+
+**[FolderManifest Free](https://github.com/ARCED-International/FolderManifest-Free)** - Free version of FolderManifest for individual users and small projects.
+
+These tools are part of ARCED International's commitment to providing high-quality, open-source solutions for humanitarian and development work.
 
 ## Tips for Success
 
@@ -269,3 +282,12 @@ Add any project-specific notes here:
 - Form ID: [your-form-id]
 - Project: [project-description]
 - Last updated: [date]
+- Organization: [your-organization]
+
+---
+
+**About ARCED International**
+
+ARCED International is a humanitarian organization committed to serving vulnerable populations worldwide. We develop open-source tools to support data collection, monitoring, and evaluation in humanitarian contexts.
+
+Learn more at: https://arced-international.com

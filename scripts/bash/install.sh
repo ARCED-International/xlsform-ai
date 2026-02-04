@@ -4,6 +4,8 @@
 set -e
 
 echo "🚀 Installing XLSForm AI CLI..."
+echo "An open source project by ARCED International"
+echo ""
 
 # Check if uv is installed
 if ! command -v uv &> /dev/null; then
@@ -14,7 +16,7 @@ fi
 
 # Install the CLI
 echo "📦 Installing xlsform-ai-cli..."
-uv tool install xlsform-ai-cli --from git+https://github.com/yourusername/xlsform-ai.git
+uv tool install xlsform-ai-cli --from git+https://github.com/ARCED-International/xlsform-ai.git
 
 # Verify installation
 echo ""
@@ -28,4 +30,5 @@ echo "  xlsform-ai init my-survey"
 echo ""
 echo "For more information:"
 echo "  xlsform-ai info"
-echo "  https://github.com/yourusername/xlsform-ai"
+echo "  https://github.com/ARCED-International/xlsform-ai"
+echo "  https://arced-international.com"

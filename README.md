@@ -2,8 +2,11 @@
 
 [![Python](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![GitHub](https://img.shields.io/badge/github-ARCED--International-blue.svg)](https://github.com/ARCED-International/xlsform-ai)
 
 **AI-powered XLSForm creation tool with Claude Code integration.**
+
+[An Open Source Project by ARCED International](https://arced-international.com)
 
 XLSForm AI helps you create, modify, and validate XLSForms intelligently. Parse forms from PDF/Word/Excel, auto-detect question types, and manage complex form logic with ease.
 
@@ -63,10 +66,10 @@ XLSForm AI is a CLI tool that sets up projects with specialized Claude Code skil
 
 ```bash
 # Using uv (recommended)
-uv tool install xlsform-ai-cli --from git+https://github.com/yourusername/xlsform-ai.git
+uv tool install xlsform-ai-cli --from git+https://github.com/ARCED-International/xlsform-ai.git
 
 # Or with pip
-pip install xlsform-ai-cli
+pip install git+https://github.com/ARCED-International/xlsform-ai.git
 ```
 
 ### Verify Installation
@@ -413,7 +416,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/xlsform-ai.git
+git clone https://github.com/ARCED-International/xlsform-ai.git
 cd xlsform-ai
 
 # Install in development mode
@@ -446,6 +449,18 @@ xlsform-ai/
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## About ARCED International
+
+[ARCED International](https://arced-international.com) is a humanitarian organization committed to serving vulnerable populations worldwide. We develop open-source tools to support data collection, monitoring, and evaluation in humanitarian contexts.
+
+### Other ARCED International Tools
+
+**[FolderManifest](https://github.com/ARCED-International/FolderManifest)** - A powerful tool for creating folder manifests and verifying file integrity for secure data transfer.
+
+**[FolderManifest Free](https://github.com/ARCED-International/FolderManifest-Free)** - A free version of FolderManifest with essential features for individual users and small projects.
+
+These tools are part of ARCED International's commitment to providing high-quality, open-source solutions for the humanitarian and development sector.
+
 ## Acknowledgments
 
 - [XLSForm](https://xlsform.org/) for the form specification
@@ -455,10 +470,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Support
 
-- 📖 [Documentation](https://github.com/yourusername/xlsform-ai/wiki)
-- 🐛 [Issues](https://github.com/yourusername/xlsform-ai/issues)
-- 💬 [Discussions](https://github.com/yourusername/xlsform-ai/discussions)
+- 📖 [Documentation](https://github.com/ARCED-International/xlsform-ai/wiki)
+- 🐛 [Issues](https://github.com/ARCED-International/xlsform-ai/issues)
+- 💬 [Discussions](https://github.com/ARCED-International/xlsform-ai/discussions)
+- 🌐 [ARCED International](https://arced-international.com)
 
 ---
 
-Made with ❤️ by the XLSForm AI community
+Made with ❤️ by [ARCED International](https://arced-international.com)

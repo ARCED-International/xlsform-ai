@@ -1,6 +1,8 @@
 # XLSForm AI Installation Script (Windows PowerShell)
 
 Write-Host "🚀 Installing XLSForm AI CLI..." -ForegroundColor Cyan
+Write-Host "An open source project by ARCED International" -ForegroundColor Cyan
+Write-Host ""
 
 # Check if uv is installed
 $uvInstalled = $false
@@ -21,7 +23,7 @@ if (-not $uvInstalled) {
 
 # Install the CLI
 Write-Host "📦 Installing xlsform-ai-cli..." -ForegroundColor Cyan
-uv tool install xlsform-ai-cli --from git+https://github.com/yourusername/xlsform-ai.git
+uv tool install xlsform-ai-cli --from git+https://github.com/ARCED-International/xlsform-ai.git
 
 # Verify installation
 Write-Host ""
@@ -35,4 +37,5 @@ Write-Host "  xlsform-ai init my-survey" -ForegroundColor Cyan
 Write-Host ""
 Write-Host "For more information:"
 Write-Host "  xlsform-ai info" -ForegroundColor Cyan
-Write-Host "  https://github.com/yourusername/xlsform-ai" -ForegroundColor Cyan
+Write-Host "  https://github.com/ARCED-International/xlsform-ai" -ForegroundColor Cyan
+Write-Host "  https://arced-international.com" -ForegroundColor Cyan
