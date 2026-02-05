@@ -32,6 +32,24 @@ try:
 except ImportError:
     DISPLAY_AVAILABLE = False
 
+# Try to import AI components, fail gracefully if not available
+try:
+    from knowledge_base.rag_engine import RAGEngine
+    from question_type_analyzer import QuestionTypeAnalyzer
+    from constraint_generator import SmartConstraintGenerator, Question
+    from choice_optimizer import ChoiceListOptimizer
+    from other_specify_handler import OtherSpecifyHandler, Question as OSQuestion
+    AI_COMPONENTS_AVAILABLE = True
+except ImportError:
+    AI_COMPONENTS_AVAILABLE = False
+    RAGEngine = None
+    QuestionTypeAnalyzer = None
+    SmartConstraintGenerator = None
+    Question = None
+    ChoiceListOptimizer = None
+    OtherSpecifyHandler = None
+    OSQuestion = None
+
 
 # Column mapping for XLSForm survey sheet
 # Note: Column numbers may vary based on your XLSForm template
@@ -54,16 +72,39 @@ COLUMNS = {
 }
 
 
-def get_best_practices(question_type, question_name):
+def get_best_practices(question_type, question_name, question_label=""):
     """Apply best practices based on question type and name.
+
+    Uses AI-powered SmartConstraintGenerator if available, otherwise
+    falls back to rule-based logic.
 
     Args:
         question_type: XLSForm question type
         question_name: Question name/variable
+        question_label: Question label text (for AI analysis)
 
     Returns:
-        dict with constraint, constraint_message, required, required_message
+        dict with constraint, constraint_message, required, required_message, appearance
     """
+    # Use AI-powered constraint generator if available
+    if AI_COMPONENTS_AVAILABLE and SmartConstraintGenerator:
+        try:
+            generator = SmartConstraintGenerator()
+            question_obj = Question(question_type, question_name, question_label)
+            constraints = generator.generate_constraints(question_obj)
+
+            return {
+                "constraint": constraints.constraint,
+                "constraint_message": constraints.constraint_message,
+                "required": constraints.required,
+                "required_message": constraints.required_message,
+                "appearance": constraints.appearance
+            }
+        except Exception as e:
+            # Fall back to simple rules on error
+            pass
+
+    # Fallback to simple rule-based logic
     # Field types that should NOT be required (computed/read-only fields)
     non_input_types = {
         'calculate', 'hidden', 'note', 'imei', 'deviceid', 'subscriberid',
@@ -77,13 +118,14 @@ def get_best_practices(question_type, question_name):
         "constraint": "",
         "constraint_message": "",
         "required": "" if is_non_input else "yes",
-        "required_message": "" if is_non_input else "This field is required"
+        "required_message": "" if is_non_input else "This field is required",
+        "appearance": ""
     }
 
     # Name fields: no numbers, special chars
     if any(keyword in question_name.lower() for keyword in ["name", "first", "last", "full"]):
         result.update({
-            "constraint": "regex(., '^[a-zA-Z\\\\s\\\\-\\\\\\\\.']$)",
+            "constraint": "regex(., '^[a-zA-Z\\\\s\\\\-\\\\\\\\.']$')",
             "constraint_message": "Please enter a valid name (letters only)",
             "required": "" if is_non_input else "yes",
             "required_message": "" if is_non_input else "Name is required"
@@ -199,14 +241,15 @@ def add_questions(questions_data, survey_file=None):
             q_name = q.get("name", "")
             q_label = q.get("label", "")
 
-            # Apply best practices
-            practices = get_best_practices(q_type, q_name)
+            # Apply best practices (with AI enhancement if available)
+            practices = get_best_practices(q_type, q_name, q_label)
 
             # Allow override if user specified constraints/required
             constraint = q.get("constraint", practices["constraint"])
             constraint_msg = q.get("constraint_message", practices["constraint_message"])
             required = q.get("required", practices["required"])
             required_msg = q.get("required_message", practices["required_message"])
+            appearance = q.get("appearance", practices.get("appearance", ""))
 
             # Set core values
             ws.cell(current_row, COLUMNS["type"], q_type)
@@ -222,6 +265,9 @@ def add_questions(questions_data, survey_file=None):
                 ws.cell(current_row, COLUMNS["required"], required)
             if required_msg:
                 ws.cell(current_row, COLUMNS["required_message"], required_msg)
+            # Set appearance from best practices if not overridden
+            if appearance and "appearance" not in q:
+                ws.cell(current_row, COLUMNS["appearance"], appearance)
 
             # Handle additional fields dynamically
             # This supports: hint, calculation, relevant, appearance, default, media::image, media::audio, media::video, etc.

@@ -102,35 +102,256 @@ If any validation fails:
 
 ## Implementation
 
-### Use Helper Script for Adding Questions
+### ⚠️ IMPORTANT: Use openpyxl Directly, NOT Temporary Files
 
-Instead of inline Python commands that may have encoding issues on Windows, use the `scripts/add_questions.py` helper:
+**NEVER create temporary Python files** (e.g., `add_questions_temp.py`). Always use openpyxl directly in the Bash tool.
 
-**For simple text questions:**
+### Efficient Implementation Methods
+
+#### Method 1: Simple Questions - Use add_questions.py Helper
+
+For **simple questions without complex escaping**, use the helper script:
+
 ```bash
+# Single question
 python scripts/add_questions.py '[{"type":"text","name":"first_name","label":"First Name"}]'
-```
 
-**For multiple questions:**
-```bash
+# Multiple simple questions
 python scripts/add_questions.py '[{"type":"text","name":"first_name","label":"First Name"},{"type":"text","name":"last_name","label":"Last Name"}]'
 ```
 
-**For questions with constraints:**
-```bash
-python scripts/add_questions.py '[{"type":"integer","name":"age","label":"Age","constraint":".>=0 and .<=120","constraint_message":"Age must be between 0 and 120"}]'
+#### Method 2: Complex Questions - Use openpyxl Directly (PREFERRED)
+
+For **questions with constraints, regex, or special characters**, use openpyxl directly:
+
+```python
+import openpyxl
+
+# Load workbook
+wb = openpyxl.load_workbook('survey.xlsx')
+ws = wb['survey']
+ws_choices = wb['choices']
+
+# Find insertion point (after header)
+insert_row = 2  # or use ws.max_row + 1 to append
+
+# Add metadata fields
+ws.cell(insert_row, 1, 'start')
+ws.cell(insert_row, 2, 'start')
+ws.cell(insert_row, 3, 'Start Time')
+insert_row += 1
+
+ws.cell(insert_row, 1, 'end')
+ws.cell(insert_row, 2, 'end')
+ws.cell(insert_row, 3, 'End Time')
+insert_row += 1
+
+# Add text question with constraint
+ws.cell(insert_row, 1, 'text')
+ws.cell(insert_row, 2, 'respondent_name')
+ws.cell(insert_row, 3, 'What is your name?')
+ws.cell(insert_row, 5, 'yes')
+ws.cell(insert_row, 8, "regex(., '^[a-zA-Z\\s\\-\\.']+$')")
+ws.cell(insert_row, 9, 'Please enter a valid name (letters only)')
+insert_row += 1
+
+# Add integer question with constraint
+ws.cell(insert_row, 1, 'integer')
+ws.cell(insert_row, 2, 'age')
+ws.cell(insert_row, 3, 'How old are you?')
+ws.cell(insert_row, 5, 'yes')
+ws.cell(insert_row, 8, '. >= 0 and . <= 130')
+ws.cell(insert_row, 9, 'Age must be between 0 and 130')
+insert_row += 1
+
+# Add select_one question
+ws.cell(insert_row, 1, 'select_one gender')
+ws.cell(insert_row, 2, 'gender')
+ws.cell(insert_row, 3, 'What is your gender?')
+ws.cell(insert_row, 5, 'yes')
+insert_row += 1
+
+# Add choices to choices sheet
+choice_start_row = ws_choices.max_row + 1
+for i, (name, label) in enumerate([('-96', 'Other'), ('-99', "Don't know")], 1):
+    ws_choices.cell(choice_start_row + i, 1, 'gender')
+    ws_choices.cell(choice_start_row + i, 2, name)
+    ws_choices.cell(choice_start_row + i, 3, label)
+
+# Save
+wb.save('survey.xlsx')
+print(f'Added questions. Survey now has {ws.max_row} rows.')
 ```
 
-**For select questions, you need to manually add choices to the choices sheet:**
-1. Add the question using the helper script
-2. Manually add the choice list to the choices sheet using openpyxl or xlwings
+This approach:
+- ✓ Works reliably on all platforms (Windows/Mac/Linux)
+- ✓ No complex JSON escaping issues
+- ✓ Easy to read and debug
+- ✓ Supports complex constraints and regex patterns
 
-### Adding to Survey Sheet
+#### Method 3: Multiple Questions with Choice Lists
 
-For each question to add:
+When adding many questions with choices, structure your code clearly:
 
-1. **Determine the row** to insert (end of form, or after specified location)
-2. **Map columns** based on question type:
+```python
+import openpyxl
+
+wb = openpyxl.load_workbook('survey.xlsx')
+ws = wb['survey']
+ws_choices = wb['choices']
+
+row = 2
+
+# Metadata
+for field in ['start', 'end', 'today', 'deviceid']:
+    ws.cell(row, 1, field)
+    ws.cell(row, 2, field)
+    ws.cell(row, 3, field.title())
+    row += 1
+
+# Begin group
+ws.cell(row, 1, 'begin group')
+ws.cell(row, 2, 'demographics')
+ws.cell(row, 3, 'Demographics')
+row += 1
+
+# Questions
+questions = [
+    ('text', 'name', 'What is your name?', "regex(., '^[a-zA-Z\\s]+$')", 'Letters only'),
+    ('integer', 'age', 'How old are you?', '. >= 0 and . <= 130', 'Age 0-130'),
+    ('select_one gender', 'gender', 'What is your gender?', '', ''),
+]
+
+for q_type, q_name, q_label, constraint, constraint_msg in questions:
+    ws.cell(row, 1, q_type)
+    ws.cell(row, 2, q_name)
+    ws.cell(row, 3, q_label)
+    ws.cell(row, 5, 'yes')
+    if constraint:
+        ws.cell(row, 8, constraint)
+        ws.cell(row, 9, constraint_msg)
+    row += 1
+
+# End group
+ws.cell(row, 1, 'end group')
+ws.cell(row, 2, 'demographics')
+row += 1
+
+# Add choices
+choices = {'gender': [('1', 'Male'), ('2', 'Female'), ('-96', 'Other')]}
+for list_name, options in choices.items():
+    for i, (name, label) in enumerate(options, 1):
+        ws_choices.cell(i, 1, list_name)
+        ws_choices.cell(i, 2, name)
+        ws_choices.cell(i, 3, label)
+
+wb.save('survey.xlsx')
+print(f'Added {len(questions)} questions')
+```
+
+### What NOT To Do
+
+❌ **DO NOT create temporary Python files:**
+```python
+# DON'T DO THIS:
+Write(add_temp.py)
+...
+Bash(python add_temp.py)
+...
+Bash(rm add_temp.py)
+```
+
+❌ **DO NOT use complex JSON strings with regex in bash:**
+```bash
+# DON'T DO THIS (fails due to escaping):
+python scripts/add_questions.py '[{"type":"text","constraint":"regex(., '\''^[a-zA-Z]+$\'')"}]'
+```
+
+### Best Practices
+
+1. **Use openpyxl directly** for complex questions
+2. **Use add_questions.py** only for simple questions without special characters
+3. **Structure your code clearly** with comments
+4. **Add questions in batches** when possible
+5. **Always save** the workbook after modifications
+6. **Print success messages** to confirm changes
+
+### Adding to Survey Sheet (Using openpyxl)
+
+For each question to add, use direct openpyxl calls:
+
+**Column Reference (COLUMNS dictionary):**
+```python
+COLUMNS = {
+    "type": 1,      # Column A
+    "name": 2,      # Column B
+    "label": 3,     # Column C
+    "hint": 4,      # Column D
+    "required": 5,  # Column E
+    "calculation": 6,# Column F
+    "relevant": 7,  # Column G
+    "constraint": 8,# Column H
+    "constraint_message": 9,  # Column I
+    "required_message": 10,   # Column J
+    "appearance": 11,          # Column K
+}
+```
+
+**Basic pattern:**
+```python
+ws.cell(row, COLUMNS['type'], 'text')
+ws.cell(row, COLUMNS['name'], 'question_name')
+ws.cell(row, COLUMNS['label'], 'Question text?')
+ws.cell(row, COLUMNS['required'], 'yes')
+```
+
+**For select_one/select_multiple with choices:**
+```python
+# Add the question
+ws.cell(row, 1, 'select_one gender')
+ws.cell(row, 2, 'q_gender')
+ws.cell(row, 3, 'What is your gender?')
+ws.cell(row, 5, 'yes')
+row += 1
+
+# Add choices separately
+choices = [('1', 'Male'), ('2', 'Female'), ('-96', 'Other')]
+choice_row = ws_choices.max_row + 1
+for name, label in choices:
+    ws_choices.cell(choice_row, 1, 'gender')
+    ws_choices.cell(choice_row, 2, name)
+    ws_choices.cell(choice_row, 3, label)
+    choice_row += 1
+```
+
+### Adding to Choices Sheet (Using openpyxl)
+
+If adding a select question with a new list_name:
+
+```python
+# Check if list exists
+existing_lists = set()
+for row in ws_choices.iter_rows(min_row=2, max_row=ws_choices.max_row, values_only=True):
+    if row[0]:  # list_name column
+        existing_lists.add(row[0])
+
+# Add choices if list doesn't exist
+if 'gender' not in existing_lists:
+    choices = [
+        ('1', 'Male'),
+        ('2', 'Female'),
+        ('-96', 'Other'),
+        ('-99', "Don't know"),
+        ('-98', 'Refused'),
+    ]
+
+    choice_row = ws_choices.max_row + 1
+    for name, label in choices:
+        ws_choices.cell(choice_row, 1, 'gender')  # list_name
+        ws_choices.cell(choice_row, 2, name)        # name
+        ws_choices.cell(choice_row, 3, label)       # label
+        choice_row += 1
+```
 
 **Basic question (text, integer, decimal, etc.):**
 ```
@@ -179,19 +400,48 @@ name: <choice value name, no spaces for select_multiple>
 label: <choice display text>
 ```
 
-### Auto-Detection Rules
+### Auto-Detection Rules (AI-Enhanced)
 
-When type is not specified, detect from description:
+When type is not specified, the system uses intelligent type detection with **aggressive numeric preference**:
 
+**Detection Strategy:**
+1. **Choice options provided** → `select_one`/`select_multiple` (always with numeric codes: 1, 2, 3...)
+2. **Numeric keywords detected** → `integer` or `decimal` (very aggressive)
+3. **RAG similarity matching** → Match against knowledge base of similar questions (if AI available)
+4. **Text-only patterns** → `text` (only for clearly text-only: names, addresses, descriptions)
+5. **Yes/No patterns** → `select_one yes_no`
+
+**Integer Keywords (very aggressive):**
+- age, how old, years old, count, number, how many, frequency, children, members, times, quantity
+
+**Decimal Keywords (very aggressive):**
+- weight, height, length, price, cost, income, salary, percentage, rate, temperature
+
+**Text-Only Patterns (fallback):**
+- name, address, describe, explain, specify, comment, open-ended
+
+**Traditional Pattern Matching (fallback):**
 - **"select one" / "choose one" / "radio"** → `select_one`
 - **"select multiple" / "check all that apply" / "checkbox"** → `select_multiple`
-- **"enter name" / "write" / "text"** → `text`
-- **"age" / "number" / "how many"** → `integer`
-- **"weight" / "height" / "price"** → `decimal`
 - **"date" / "when"** → `date`
 - **"location" / "GPS" / "coordinates"** → `geopoint`
 - **"photo" / "picture" / "image"** → `image`
-- **"yes/no" / "true or false"** → `select_one yes_no` (reuse if exists)
+- **"yes/no" / "true or false"** → `select_one yes_no`
+
+**Example:**
+```
+Question: "What is your age?"
+Detected: integer (confidence: 0.85)
+Reasoning: Integer keyword "age" detected
+
+Question: "Enter your weight"
+Detected: decimal (confidence: 0.85)
+Reasoning: Decimal keyword "weight" detected
+
+Question: "What is your name?"
+Detected: text (confidence: 0.85)
+Reasoning: Text-only keyword "name" detected
+```
 
 ### Name Generation
 
@@ -207,36 +457,40 @@ When user doesn't specify a name:
 - "Do you like pizza?" → `likes_pizza`
 - "What is your gender?" → `gender`
 
-### Choice List Handling
+### Choice List Handling (AI-Enhanced)
 
-**When to reuse existing lists:**
-- `yes_no` - for yes/no questions
-- `gender` - for gender questions
-- Any list that has the exact same choices needed
+The system automatically optimizes choice list reuse and uses **numeric codes by default**:
 
-**When to create new lists:**
-- Custom choices specific to the question
-- Different labels for the same values
-- Need for additional data columns
+**Automatic Reuse:**
+- `yes_no` - for Yes/No questions (1=Yes, 2=No)
+- `gender_simple` - for gender questions (1=Male, 2=Female, 3=Other)
+- `agreement` - for 5-point Likert scales (1=Strongly agree to 5=Strongly disagree)
+- `frequency` - for frequency questions (1=Always to 5=Never)
 
-**Default choices for common types:**
+**Numeric Codes Always Used:**
+All choice lists use numeric codes (1, 2, 3...) for easier analysis in R/Stata/SPSS.
 
-For yes/no:
+**"Other" Options:**
+When "Other" is detected in choices:
+- Automatically coded as "-96"
+- System creates follow-up "Other specify" text question with relevance logic
+
+**Special Response Codes (consistent negative values):**
+- **-96**: Other (specify)
+- **-99**: Don't know
+- **-98**: Refused to answer
+
+**Example:**
 ```
-list_name: yes_no
-choices: yes, no
-```
+Question: Select your gender
+Choices: Male, Female, Other (specify), Don't know, Refused
 
-For gender:
-```
-list_name: gender
-choices: male, female, other, prefer_not_to_say
-```
-
-For agreement:
-```
-list_name: agreement
-choices: strongly_agree, agree, neutral, disagree, strongly_disagree
+Creates:
+1. select_one gender question
+   - Choices: 1=Male, 2=Female, -96=Other (specify), -99=Don't know, -98=Refused
+2. text question: gender_other
+   - Label: "Please specify (Other)"
+   - Relevance: ${gender} = '-96'
 ```
 
 ## After Adding
