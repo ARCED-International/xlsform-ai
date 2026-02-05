@@ -216,12 +216,12 @@ if __name__ == "__main__":
     # Build index
     retriever = FAISSRetriever(embedding_dimension=embedding_dim)
     retriever.build_index(embeddings, metadata)
-    print(f"[OK] Built index with {retriever.get_index_size()} embeddings")
+    print(f"✓ Built index with {retriever.get_index_size()} embeddings")
 
     # Test search
     query = embeddings[0]  # Use first embedding as query
     results = retriever.search(query, top_k=5)
-    print(f"\n[OK] Search returned {len(results)} results:")
+    print(f"\n✓ Search returned {len(results)} results:")
     for i, result in enumerate(results[:3]):
         print(f"  {i+1}. Score: {result['score']:.4f}, Metadata: {result['metadata']}")
 
@@ -230,16 +230,16 @@ if __name__ == "__main__":
     with tempfile.TemporaryDirectory() as tmpdir:
         save_path = Path(tmpdir) / "test_index"
         retriever.save_index(save_path)
-        print(f"\n[OK] Saved index to: {save_path}")
+        print(f"\n✓ Saved index to: {save_path}")
 
         # Create new retriever and load
         new_retriever = FAISSRetriever(embedding_dimension=embedding_dim)
         new_retriever.load_index(save_path)
-        print(f"[OK] Loaded index with {new_retriever.get_index_size()} embeddings")
+        print(f"✓ Loaded index with {new_retriever.get_index_size()} embeddings")
 
         # Verify search works
         new_results = new_retriever.search(query, top_k=5)
         assert len(results) == len(new_results), "Search results length mismatch"
-        print("[OK] Loaded index produces same results")
+        print("✓ Loaded index produces same results")
 
-    print("\n[OK] All tests passed!")
+    print("\n✓ All tests passed!")

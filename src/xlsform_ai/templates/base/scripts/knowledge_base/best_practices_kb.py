@@ -218,7 +218,7 @@ if __name__ == "__main__":
 
     documents = kb.load_all_documents()
 
-    print(f"[OK] Loaded {len(documents)} documents")
+    print(f"✓ Loaded {len(documents)} documents")
 
     # Show sample documents
     for i, doc in enumerate(documents[:3]):
@@ -227,4 +227,4 @@ if __name__ == "__main__":
         print(f"  Category: {doc['metadata']['category']}")
         print(f"  Text: {doc['text'][:100]}...")
 
-    print("\n[OK] Test complete!")
+    print("\n✓ Test complete!")

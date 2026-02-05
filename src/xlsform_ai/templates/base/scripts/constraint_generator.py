@@ -398,4 +398,4 @@ if __name__ == "__main__":
             print(f"  Appearance: {constraints.appearance}")
         print()
 
-    print("[OK] All tests completed!")
+    print("✓ All tests completed!")

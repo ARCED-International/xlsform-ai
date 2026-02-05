@@ -163,7 +163,7 @@ def main():
             print()
 
         if not errors and not warnings:
-            print("[OK] All checks passed! No errors found.\n")
+            print("✓ All checks passed! No errors found.\n")
 
     # Exit code
     sys.exit(1 if errors else 0)

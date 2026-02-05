@@ -20,11 +20,10 @@ except ImportError:
 
 # Try to import form structure, fail gracefully if not available
 try:
-    from form_structure import find_insertion_point, freeze_top_row, find_header_row, build_column_mapping
+    from form_structure import find_insertion_point, freeze_top_row, find_header_row
     FORM_STRUCTURE_AVAILABLE = True
 except ImportError:
     FORM_STRUCTURE_AVAILABLE = False
-    build_column_mapping = None
 
 # Try to import display module, fail gracefully if not available
 try:
@@ -222,19 +221,6 @@ def add_questions(questions_data, survey_file=None):
         if header_row is None:
             return {"success": False, "error": "Could not find header row with 'type' column"}
 
-        # NEW: Build dynamic column mapping to fix wrong column bug
-        try:
-            if FORM_STRUCTURE_AVAILABLE and build_column_mapping:
-                column_mapping = build_column_mapping(ws, header_row)
-            else:
-                # Fallback to COLUMNS dict
-                column_mapping = COLUMNS
-        except ValueError as e:
-            return {"success": False, "error": str(e)}
-        except Exception as e:
-            # Fallback to COLUMNS dict on any error
-            column_mapping = COLUMNS
-
         # Find insertion point using smart logic (or fallback to simple logic)
         if FORM_STRUCTURE_AVAILABLE:
             insertion_row = find_insertion_point(ws, header_row, questions_data)
@@ -258,24 +244,6 @@ def add_questions(questions_data, survey_file=None):
             # Apply best practices (with AI enhancement if available)
             practices = get_best_practices(q_type, q_name, q_label)
 
-            # NEW: Check for "Other" choice in select questions
-            choices = q.get("choices", [])
-            has_other = False
-            other_choice_name = None
-
-            if q_type.startswith("select_") and choices and AI_COMPONENTS_AVAILABLE and OtherSpecifyHandler:
-                handler = OtherSpecifyHandler()
-                if handler.detect_other_choice(choices):
-                    has_other = True
-                    # Find the "Other" choice name
-                    for choice in choices:
-                        choice_name = choice.get("name", "")
-                        if choice_name == "-96" or "other" in str(choice.get("label", "")).lower():
-                            other_choice_name = choice_name
-                            break
-                    if not other_choice_name:
-                        other_choice_name = "-96"
-
             # Allow override if user specified constraints/required
             constraint = q.get("constraint", practices["constraint"])
             constraint_msg = q.get("constraint_message", practices["constraint_message"])
@@ -283,43 +251,46 @@ def add_questions(questions_data, survey_file=None):
             required_msg = q.get("required_message", practices["required_message"])
             appearance = q.get("appearance", practices.get("appearance", ""))
 
-            # Set core values using dynamic column mapping
-            ws.cell(current_row, column_mapping["type"], q_type)
-            ws.cell(current_row, column_mapping["name"], q_name)
-            ws.cell(current_row, column_mapping["label"], q_label)
+            # Set core values
+            ws.cell(current_row, COLUMNS["type"], q_type)
+            ws.cell(current_row, COLUMNS["name"], q_name)
+            ws.cell(current_row, COLUMNS["label"], q_label)
 
-            # Set constraint fields only if columns exist
-            if "constraint" in column_mapping and constraint:
-                ws.cell(current_row, column_mapping["constraint"], constraint)
-            if "constraint_message" in column_mapping and constraint_msg:
-                ws.cell(current_row, column_mapping["constraint_message"], constraint_msg)
-            if "required" in column_mapping and required:
-                ws.cell(current_row, column_mapping["required"], required)
-            if "required_message" in column_mapping and required_msg:
-                ws.cell(current_row, column_mapping["required_message"], required_msg)
-            if "appearance" in column_mapping and appearance and "appearance" not in q:
-                ws.cell(current_row, column_mapping["appearance"], appearance)
+            # Set constraint fields
+            if constraint:
+                ws.cell(current_row, COLUMNS["constraint"], constraint)
+            if constraint_msg:
+                ws.cell(current_row, COLUMNS["constraint_message"], constraint_msg)
+            if required:
+                ws.cell(current_row, COLUMNS["required"], required)
+            if required_msg:
+                ws.cell(current_row, COLUMNS["required_message"], required_msg)
+            # Set appearance from best practices if not overridden
+            if appearance and "appearance" not in q:
+                ws.cell(current_row, COLUMNS["appearance"], appearance)
 
             # Handle additional fields dynamically
             # This supports: hint, calculation, relevant, appearance, default, media::image, media::audio, media::video, etc.
             for key, value in q.items():
-                if key not in ["type", "name", "label", "constraint", "constraint_message", "required", "required_message", "appearance"]:
-                    # Use dynamic column mapping
-                    if key in column_mapping:
-                        ws.cell(current_row, column_mapping[key], value)
-                    elif key == "hint" and "hint" in column_mapping:
-                        ws.cell(current_row, column_mapping["hint"], value)
-                    elif key == "calculation" and "calculation" in column_mapping:
-                        ws.cell(current_row, column_mapping["calculation"], value)
-                    elif key == "relevant" and "relevant" in column_mapping:
-                        ws.cell(current_row, column_mapping["relevant"], value)
-                    elif key == "default" and "default" in column_mapping:
-                        ws.cell(current_row, column_mapping["default"], value)
+                if key not in ["type", "name", "label", "constraint", "constraint_message", "required", "required_message"]:
+                    # Check if we have a column mapping for this key
+                    if key in COLUMNS:
+                        ws.cell(current_row, COLUMNS[key], value)
+                    elif key == "hint" and "hint" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["hint"], value)
+                    elif key == "calculation" and "calculation" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["calculation"], value)
+                    elif key == "relevant" and "relevant" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["relevant"], value)
+                    elif key == "appearance" and "appearance" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["appearance"], value)
+                    elif key == "default" and "default" in COLUMNS:
+                        ws.cell(current_row, COLUMNS["default"], value)
                     elif key.startswith("media::"):
                         media_type = key.split("::")[1]  # e.g., "image" from "media::image"
                         media_column = f"media::{media_type}"
-                        if media_column in column_mapping:
-                            ws.cell(current_row, column_mapping[media_column], value)
+                        if media_column in COLUMNS:
+                            ws.cell(current_row, COLUMNS[media_column], value)
 
             added.append({
                 "row": current_row,
@@ -331,32 +302,6 @@ def add_questions(questions_data, survey_file=None):
             })
 
             current_row += 1
-
-            # NEW: Add "Other specify" follow-up if detected
-            if has_other and other_choice_name:
-                other_question_name = f"{q_name}_other"
-                other_label = "Please specify (Other)"
-
-                # Create the follow-up question
-                ws.cell(current_row, column_mapping["type"], "text")
-                ws.cell(current_row, column_mapping["name"], other_question_name)
-                ws.cell(current_row, column_mapping["label"], other_label)
-
-                # Add relevance to show only when "Other" selected
-                if "relevant" in column_mapping:
-                    relevance = f"${{{q_name}}} = '{other_choice_name}'"
-                    ws.cell(current_row, column_mapping["relevant"], relevance)
-
-                added.append({
-                    "row": current_row,
-                    "type": "text",
-                    "name": other_question_name,
-                    "label": other_label,
-                    "note": "Auto-created 'Other specify' follow-up",
-                    "parent": q_name
-                })
-
-                current_row += 1
 
         # Freeze the header row for better usability
         if FORM_STRUCTURE_AVAILABLE:

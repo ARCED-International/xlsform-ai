@@ -190,4 +190,4 @@ if __name__ == "__main__":
     import os
     os.unlink(temp_path)
 
-    print("\n[OK] All tests passed!")
+    print("\n✓ All tests passed!")

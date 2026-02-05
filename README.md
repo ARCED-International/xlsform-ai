@@ -64,29 +64,6 @@ XLSForm AI is a CLI tool that sets up projects with specialized Claude Code skil
 - Claude Code with CLI access
 - Excel (optional, for xlwings features)
 
-### Install uv (Recommended)
-
-If you don't have `uv` installed:
-
-```bash
-# On macOS and Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# On Windows with PowerShell
-powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-
-# Or with pip
-pip install uv
-```
-
-**What is uv?**
-`uv` is a fast Python package manager and installer written in Rust. It's much faster than pip and provides a better experience for managing Python tools.
-
-**Verify uv installation:**
-```bash
-uv --version
-```
-
 ### Install CLI Tool
 
 ```bash
