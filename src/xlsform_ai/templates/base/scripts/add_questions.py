@@ -20,7 +20,7 @@ except ImportError:
 
 # Try to import form structure, fail gracefully if not available
 try:
-    from form_structure import find_insertion_point, freeze_top_row, find_header_row
+    from form_structure import find_insertion_point, freeze_top_row, find_header_row, build_column_mapping
     FORM_STRUCTURE_AVAILABLE = True
 except ImportError:
     FORM_STRUCTURE_AVAILABLE = False
@@ -49,27 +49,6 @@ except ImportError:
     ChoiceListOptimizer = None
     OtherSpecifyHandler = None
     OSQuestion = None
-
-
-# Column mapping for XLSForm survey sheet
-# Note: Column numbers may vary based on your XLSForm template
-COLUMNS = {
-    "type": 1,
-    "name": 2,
-    "label": 3,
-    "hint": 4,
-    "required": 5,
-    "calculation": 6,
-    "relevant": 7,
-    "constraint": 8,
-    "constraint_message": 9,
-    "required_message": 10,
-    "appearance": 11,
-    "default": 12,          # For default values in select/select_one
-    "media::image": 13,     # For image filenames
-    "media::audio": 14,     # For audio filenames
-    "media::video": 15,     # For video filenames
-}
 
 
 def get_best_practices(question_type, question_name, question_label=""):
@@ -221,14 +200,34 @@ def add_questions(questions_data, survey_file=None):
         if header_row is None:
             return {"success": False, "error": "Could not find header row with 'type' column"}
 
+        # Build dynamic column mapping from actual header row
+        # This maps column names to their actual positions (e.g., {"type": 1, "name": 3})
+        if FORM_STRUCTURE_AVAILABLE:
+            column_map = build_column_mapping(ws, header_row)
+        else:
+            # Fallback: assume standard column positions
+            column_map = {
+                "type": 1, "name": 2, "label": 3, "hint": 4, "required": 5,
+                "calculation": 6, "relevant": 7, "constraint": 8,
+                "constraint_message": 9, "required_message": 10, "appearance": 11,
+                "default": 12, "media::image": 13, "media::audio": 14, "media::video": 15
+            }
+
+        # Validate required columns exist
+        required_columns = ["type", "name", "label"]
+        missing_columns = [col for col in required_columns if col not in column_map]
+        if missing_columns:
+            return {"success": False, "error": f"Missing required columns in header row: {', '.join(missing_columns)}"}
+
         # Find insertion point using smart logic (or fallback to simple logic)
         if FORM_STRUCTURE_AVAILABLE:
-            insertion_row = find_insertion_point(ws, header_row, questions_data)
+            insertion_row = find_insertion_point(ws, header_row, questions_data, column_map)
         else:
             # Fallback: find last data row
             insertion_row = ws.max_row
+            name_col = column_map.get("name", 2)  # Use dynamic mapping or fallback to column 2
             for row_idx in range(ws.max_row, header_row, -1):
-                if ws.cell(row_idx, 2).value:  # Check if 'name' column has value
+                if ws.cell(row_idx, name_col).value:  # Check if 'name' column has value
                     insertion_row = row_idx
                     break
             insertion_row += 1
@@ -251,46 +250,33 @@ def add_questions(questions_data, survey_file=None):
             required_msg = q.get("required_message", practices["required_message"])
             appearance = q.get("appearance", practices.get("appearance", ""))
 
-            # Set core values
-            ws.cell(current_row, COLUMNS["type"], q_type)
-            ws.cell(current_row, COLUMNS["name"], q_name)
-            ws.cell(current_row, COLUMNS["label"], q_label)
+            # Set core values (required columns always exist due to validation above)
+            ws.cell(current_row, column_map["type"], q_type)
+            ws.cell(current_row, column_map["name"], q_name)
+            ws.cell(current_row, column_map["label"], q_label)
 
-            # Set constraint fields
-            if constraint:
-                ws.cell(current_row, COLUMNS["constraint"], constraint)
-            if constraint_msg:
-                ws.cell(current_row, COLUMNS["constraint_message"], constraint_msg)
-            if required:
-                ws.cell(current_row, COLUMNS["required"], required)
-            if required_msg:
-                ws.cell(current_row, COLUMNS["required_message"], required_msg)
-            # Set appearance from best practices if not overridden
-            if appearance and "appearance" not in q:
-                ws.cell(current_row, COLUMNS["appearance"], appearance)
+            # Set constraint fields (optional - check if column exists)
+            if constraint and "constraint" in column_map:
+                ws.cell(current_row, column_map["constraint"], constraint)
+            if constraint_msg and "constraint_message" in column_map:
+                ws.cell(current_row, column_map["constraint_message"], constraint_msg)
+            if required and "required" in column_map:
+                ws.cell(current_row, column_map["required"], required)
+            if required_msg and "required_message" in column_map:
+                ws.cell(current_row, column_map["required_message"], required_msg)
+            # Set appearance from best practices if not overridden by user
+            if appearance and "appearance" not in q and "appearance" in column_map:
+                ws.cell(current_row, column_map["appearance"], appearance)
 
-            # Handle additional fields dynamically
+            # Handle additional fields dynamically from question data
             # This supports: hint, calculation, relevant, appearance, default, media::image, media::audio, media::video, etc.
             for key, value in q.items():
                 if key not in ["type", "name", "label", "constraint", "constraint_message", "required", "required_message"]:
+                    # Normalize key to lowercase for case-insensitive matching
+                    key_lower = key.lower()
                     # Check if we have a column mapping for this key
-                    if key in COLUMNS:
-                        ws.cell(current_row, COLUMNS[key], value)
-                    elif key == "hint" and "hint" in COLUMNS:
-                        ws.cell(current_row, COLUMNS["hint"], value)
-                    elif key == "calculation" and "calculation" in COLUMNS:
-                        ws.cell(current_row, COLUMNS["calculation"], value)
-                    elif key == "relevant" and "relevant" in COLUMNS:
-                        ws.cell(current_row, COLUMNS["relevant"], value)
-                    elif key == "appearance" and "appearance" in COLUMNS:
-                        ws.cell(current_row, COLUMNS["appearance"], value)
-                    elif key == "default" and "default" in COLUMNS:
-                        ws.cell(current_row, COLUMNS["default"], value)
-                    elif key.startswith("media::"):
-                        media_type = key.split("::")[1]  # e.g., "image" from "media::image"
-                        media_column = f"media::{media_type}"
-                        if media_column in COLUMNS:
-                            ws.cell(current_row, COLUMNS[media_column], value)
+                    if key_lower in column_map:
+                        ws.cell(current_row, column_map[key_lower], value)
 
             added.append({
                 "row": current_row,

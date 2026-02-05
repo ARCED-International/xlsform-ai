@@ -100,18 +100,6 @@ class ChoiceListOptimizer:
             {"name": "-99", "label": "Don't know"}
         ],
     }
-            {"name": "1", "label": "Always"},
-            {"name": "2", "label": "Often"},
-            {"name": "3", "label": "Sometimes"},
-            {"name": "4", "label": "Rarely"},
-            {"name": "5", "label": "Never"}
-        ],
-        "yes_no_unsure": [
-            {"name": "1", "label": "Yes"},
-            {"name": "2", "label": "No"},
-            {"name": "3", "label": "Unsure"}
-        ],
-    }
 
     def __init__(self, existing_choices: Optional[Dict[str, List[Dict[str, str]]]] = None):
         """Initialize the optimizer.

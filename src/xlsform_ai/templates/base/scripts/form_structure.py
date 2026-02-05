@@ -24,7 +24,7 @@ def is_metadata_field(question_type: str) -> bool:
     return question_type.lower() in METADATA_TYPES
 
 
-def find_insertion_point(ws, header_row: int, questions_data: List[dict]) -> int:
+def find_insertion_point(ws, header_row: int, questions_data: List[dict], column_map: Dict[str, int] = None) -> int:
     """
     Determine where to insert new questions.
 
@@ -36,10 +36,20 @@ def find_insertion_point(ws, header_row: int, questions_data: List[dict]) -> int
         ws: openpyxl worksheet object
         header_row: Row number of the header
         questions_data: List of question dicts to insert
+        column_map: Optional dictionary mapping column names to positions.
+                    If not provided, assumes type=1, name=2.
 
     Returns:
         The row number where insertion should begin
     """
+    # Default column mapping if not provided (for backward compatibility)
+    if column_map is None:
+        column_map = {"type": 1, "name": 2}
+
+    # Get column positions (with fallbacks)
+    type_col = column_map.get("type", 1)
+    name_col = column_map.get("name", 2)
+
     # Check if we're adding metadata fields
     has_metadata = any(is_metadata_field(q.get('type', '')) for q in questions_data)
 
@@ -47,7 +57,7 @@ def find_insertion_point(ws, header_row: int, questions_data: List[dict]) -> int
         # Find end of existing metadata section
         # Insert before first non-metadata question
         for row_idx in range(header_row + 1, ws.max_row + 1):
-            cell_type = ws.cell(row_idx, 1).value
+            cell_type = ws.cell(row_idx, type_col).value
             # Stop at first empty row - this is where we should insert
             if not cell_type:
                 return row_idx
@@ -60,11 +70,11 @@ def find_insertion_point(ws, header_row: int, questions_data: List[dict]) -> int
         # Find last question (after any metadata)
         last_data_row = header_row
         for row_idx in range(header_row + 1, ws.max_row + 1):
-            cell_name = ws.cell(row_idx, 2).value  # name column
+            cell_name = ws.cell(row_idx, name_col).value  # name column (dynamic position)
             # Stop at first empty row
             if not cell_name:
                 # Also check if type column is empty to confirm this is truly empty
-                if not ws.cell(row_idx, 1).value:
+                if not ws.cell(row_idx, type_col).value:
                     return row_idx
             if cell_name:
                 last_data_row = row_idx
@@ -88,31 +98,81 @@ def find_header_row(ws) -> Optional[int]:
     """
     Find the header row by looking for the 'type' column.
 
+    Searches across multiple columns (not just column 1) to handle
+    XLSForm templates with columns in non-standard positions.
+
     Args:
         ws: openpyxl worksheet object
 
     Returns:
         Row number of the header, or None if not found
     """
+    # Check first 10 rows for header
     for row_idx in range(1, min(10, ws.max_row + 1)):
-        cell_value = ws.cell(row_idx, 1).value
-        if cell_value and str(cell_value).strip().lower() == "type":
-            return row_idx
+        # Search across first 20 columns for 'type' (more robust than just column 1)
+        max_col = min(ws.max_column, 20)
+        for col_idx in range(1, max_col + 1):
+            cell_value = ws.cell(row_idx, col_idx).value
+            if cell_value and str(cell_value).strip().lower() == "type":
+                return row_idx
     return None
+
+
+def build_column_mapping(ws, header_row: int) -> Dict[str, int]:
+    """
+    Build a dynamic mapping of column names to column positions.
+
+    Reads the header row to determine where each column actually is,
+    instead of relying on hardcoded positions. This allows the system
+    to work with XLSForm templates that have columns in any order.
+
+    Args:
+        ws: openpyxl worksheet object
+        header_row: Row number containing headers (1-indexed)
+
+    Returns:
+        Dictionary mapping column names to column numbers (1-indexed)
+        Example: {"type": 1, "name": 3, "label": 5}
+
+    Note:
+        Returns empty dict if header_row is invalid or no headers found.
+        Column names are converted to lowercase and stripped of whitespace
+        for case-insensitive matching.
+    """
+    column_map = {}
+
+    # Iterate through all columns in the header row
+    # openpyxl's max_column may not always be accurate, so we check a reasonable range
+    max_col = min(ws.max_column, 100)  # Sanity check: don't scan more than 100 columns
+
+    for col_idx in range(1, max_col + 1):
+        cell_value = ws.cell(header_row, col_idx).value
+        if cell_value:
+            # Convert to string, strip whitespace, and convert to lowercase
+            # for consistent, case-insensitive lookups
+            col_name = str(cell_value).strip().lower()
+            if col_name:
+                column_map[col_name] = col_idx
+
+    return column_map
 
 
 class FormStructure:
     """Parse and understand XLSForm structure for context-aware insertion."""
 
-    def __init__(self, worksheet, header_row):
+    def __init__(self, worksheet, header_row, column_map: Dict[str, int] = None):
         """Initialize form structure parser.
 
         Args:
             worksheet: openpyxl worksheet object
             header_row: Row number of the header
+            column_map: Optional dictionary mapping column names to positions.
+                        If not provided, assumes type=1, name=2.
         """
         self.ws = worksheet
         self.header_row = header_row
+        # Default column mapping if not provided (for backward compatibility)
+        self.column_map = column_map if column_map is not None else {"type": 1, "name": 2}
         self.structure = self._parse_structure()
 
     def _parse_structure(self) -> dict:
@@ -128,11 +188,15 @@ class FormStructure:
             'questions': []
         }
 
+        # Get column positions from the column map
+        type_col = self.column_map.get("type", 1)
+        name_col = self.column_map.get("name", 2)
+
         stack = []  # Track current context (group/repeat)
 
         for row_idx in range(self.header_row + 1, self.ws.max_row + 1):
-            cell_type = str(self.ws.cell(row_idx, 1).value or '').strip()
-            cell_name = str(self.ws.cell(row_idx, 2).value or '').strip()
+            cell_type = str(self.ws.cell(row_idx, type_col).value or '').strip()
+            cell_name = str(self.ws.cell(row_idx, name_col).value or '').strip()
 
             if not cell_type:
                 continue
