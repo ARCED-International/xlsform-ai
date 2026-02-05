@@ -236,8 +236,12 @@ class TemplateManager:
                 template_xlsx = self.base_template / "shared" / "skills" / "xlsform-core" / "assets" / "xlsform-template.xlsx"
                 if template_xlsx.exists():
                     shutil.copy2(template_xlsx, survey_xlsx)
-                    # Note: Template should already have freeze panes set correctly
-                    # We don't modify with openpyxl to avoid file corruption
+                    # Note: Template sourced from Google Sheets
+                    # https://docs.google.com/spreadsheets/d/1v9Bumt3R0vCOGEKQI6ExUf2-8T72-XXp_CbKKTACuko/edit?gid=1068911091
+                    # To update: Download as XLSX and replace both template files:
+                    #   - src/xlsform_ai/templates/base/shared/skills/xlsform-core/assets/xlsform-template.xlsx
+                    #   - src/xlsform_ai/templates/base/.claude/skills/xlsform-core/assets/xlsform-template.xlsx
+                    # Template has freeze panes pre-set - we don't modify with openpyxl to avoid corruption
                 else:
                     survey_xlsx.touch()
                 print(f"[OK] Created {survey_file_name}")

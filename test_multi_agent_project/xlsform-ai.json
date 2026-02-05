@@ -2,7 +2,7 @@
   "version": "1.0",
   "project_name": "test_multi_agent_project",
   "xlsform_file": "survey.xlsx",
-  "created": "2026-02-04T18:13:18.200228",
+  "created": "2026-02-05T10:56:41.575769",
   "last_modified": null,
   "settings": {
     "auto_validate": true,
@@ -17,9 +17,7 @@
     }
   },
   "enabled_agents": [
-    "claude",
-    "cursor-agent",
-    "copilot"
+    "claude"
   ],
   "primary_agent": "claude"
 }

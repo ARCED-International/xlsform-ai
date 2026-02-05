@@ -7,9 +7,6 @@ arguments:
   - name: changes
     description: What to change (type, label, constraint, relevance, required, etc.)
     required: true
-  - name: file
-    description: Override XLSForm file name (default: use xlsform-ai.json config or survey.xlsx)
-    required: false
 ---
 
 # Update XLSForm Question

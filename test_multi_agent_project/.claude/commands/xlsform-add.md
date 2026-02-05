@@ -10,9 +10,6 @@ arguments:
   - name: location
     description: Where to add the question (end of form, after specific question, or in a group/repeat)
     required: false
-  - name: file
-    description: Override XLSForm file name (default: use xlsform-ai.json config or survey.xlsx)
-    required: false
 ---
 
 # Add XLSForm Questions
