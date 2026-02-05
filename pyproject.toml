@@ -50,9 +50,11 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools]
 package-dir = {"" = "src"}
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
 [tool.setuptools.package-data]
-"*" = ["*.txt", "*.md", "*.json", "*.xlsx"]
-"xlsform_ai" = ["templates/*", "templates/**/*"]
+xlsform_ai = ["templates/**/*.xlsx", "templates/**/*.md", "templates/**/*.json", "templates/**/*.py"]
 
 [tool.setuptools_scm]
 allow_dirty = true
