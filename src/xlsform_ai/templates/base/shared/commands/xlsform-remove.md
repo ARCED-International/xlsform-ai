@@ -7,9 +7,6 @@ arguments:
   - name: scope
     description: What to remove (question, choice_list, or both)
     required: false
-  - name: file
-    description: Override XLSForm file name (default: use xlsform-ai.json config or survey.xlsx)
-    required: false
 ---
 
 # Remove XLSForm Questions or Choice Lists
