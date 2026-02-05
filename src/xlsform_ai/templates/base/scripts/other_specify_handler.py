@@ -299,4 +299,4 @@ if __name__ == "__main__":
     print(f"  Updated: {len(updated_choices)} choices")
     print(f"  Choices: {[c['label'] for c in updated_choices]}")
 
-    print("\n✓ All tests completed!")
+    print("\n[OK] All tests completed!")

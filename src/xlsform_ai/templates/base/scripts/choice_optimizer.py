@@ -423,4 +423,4 @@ if __name__ == "__main__":
             print(f"  Warning: {decision.warning}")
         print()
 
-    print("✓ All tests completed!")
+    print("[OK] All tests completed!")

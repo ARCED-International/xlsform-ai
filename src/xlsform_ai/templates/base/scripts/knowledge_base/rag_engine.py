@@ -114,7 +114,7 @@ class RAGEngine:
         # Save index
         self.embeddings_path.mkdir(parents=True, exist_ok=True)
         self.retriever.save_index(self.embeddings_path / "kb_index")
-        print(f"✓ Built index with {len(documents)} documents")
+        print(f"[OK] Built index with {len(documents)} documents")
 
     def query_best_practices(
         self,
@@ -310,7 +310,7 @@ if __name__ == "__main__":
     # This will build a simple index from available documents
     try:
         rag = RAGEngine()
-        print("✓ RAG Engine initialized")
+        print("[OK] RAG Engine initialized")
 
         # Test query
         practices = rag.query_best_practices(
@@ -318,15 +318,15 @@ if __name__ == "__main__":
             "integer",
             {"section": "demographics"}
         )
-        print(f"\n✓ Query returned {len(practices)} best practices")
+        print(f"\n[OK] Query returned {len(practices)} best practices")
 
         # Test constraint suggestions
         rules = rag.get_constraint_suggestions("age", "integer", "What is your age?")
-        print(f"\n✓ Got {len(rules)} constraint suggestions")
+        print(f"\n[OK] Got {len(rules)} constraint suggestions")
         if rules:
             print(f"  Best: {rules[0].constraint}")
 
-        print("\n✓ All tests passed!")
+        print("\n[OK] All tests passed!")
 
     except Exception as e:
         print(f"\nNote: {e}")

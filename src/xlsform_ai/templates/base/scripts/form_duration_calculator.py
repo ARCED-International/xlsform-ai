@@ -237,7 +237,7 @@ if __name__ == "__main__":
     print("  The calculator checks for 'start' and 'end' metadata fields")
     print("  and adds duration calculation after them")
 
-    print("\n✓ All tests completed!")
+    print("\n[OK] All tests completed!")
     print("\nUsage Example:")
     print("  calculator = FormDurationCalculator()")
     print("  if calculator.has_start_end_metadata(ws):")

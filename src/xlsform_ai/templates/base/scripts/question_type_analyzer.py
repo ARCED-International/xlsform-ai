@@ -395,4 +395,4 @@ if __name__ == "__main__":
             print(f"  Numeric Codes: {len(decision.numeric_codes)} options")
         print()
 
-    print("✓ All tests completed!")
+    print("[OK] All tests completed!")
