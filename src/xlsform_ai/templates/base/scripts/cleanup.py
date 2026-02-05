@@ -21,6 +21,7 @@ def cleanup_project(project_dir=None, dry_run=False):
         ".claude",           # Claude Code configuration
         "scripts",           # Helper scripts
         "package.json",      # npm scripts
+        "xlsform-ai.json",   # Project configuration
     ]
 
     # Files to keep (output files)

@@ -19,7 +19,6 @@ from .display import (
     print_main_banner,
     print_init_success,
     print_info_panel,
-    print_cleanup_results,
     print_error as display_error,
     print_warning as display_warning,
 )
@@ -331,11 +330,14 @@ def cleanup_project(dry_run: bool = False):
         dry_run: Show what would be removed without actually removing
     """
     import sys
-    sys.path.insert(0, Path.cwd())
+    import subprocess
+    from pathlib import Path
 
-    try:
-        from scripts.cleanup import cleanup_project as cp
-    except ImportError:
+    project_path = Path.cwd()
+
+    # Check if cleanup script exists
+    cleanup_script = project_path / "scripts" / "cleanup.py"
+    if not cleanup_script.exists():
         print_error("Cleanup script not found. Are you in an XLSForm AI project?")
         sys.exit(1)
 
@@ -344,10 +346,27 @@ def cleanup_project(dry_run: bool = False):
     if dry_run:
         console.print("[yellow]Dry run mode - showing what would be removed:[/yellow]\n")
 
-    result = cp(dry_run=dry_run)
+    # Build command
+    cmd = [sys.executable, str(cleanup_script)]
+    if dry_run:
+        cmd.append("--dry-run")
 
-    # Use the beautiful display module for results
-    print_cleanup_results(result, dry_run=dry_run)
+    # Run the cleanup script
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        console.print(result.stdout)
+        if result.stderr:
+            console.print(result.stderr, style="red")
+    except subprocess.CalledProcessError as e:
+        print_error(f"Cleanup failed: {e}")
+        if e.stdout:
+            console.print(e.stdout)
+        if e.stderr:
+            console.print(e.stderr, style="red")
+        sys.exit(1)
+    except Exception as e:
+        print_error(f"Error running cleanup: {e}")
+        sys.exit(1)
 
 
 # Note: We're using a stub function here since we can't import typer in plan mode

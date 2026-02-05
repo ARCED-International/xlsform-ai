@@ -48,15 +48,24 @@ def find_insertion_point(ws, header_row: int, questions_data: List[dict]) -> int
         # Insert before first non-metadata question
         for row_idx in range(header_row + 1, ws.max_row + 1):
             cell_type = ws.cell(row_idx, 1).value
-            if cell_type and not is_metadata_field(str(cell_type)):
+            # Stop at first empty row - this is where we should insert
+            if not cell_type:
                 return row_idx
-        # No non-metadata questions found, append at end
+            # If we find a non-metadata field, insert here
+            if not is_metadata_field(str(cell_type)):
+                return row_idx
+        # No empty rows or non-metadata questions found, append at end
         return ws.max_row + 1
     else:
         # Find last question (after any metadata)
         last_data_row = header_row
         for row_idx in range(header_row + 1, ws.max_row + 1):
             cell_name = ws.cell(row_idx, 2).value  # name column
+            # Stop at first empty row
+            if not cell_name:
+                # Also check if type column is empty to confirm this is truly empty
+                if not ws.cell(row_idx, 1).value:
+                    return row_idx
             if cell_name:
                 last_data_row = row_idx
         return last_data_row + 1

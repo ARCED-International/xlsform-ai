@@ -236,18 +236,8 @@ class TemplateManager:
                 template_xlsx = self.base_template / "shared" / "skills" / "xlsform-core" / "assets" / "xlsform-template.xlsx"
                 if template_xlsx.exists():
                     shutil.copy2(template_xlsx, survey_xlsx)
-                    # Apply freeze panes
-                    try:
-                        import openpyxl
-                        wb = openpyxl.load_workbook(survey_xlsx)
-                        for sheet in wb.worksheets:
-                            for row_idx in range(1, min(10, sheet.max_row + 1)):
-                                if sheet.cell(row_idx, 1).value and str(sheet.cell(row_idx, 1).value).strip().lower() == "type":
-                                    sheet.freeze_panes = f"A{row_idx + 1}"
-                                    break
-                        wb.save(survey_xlsx)
-                    except Exception as e:
-                        print(f"Note: Could not apply freeze panes: {e}")
+                    # Note: Template should already have freeze panes set correctly
+                    # We don't modify with openpyxl to avoid file corruption
                 else:
                     survey_xlsx.touch()
                 print(f"[OK] Created {survey_file_name}")
