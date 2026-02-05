@@ -7,7 +7,38 @@ from rich.text import Text
 
 from . import __version__
 
-console = Console()
+console = Console(force_terminal=True, legacy_windows=False)
+
+
+def _get_arced_logo():
+    """Get the ARCED International logo - small, neat, colored diamond."""
+    logo = """[bold cyan]
+                  *
+                 ***
+                *****
+               *******
+              *********
+             ***********
+            *************
+[bright_blue]           ***************
+[blue]            *****************
+[dodger_blue3]             *******************
+[deep_sky_blue3]              *********************
+[cyan]               ***********************
+[bright_cyan]                *************************
+                 *************************
+                ***********************
+               *********************
+              *******************
+             ***************
+            *************
+           *********
+          *******
+         *****
+        ***
+         *[/bright_cyan]"""
+
+    return logo
 
 
 def _get_banner():
@@ -23,8 +54,12 @@ def _get_banner():
  █████ █████ ███████████░░█████████  █████      ░░██████  █████     █████░███ █████    █████   █████ █████
 ░░░░░ ░░░░░ ░░░░░░░░░░░  ░░░░░░░░░  ░░░░░        ░░░░░░  ░░░░░     ░░░░░ ░░░ ░░░░░    ░░░░░   ░░░░░ ░░░░░[/bold cyan]"""
 
+    # ARCED International logo
+    arced_logo = _get_arced_logo()
+
     return f"""{xlsform_art}
 
+{arced_logo}
 
 [dim]                    AI-Powered Survey & Form Creation Toolkit[/dim]
 [dim]                            by ARCED International[/dim]
@@ -78,6 +113,13 @@ def get_warning_header():
 
 def print_main_banner():
     """Print the main XLSForm AI banner."""
+    import sys
+    import io
+
+    # Force UTF-8 encoding for Windows console compatibility
+    if hasattr(sys.stdout, 'buffer'):
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+
     console.print(BANNER)
 
 

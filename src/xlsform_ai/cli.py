@@ -333,6 +333,9 @@ def cleanup_project(dry_run: bool = False):
     import subprocess
     from pathlib import Path
 
+    # Show banner at start
+    print_banner()
+
     project_path = Path.cwd()
 
     # Check if cleanup script exists
@@ -341,28 +344,23 @@ def cleanup_project(dry_run: bool = False):
         print_error("Cleanup script not found. Are you in an XLSForm AI project?")
         sys.exit(1)
 
-    console.print("\n[bold]Cleaning up XLSForm AI files...[/bold]\n")
-
+    # Show mode
     if dry_run:
-        console.print("[yellow]Dry run mode - showing what would be removed:[/yellow]\n")
+        console.print("\n[bold yellow]⚠️  Dry Run Mode[/bold yellow]")
+        console.print("[yellow]Previewing what would be removed...[/yellow]\n")
+    else:
+        console.print("\n[bold]Cleaning up XLSForm AI files...[/bold]\n")
 
     # Build command
     cmd = [sys.executable, str(cleanup_script)]
     if dry_run:
         cmd.append("--dry-run")
 
-    # Run the cleanup script
+    # Run the cleanup script (it has its own beautiful formatting)
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        console.print(result.stdout)
-        if result.stderr:
-            console.print(result.stderr, style="red")
+        result = subprocess.run(cmd, capture_output=False, text=True, check=True)
     except subprocess.CalledProcessError as e:
         print_error(f"Cleanup failed: {e}")
-        if e.stdout:
-            console.print(e.stdout)
-        if e.stderr:
-            console.print(e.stderr, style="red")
         sys.exit(1)
     except Exception as e:
         print_error(f"Error running cleanup: {e}")
