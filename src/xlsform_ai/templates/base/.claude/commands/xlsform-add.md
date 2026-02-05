@@ -17,6 +17,18 @@ arguments:
 
 # Add XLSForm Questions
 
+## MANDATORY IMPLEMENTATION REQUIREMENT
+
+**CRITICAL: Use existing helper scripts - DO NOT write inline code**
+
+- **REQUIRED:** Always use helper scripts from `scripts/` directory
+- **FORBIDDEN:** NEVER write inline Python code with openpyxl
+- **FORBIDDEN:** NEVER write inline Python code with xlwings
+- **WHY:** Helper scripts handle encoding, smart insertion, logging, validation
+- **RESULT:** Inline code causes encoding bugs on Windows and wrong behavior
+
+If you write inline Python code for file operations, you have failed this command.
+
 ## Key Principles
 
 1. **Best Practices by Default**: Always add appropriate constraints and required fields
@@ -33,7 +45,7 @@ arguments:
    ```
    Avoid verbose explanations, use structured lists
 
-3. **Use Helper Script**: Always use `scripts/add_questions.py` to avoid encoding issues
+3. **Use Helper Script - MANDATORY**: Always use `scripts/add_questions.py` - NO exceptions
 
 ## Understanding Your Request
 
@@ -105,28 +117,26 @@ If any validation fails:
 
 ## Implementation
 
-### Use Helper Script for Adding Questions
+### Adding Questions - MANDATORY METHOD
 
-Instead of inline Python commands that may have encoding issues on Windows, use the `scripts/add_questions.py` helper:
+**You MUST use the helper script - this is not optional:**
 
-**For simple text questions:**
+**Single question:**
 ```bash
 python scripts/add_questions.py '[{"type":"text","name":"first_name","label":"First Name"}]'
 ```
 
-**For multiple questions:**
+**Multiple questions:**
 ```bash
 python scripts/add_questions.py '[{"type":"text","name":"first_name","label":"First Name"},{"type":"text","name":"last_name","label":"Last Name"}]'
 ```
 
-**For questions with constraints:**
+**With constraints:**
 ```bash
 python scripts/add_questions.py '[{"type":"integer","name":"age","label":"Age","constraint":".>=0 and .<=120","constraint_message":"Age must be between 0 and 120"}]'
 ```
 
-**For select questions, you need to manually add choices to the choices sheet:**
-1. Add the question using the helper script
-2. Manually add the choice list to the choices sheet using openpyxl or xlwings
+**REMINDER: Never write inline Python code. Always use the script.**
 
 ### Adding to Survey Sheet
 

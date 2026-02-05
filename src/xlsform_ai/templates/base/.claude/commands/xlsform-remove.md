@@ -14,6 +14,18 @@ arguments:
 
 # Remove XLSForm Questions or Choice Lists
 
+## MANDATORY IMPLEMENTATION REQUIREMENT
+
+**CRITICAL: Use existing helper scripts - DO NOT write inline code**
+
+- **REQUIRED:** Always use xlwings helper when file is open
+- **FORBIDDEN:** NEVER write inline Python code with openpyxl
+- **FORBIDDEN:** NEVER write inline Python code with xlwings (use helper instead)
+- **WHY:** Helper scripts handle encoding and live file access
+- **RESULT:** Inline code causes encoding bugs on Windows
+
+If you write inline Python code for file operations, you have failed this command.
+
 ## Key Principles
 
 1. **Safety first**: Check dependencies before removing
@@ -92,21 +104,20 @@ Before removing, verify:
 
 ## Implementation
 
+### Removal Methods
+
+**IMPORTANT:** Use xlwings helper when file is open in Excel:
+
+```bash
+# For files open in Excel (recommended - preserves formatting)
+python scripts/xlwings_helper.py remove --target <name>
+```
+
 ### Removing a Question
 
 1. **Find the question row** in survey sheet
 2. **Remove the entire row**
-3. **Update row references** (not needed for XLSForm, but good practice)
-4. **Check for orphaned choice lists** (if question was select type)
-
-Example:
-```python
-# Find row with name = target in column 2
-# Delete that row
-# Check if question type was select_one/select_multiple
-# If yes, check if choice list is now unused
-# If unused, offer to remove choice list
-```
+3. **Check for orphaned choice lists** (if question was select type)
 
 ### Removing a Choice List
 
@@ -114,13 +125,7 @@ Example:
 2. **Remove all those rows**
 3. **Check for orphaned questions** that reference this list
 
-Example:
-```python
-# Find all rows in choices sheet where list_name = target
-# Delete all those rows
-# Check survey sheet for questions using this list_name
-# Warn about invalid questions
-```
+**REMINDER: Never write inline Python code. Always use the helper.**
 
 ### Safe Removal Pattern
 

@@ -17,6 +17,18 @@ arguments:
 
 # Import Questions from File
 
+## MANDATORY IMPLEMENTATION REQUIREMENT
+
+**CRITICAL: Use existing helper scripts - DO NOT write inline code**
+
+- **REQUIRED:** Always use helper scripts from `scripts/` directory
+- **FORBIDDEN:** NEVER write inline Python code with openpyxl
+- **FORBIDDEN:** NEVER write inline Python code with xlwings
+- **WHY:** Helper scripts handle encoding, parsing, and validation
+- **RESULT:** Inline code causes encoding bugs and parsing failures
+
+If you write inline Python code for file operations, you have failed this command.
+
 ## Understanding Your Request
 
 The user wants to import questions from an external file into their XLSForm.

@@ -206,12 +206,27 @@ class TemplateManager:
                     print(f"[OK] Configured {agent} assistant")
 
             # Create configuration file with multi-agent support
+            # Preserve existing xlsform_file setting to protect user data
             config_file = project_path / "xlsform-ai.json"
             if not config_file.exists() or overwrite:
                 try:
+                    # Preserve existing xlsform_file if config exists
+                    existing_survey_file = None
+                    if config_file.exists():
+                        try:
+                            with open(config_file, 'r', encoding='utf-8') as f:
+                                existing_config = json.load(f)
+                                existing_survey_file = existing_config.get("xlsform_file")
+                        except Exception:
+                            pass
+
                     config_data = DEFAULT_CONFIG.copy()
                     config_data["project_name"] = project_path.name
                     config_data["created"] = datetime.now().isoformat()
+
+                    # Preserve existing survey file setting (IMPORTANT: never change user's survey file)
+                    if existing_survey_file:
+                        config_data["xlsform_file"] = existing_survey_file
 
                     # Add multi-agent configuration
                     config_data["enabled_agents"] = agents

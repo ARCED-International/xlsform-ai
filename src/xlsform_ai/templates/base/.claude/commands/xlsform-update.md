@@ -14,6 +14,18 @@ arguments:
 
 # Update XLSForm Question
 
+## MANDATORY IMPLEMENTATION REQUIREMENT
+
+**CRITICAL: Use existing helper scripts - DO NOT write inline code**
+
+- **REQUIRED:** Always use xlwings helper when file is open
+- **FORBIDDEN:** NEVER write inline Python code with openpyxl
+- **FORBIDDEN:** NEVER write inline Python code with xlwings (use helper instead)
+- **WHY:** Helper scripts handle encoding and live file access
+- **RESULT:** Inline code causes encoding bugs on Windows
+
+If you write inline Python code for file operations, you have failed this command.
+
 ## Key Principles
 
 1. **Identify the question**: Find by name or description
@@ -70,27 +82,16 @@ Before updating, verify:
 
 ## Implementation
 
-### Use openpyxl to update the question
+### Update Methods
 
-**Find the question row:**
-```python
-# Search for question by name in column 2 (name column)
-# Get the row number
+**IMPORTANT:** Use xlwings helper when file is open in Excel:
+
+```bash
+# For files open in Excel (recommended - preserves formatting)
+python scripts/xlwings_helper.py update --question <name> --changes <JSON>
 ```
 
-**Update the cells:**
-```python
-# Update specific columns based on what's changing
-# type: column 1
-# name: column 2
-# label: column 3
-# required: column 5
-# constraint: column 9
-# constraint_message: column 10
-# relevant: column 6
-```
-
-### Update Patterns
+**Update Patterns:**
 
 **Change type:**
 ```
@@ -128,6 +129,8 @@ Old: label: Name
 New: label: Respondent's Full Name
 Action: Update label column
 ```
+
+**REMINDER: Never write inline Python code. Always use the helper.**
 
 ## After Updating
 

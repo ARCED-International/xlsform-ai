@@ -206,7 +206,8 @@ def init_project(
         ai_files = _check_ai_files(project_path)
         if ai_files:
             console.print(f"[yellow]Warning: Current directory is not empty ({len(ai_files)} XLSForm AI file(s))[/yellow]")
-            console.print("[yellow]Template files will be merged with existing content and may overwrite existing files[/yellow]")
+            console.print("[yellow]Template files will be merged with existing content.[/yellow]")
+            console.print("[bold green]Your survey file and activity logs are protected and will NOT be overwritten.[/bold green]")
 
             response = questionary.confirm(
                 "Do you want to continue?",

@@ -11,12 +11,40 @@ arguments:
 
 # Validate XLSForm
 
+## MANDATORY IMPLEMENTATION REQUIREMENT
+
+**CRITICAL: Use existing helper scripts - DO NOT write inline code**
+
+- **REQUIRED:** Always use helper scripts from `scripts/` directory
+- **FORBIDDEN:** NEVER write inline Python code with openpyxl
+- **FORBIDDEN:** NEVER write inline Python code with xlwings
+- **WHY:** Helper scripts handle encoding and validation logic
+- **RESULT:** Inline code causes encoding bugs on Windows
+
+If you write inline Python code for validation, you have failed this command.
+
 ## Understanding the Request
 
 The user wants to validate their XLSForm to ensure:
 - No critical errors that prevent conversion
 - No warnings that might cause issues
 - Following best practices
+
+## Implementation - MANDATORY METHOD
+
+**You MUST use the helper script - this is not optional:**
+
+**Default validation:**
+```bash
+python scripts/validate_form.py survey.xlsx
+```
+
+**Custom file:**
+```bash
+python scripts/validate_form.py path/to/form.xlsx
+```
+
+**REMINDER: Never write inline Python code. Always use the script.**
 
 ## Load the Form
 

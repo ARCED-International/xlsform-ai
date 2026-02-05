@@ -14,6 +14,18 @@ arguments:
 
 # Move XLSForm Questions
 
+## MANDATORY IMPLEMENTATION REQUIREMENT
+
+**CRITICAL: Use existing helper scripts - DO NOT write inline code**
+
+- **REQUIRED:** Always use xlwings helper when file is open
+- **FORBIDDEN:** NEVER write inline Python code with openpyxl
+- **FORBIDDEN:** NEVER write inline Python code with xlwings (use helper instead)
+- **WHY:** Helper scripts handle encoding and live file access
+- **RESULT:** Inline code causes encoding bugs on Windows
+
+If you write inline Python code for file operations, you have failed this command.
+
 ## Key Principles
 
 1. **Preserve structure**: Keep groups/repeats intact
@@ -84,6 +96,15 @@ Before moving, verify:
 - [ ] begin/end pairs remain balanced
 
 ## Implementation
+
+### Move Methods
+
+**IMPORTANT:** Use xlwings helper when file is open in Excel:
+
+```bash
+# For files open in Excel (recommended - preserves formatting)
+python scripts/xlwings_helper.py move --question <name> --location <target>
+```
 
 ### Move Strategies
 

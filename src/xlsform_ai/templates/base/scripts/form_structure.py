@@ -68,16 +68,30 @@ def find_insertion_point(ws, header_row: int, questions_data: List[dict], column
         return ws.max_row + 1
     else:
         # Find last question (after any metadata)
+        # Strategy: Scan until we find N consecutive empty rows (prevents infinite scan on formatted templates)
+        consecutive_empty_rows = 0
         last_data_row = header_row
+        max_empty_scan = 10  # Stop after 10 consecutive empty rows
+
         for row_idx in range(header_row + 1, ws.max_row + 1):
-            cell_name = ws.cell(row_idx, name_col).value  # name column (dynamic position)
-            # Stop at first empty row
-            if not cell_name:
-                # Also check if type column is empty to confirm this is truly empty
-                if not ws.cell(row_idx, type_col).value:
-                    return row_idx
-            if cell_name:
+            cell_type = ws.cell(row_idx, type_col).value
+            cell_name = ws.cell(row_idx, name_col).value
+
+            # Check if row has actual data (not just formatting)
+            has_data = bool(cell_type or cell_name)
+
+            if has_data:
                 last_data_row = row_idx
+                consecutive_empty_rows = 0
+            else:
+                consecutive_empty_rows += 1
+
+                # If we found enough consecutive empty rows, this is the insertion point
+                if consecutive_empty_rows >= max_empty_scan:
+                    return last_data_row + 1
+
+        # If we scanned all rows and didn't find 10 consecutive empties,
+        # append after the last data row
         return last_data_row + 1
 
 
