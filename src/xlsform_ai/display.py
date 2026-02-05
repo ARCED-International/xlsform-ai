@@ -10,37 +10,6 @@ from . import __version__
 console = Console(force_terminal=True, legacy_windows=False)
 
 
-def _get_arced_logo():
-    """Get the ARCED International logo - small, neat, colored diamond."""
-    logo = """[bold cyan]
-                  *
-                 ***
-                *****
-               *******
-              *********
-             ***********
-            *************
-[bright_blue]           ***************
-[blue]            *****************
-[dodger_blue3]             *******************
-[deep_sky_blue3]              *********************
-[cyan]               ***********************
-[bright_cyan]                *************************
-                 *************************
-                ***********************
-               *********************
-              *******************
-             ***************
-            *************
-           *********
-          *******
-         *****
-        ***
-         *[/bright_cyan]"""
-
-    return logo
-
-
 def _get_banner():
     """Get the XLSForm AI banner - Speckit-inspired professional design."""
     # XLSFORM ASCII art
@@ -54,12 +23,7 @@ def _get_banner():
  █████ █████ ███████████░░█████████  █████      ░░██████  █████     █████░███ █████    █████   █████ █████
 ░░░░░ ░░░░░ ░░░░░░░░░░░  ░░░░░░░░░  ░░░░░        ░░░░░░  ░░░░░     ░░░░░ ░░░ ░░░░░    ░░░░░   ░░░░░ ░░░░░[/bold cyan]"""
 
-    # ARCED International logo
-    arced_logo = _get_arced_logo()
-
     return f"""{xlsform_art}
-
-{arced_logo}
 
 [dim]                    AI-Powered Survey & Form Creation Toolkit[/dim]
 [dim]                            by ARCED International[/dim]
