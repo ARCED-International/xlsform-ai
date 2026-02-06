@@ -33,6 +33,26 @@ Identify what's being removed:
 3. Check for dependencies
 4. Show what will be affected
 
+### Cross-Platform Compatibility
+
+When creating Python code for removal that runs on bash/PowerShell/Linux:
+
+1. **Avoid Unicode characters** in print statements
+   - Use ASCII: `SUCCESS` instead of checkmark symbols
+   - Use ASCII: `ERROR` instead of X symbols
+
+2. **Handle encoding explicitly** at script start
+   ```python
+   import sys
+   if sys.platform == 'win32':
+       sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+   ```
+
+3. **Escape quotes properly** for bash
+   - Use double quotes outside: `"..."`
+   - Escape inner quotes: `'...\'...'`
+   - Or use raw strings: `r"..."`
+
 ## Dependency Checking
 
 Before removing, check:
@@ -152,7 +172,7 @@ Removing row 15...
 1. **Verify** the removal was successful
 2. **Show structured output:**
 ```
-✓ Removed: old_question
+SUCCESS: Removed: old_question
 
   Removed from: Row 10
   Type: text
@@ -178,7 +198,7 @@ Found: Row 10 - text old_question "Old Question"
 Checking dependencies...
 No dependencies found. Safe to remove.
 
-✓ Removed: old_question
+SUCCESS: Removed: old_question
   Removed from: Row 10
 ```
 
@@ -193,7 +213,7 @@ Checking if any questions use this list...
 
 No questions use this list. Safe to remove.
 
-✓ Removed: unused_fruits choice list
+SUCCESS: Removed: unused_fruits choice list
   Choices removed: 5
 ```
 
@@ -287,7 +307,7 @@ Found:
 
 Removing rows 20-23...
 
-✓ Removed: household_member repeat
+SUCCESS: Removed: household_member repeat
   Questions removed: 3
   Rows removed: 20-23
 ```
@@ -315,7 +335,7 @@ Removing from bottom up (to preserve row numbers)...
   Removed q2 (row 11)
   Removed q1 (row 10)
 
-✓ Removed: 3 questions
+SUCCESS: Removed: 3 questions
   Total rows removed: 3
   Choice lists removed: options (5 choices)
 ```

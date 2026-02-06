@@ -1,5 +1,18 @@
 """Form structure parsing and smart insertion logic."""
 
+# Ensure UTF-8 encoding for Windows console output
+import sys
+if sys.platform == 'win32':
+    import locale
+    import codecs
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except AttributeError:
+        # Python < 3.7 doesn't have reconfigure, use environment variable approach
+        import os
+        os.environ['PYTHONIOENCODING'] = 'utf-8'
+
 from typing import List, Optional, Dict
 
 
@@ -22,6 +35,49 @@ def is_metadata_field(question_type: str) -> bool:
     if not question_type:
         return False
     return question_type.lower() in METADATA_TYPES
+
+
+def find_last_data_row(ws, header_row: int = 1, check_columns: List[int] = None) -> int:
+    """
+    Find the last row that contains actual data (not just formatting).
+
+    This is needed when templates have pre-formatted empty rows.
+    Using ws.max_row directly would return the last formatted row,
+    not the last row with data.
+
+    Args:
+        ws: openpyxl worksheet object
+        header_row: Row number of the header (default: 1)
+        check_columns: List of column indices to check (1-indexed).
+                      If None, checks columns 1-3.
+
+    Returns:
+        The row number of the last data row, or header_row if no data found
+    """
+    if check_columns is None:
+        check_columns = [1, 2, 3]  # Check first 3 columns by default
+
+    last_data_row = header_row
+    consecutive_empty_rows = 0
+    max_empty_scan = 10  # Stop after 10 consecutive empty rows
+
+    for row_idx in range(header_row + 1, ws.max_row + 1):
+        has_data = False
+        for col_idx in check_columns:
+            cell_value = ws.cell(row_idx, col_idx).value
+            if cell_value is not None and str(cell_value).strip():
+                has_data = True
+                break
+
+        if has_data:
+            last_data_row = row_idx
+            consecutive_empty_rows = 0
+        else:
+            consecutive_empty_rows += 1
+            if consecutive_empty_rows >= max_empty_scan:
+                break
+
+    return last_data_row
 
 
 def find_insertion_point(ws, header_row: int, questions_data: List[dict], column_map: Dict[str, int] = None) -> int:

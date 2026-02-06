@@ -35,6 +35,26 @@ Identify the move operation:
 3. Locate the target position
 4. Check for structural issues (groups, repeats)
 
+### Cross-Platform Compatibility
+
+When creating Python code for moving questions that runs on bash/PowerShell/Linux:
+
+1. **Avoid Unicode characters** in print statements
+   - Use ASCII: `SUCCESS` instead of checkmark symbols
+   - Use ASCII: `ERROR` instead of X symbols
+
+2. **Handle encoding explicitly** at script start
+   ```python
+   import sys
+   if sys.platform == 'win32':
+       sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+   ```
+
+3. **Escape quotes properly** for bash
+   - Use double quotes outside: `"..."`
+   - Escape inner quotes: `'...\'...'`
+   - Or use raw strings: `r"..."`
+
 ## Proposed Changes
 
 Show the move operation:
@@ -213,7 +233,7 @@ Result:
 1. **Verify** the move was successful
 2. **Show structured output:**
 ```
-✓ Moved: age_question
+SUCCESS: Moved: age_question
 
   From: Row 15
   To: Row 3 (top of form)
@@ -240,7 +260,7 @@ Found: first_name (text) on row 10
 
 Moving to row 2 (top of form, after header)...
 
-✓ Moved: first_name
+SUCCESS: Moved: first_name
   From: Row 10
   To: Row 2
 ```
@@ -257,7 +277,7 @@ Found:
 
 Moving age to row 3 (after name)...
 
-✓ Moved: age
+SUCCESS: Moved: age
   From: Row 5
   To: Row 3
 ```
@@ -282,7 +302,7 @@ Current group structure:
 
 Moving to row 8 (inside group, after age)...
 
-✓ Moved: income
+SUCCESS: Moved: income
   From: Row 10
   To: Row 8 (inside demographics group)
 
@@ -370,7 +390,7 @@ Moving in reverse order (to maintain positions)...
 Step 1: Move age to row 3
 Step 2: Move name to row 2
 
-✓ Moved: 2 questions
+SUCCESS: Moved: 2 questions
   New order:
     Row 2: name
     Row 3: age
@@ -389,7 +409,7 @@ Current order:
 
 Reversing...
 
-✓ Reordered: 3 questions
+SUCCESS: Reordered: 3 questions
   New order:
     1. q3
     2. q2
@@ -410,7 +430,7 @@ Moving from contact_info to demographics...
 Warning: contact_info group will be empty after this move.
 Action: Removing empty contact_info group.
 
-✓ Moved: phone
+SUCCESS: Moved: phone
   From: contact_info group
   To: demographics group (after age question)
 

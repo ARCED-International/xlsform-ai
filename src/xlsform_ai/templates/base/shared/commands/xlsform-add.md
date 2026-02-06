@@ -25,7 +25,7 @@ arguments:
 
 2. **Structured Output**: Keep output concise and scannable
    ```
-   ✓ Added 2 questions
+   SUCCESS: Added 2 questions
      Row 2: text | first_name | "First Name"
    ```
    Avoid verbose explanations, use structured lists
@@ -102,7 +102,7 @@ If any validation fails:
 
 ## Implementation
 
-### ⚠️ IMPORTANT: Use openpyxl Directly, NOT Temporary Files
+### WARNING: IMPORTANT: Use openpyxl Directly, NOT Temporary Files
 
 **NEVER create temporary Python files** (e.g., `add_questions_temp.py`). Always use openpyxl directly in the Bash tool.
 
@@ -172,7 +172,9 @@ ws.cell(insert_row, 5, 'yes')
 insert_row += 1
 
 # Add choices to choices sheet
-choice_start_row = ws_choices.max_row + 1
+# Find last data row in choices sheet (handles pre-formatted templates)
+from form_structure import find_last_data_row
+choice_start_row = find_last_data_row(ws_choices, 1, [1,2,3]) + 1
 for i, (name, label) in enumerate([('-96', 'Other'), ('-99', "Don't know")], 1):
     ws_choices.cell(choice_start_row + i, 1, 'gender')
     ws_choices.cell(choice_start_row + i, 2, name)
@@ -184,10 +186,10 @@ print(f'Added questions. Survey now has {ws.max_row} rows.')
 ```
 
 This approach:
-- ✓ Works reliably on all platforms (Windows/Mac/Linux)
-- ✓ No complex JSON escaping issues
-- ✓ Easy to read and debug
-- ✓ Supports complex constraints and regex patterns
+- SUCCESS: Works reliably on all platforms (Windows/Mac/Linux)
+- SUCCESS: No complex JSON escaping issues
+- SUCCESS: Easy to read and debug
+- SUCCESS: Supports complex constraints and regex patterns
 
 #### Method 3: Multiple Questions with Choice Lists
 
@@ -240,7 +242,10 @@ row += 1
 # Add choices
 choices = {'gender': [('1', 'Male'), ('2', 'Female'), ('-96', 'Other')]}
 for list_name, options in choices.items():
-    for i, (name, label) in enumerate(options, 1):
+    # Find last data row and start after it (handles pre-formatted templates)
+    from form_structure import find_last_data_row
+    choice_start_row = find_last_data_row(ws_choices, 1, [1,2,3]) + 1
+    for i, (name, label) in enumerate(options, choice_start_row):
         ws_choices.cell(i, 1, list_name)
         ws_choices.cell(i, 2, name)
         ws_choices.cell(i, 3, label)
@@ -251,7 +256,7 @@ print(f'Added {len(questions)} questions')
 
 ### What NOT To Do
 
-❌ **DO NOT create temporary Python files:**
+ERROR: **DO NOT create temporary Python files:**
 ```python
 # DON'T DO THIS:
 Write(add_temp.py)
@@ -261,11 +266,36 @@ Bash(python add_temp.py)
 Bash(rm add_temp.py)
 ```
 
-❌ **DO NOT use complex JSON strings with regex in bash:**
+ERROR: **DO NOT use complex JSON strings with regex in bash:**
 ```bash
 # DON'T DO THIS (fails due to escaping):
 python scripts/add_questions.py '[{"type":"text","constraint":"regex(., '\''^[a-zA-Z]+$\'')"}]'
 ```
+
+### Cross-Platform Compatibility
+
+When creating Python code that runs in bash/PowerShell/Linux:
+
+1. **Avoid Unicode characters** in print statements
+   - Use ASCII: `SUCCESS` instead of `SUCCESS:`
+   - Use ASCII: `ERROR` instead of `ERROR:`
+
+2. **Handle encoding explicitly** at script start
+   ```python
+   import sys
+   if sys.platform == 'win32':
+       sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+   ```
+
+3. **Escape quotes properly** for bash
+   - Use double quotes outside: `"..."`
+   - Escape inner quotes: `'...\'...'`
+   - Or use raw strings: `r"..."`
+
+4. **Test on multiple platforms**
+   - Windows (Git Bash / PowerShell)
+   - Linux (bash)
+   - macOS (zsh/bash)
 
 ### Best Practices
 
@@ -316,7 +346,9 @@ row += 1
 
 # Add choices separately
 choices = [('1', 'Male'), ('2', 'Female'), ('-96', 'Other')]
-choice_row = ws_choices.max_row + 1
+# Find last data row in choices sheet (handles pre-formatted templates)
+from form_structure import find_last_data_row
+choice_row = find_last_data_row(ws_choices, 1, [1,2,3]) + 1
 for name, label in choices:
     ws_choices.cell(choice_row, 1, 'gender')
     ws_choices.cell(choice_row, 2, name)
@@ -345,7 +377,9 @@ if 'gender' not in existing_lists:
         ('-98', 'Refused'),
     ]
 
-    choice_row = ws_choices.max_row + 1
+    # Find last data row in choices sheet (handles pre-formatted templates)
+    from form_structure import find_last_data_row
+    choice_row = find_last_data_row(ws_choices, 1, [1,2,3]) + 1
     for name, label in choices:
         ws_choices.cell(choice_row, 1, 'gender')  # list_name
         ws_choices.cell(choice_row, 2, name)        # name
@@ -405,11 +439,11 @@ label: <choice display text>
 When type is not specified, the system uses intelligent type detection with **aggressive numeric preference**:
 
 **Detection Strategy:**
-1. **Choice options provided** → `select_one`/`select_multiple` (always with numeric codes: 1, 2, 3...)
-2. **Numeric keywords detected** → `integer` or `decimal` (very aggressive)
-3. **RAG similarity matching** → Match against knowledge base of similar questions (if AI available)
-4. **Text-only patterns** → `text` (only for clearly text-only: names, addresses, descriptions)
-5. **Yes/No patterns** → `select_one yes_no`
+1. **Choice options provided** -> `select_one`/`select_multiple` (always with numeric codes: 1, 2, 3...)
+2. **Numeric keywords detected** -> `integer` or `decimal` (very aggressive)
+3. **RAG similarity matching** -> Match against knowledge base of similar questions (if AI available)
+4. **Text-only patterns** -> `text` (only for clearly text-only: names, addresses, descriptions)
+5. **Yes/No patterns** -> `select_one yes_no`
 
 **Integer Keywords (very aggressive):**
 - age, how old, years old, count, number, how many, frequency, children, members, times, quantity
@@ -421,12 +455,12 @@ When type is not specified, the system uses intelligent type detection with **ag
 - name, address, describe, explain, specify, comment, open-ended
 
 **Traditional Pattern Matching (fallback):**
-- **"select one" / "choose one" / "radio"** → `select_one`
-- **"select multiple" / "check all that apply" / "checkbox"** → `select_multiple`
-- **"date" / "when"** → `date`
-- **"location" / "GPS" / "coordinates"** → `geopoint`
-- **"photo" / "picture" / "image"** → `image`
-- **"yes/no" / "true or false"** → `select_one yes_no`
+- **"select one" / "choose one" / "radio"** -> `select_one`
+- **"select multiple" / "check all that apply" / "checkbox"** -> `select_multiple`
+- **"date" / "when"** -> `date`
+- **"location" / "GPS" / "coordinates"** -> `geopoint`
+- **"photo" / "picture" / "image"** -> `image`
+- **"yes/no" / "true or false"** -> `select_one yes_no`
 
 **Example:**
 ```
@@ -452,10 +486,10 @@ When user doesn't specify a name:
 3. Ensure uniqueness by adding number suffix if needed
 
 **Examples:**
-- "What is your name?" → `respondent_name`
-- "How old are you?" → `age` or `respondent_age`
-- "Do you like pizza?" → `likes_pizza`
-- "What is your gender?" → `gender`
+- "What is your name?" -> `respondent_name`
+- "How old are you?" -> `age` or `respondent_age`
+- "Do you like pizza?" -> `likes_pizza`
+- "What is your gender?" -> `gender`
 
 ### Choice List Handling (AI-Enhanced)
 
@@ -498,7 +532,7 @@ Creates:
 1. **Verify** the changes were applied correctly
 2. **Show a concise summary** with this format:
 ```
-✓ Added 2 questions
+SUCCESS: Added 2 questions
 
   Row 2: text | first_name | "First Name"
     Required: yes
@@ -577,9 +611,9 @@ Added successfully! Both questions are now inside the household_member repeat.
 ### Adding to a Group or Repeat
 
 When user specifies a location:
-- "in the demographics group" → find begin group, add inside
-- "after the name question" → find name question, add after it
-- "in the household repeat" → find begin repeat, add inside
+- "in the demographics group" -> find begin group, add inside
+- "after the name question" -> find name question, add after it
+- "in the household repeat" -> find begin repeat, add inside
 
 ### Importing from Files
 
@@ -610,16 +644,16 @@ Should I add all these questions? (You can specify which ones to include)
 ### Conditional Questions
 
 When user implies conditionality:
-- "Add age question if they're 18+" → add with `relevant: ${previous} >= 18`
-- "Only show if they answered yes to previous" → detect from context
+- "Add age question if they're 18+" -> add with `relevant: ${previous} >= 18`
+- "Only show if they answered yes to previous" -> detect from context
 
 Extract the condition and add to `relevant` column.
 
 ### Questions with Constraints
 
 When user mentions limits:
-- "Add age question (must be 0-120)" → add with constraint
-- "Enter percentage (0-100)" → add with constraint
+- "Add age question (must be 0-120)" -> add with constraint
+- "Enter percentage (0-100)" -> add with constraint
 
 Extract the constraint and:
 1. Add to `constraint` column

@@ -44,6 +44,27 @@ python scripts/parse_xlsx.py <source> --sheet <sheet_name>
 
 Run the appropriate script and capture its output.
 
+### Cross-Platform Compatibility
+
+When creating Python code for file parsing that runs on bash/PowerShell/Linux:
+
+1. **Avoid Unicode characters** in print statements
+   - Use ASCII: `SUCCESS` instead of checkmark symbols
+   - Use ASCII: `ERROR` instead of X symbols
+
+2. **Handle encoding explicitly** at script start
+   ```python
+   import sys
+   if sys.platform == 'win32':
+       sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+   ```
+
+3. **Use proper file paths** for cross-platform compatibility
+   - Use `pathlib.Path` instead of string paths
+   - Use forward slashes or `os.path.join()`
+
+## Question Type Detection
+
 **Expected output format:** JSON with extracted question structure:
 
 ```json
@@ -122,9 +143,9 @@ Or:
 ### Constraint Extraction
 
 Look for constraint indicators:
-- "age between 18-65" → constraint: `. >= 18 and . <= 65`
-- "must be positive" → constraint: `. > 0`
-- "0-100" → constraint: `. >= 0 and . <= 100`
+- "age between 18-65" -> constraint: `. >= 18 and . <= 65`
+- "must be positive" -> constraint: `. > 0`
+- "0-100" -> constraint: `. >= 0 and . <= 100`
 
 ## Present Findings
 
@@ -185,10 +206,10 @@ Choose option (1-4):
 
 ```
 Available questions:
-[✓] 1. What is your name? (text)
-[✓] 2. What is your gender? (select_one)
+[SUCCESS:] 1. What is your name? (text)
+[SUCCESS:] 2. What is your gender? (select_one)
 [ ] 3. How old are you? (integer) ← Skip
-[✓] 4. Select your favorite fruits (select_multiple)
+[SUCCESS:] 4. Select your favorite fruits (select_multiple)
 ...
 
 Enter numbers to toggle selection, or 'all'/'none':
@@ -215,9 +236,9 @@ Once confirmed:
 ### 1. Generate Question Names
 
 Create unique, descriptive names:
-- "What is your name?" → `respondent_name`
-- "How old are you?" → `age`
-- "What is your gender?" → `gender`
+- "What is your name?" -> `respondent_name`
+- "How old are you?" -> `age`
+- "What is your gender?" -> `gender`
 
 Check for duplicates and append numbers if needed.
 
@@ -303,7 +324,7 @@ Reading sheet 'Survey Questions' from workbook.xlsx...
 
 If questions with similar names exist:
 ```
-⚠️  Warning: Similar questions found in current form
+WARNING:  Warning: Similar questions found in current form
 
 Existing: q1_name "What is your name?"
 Importing: respondent_name "What is your name?"
@@ -340,7 +361,7 @@ Recommendation: Reuse existing list for consistency
 
 ### File Not Found
 ```
-❌ Error: File 'questions.pdf' not found.
+ERROR: Error: File 'questions.pdf' not found.
 
 Please check:
 - File path is correct
@@ -350,7 +371,7 @@ Please check:
 
 ### Unsupported File Type
 ```
-❌ Error: Unsupported file type '.txt'
+ERROR: Error: Unsupported file type '.txt'
 
 Supported formats:
 - PDF (.pdf)
@@ -360,7 +381,7 @@ Supported formats:
 
 ### No Questions Found
 ```
-⚠️  Warning: No questions could be detected in the file.
+WARNING:  Warning: No questions could be detected in the file.
 
 This could be because:
 - File format is not supported
@@ -374,7 +395,7 @@ Try:
 
 ### Parser Script Failed
 ```
-❌ Error: Failed to parse file
+ERROR: Error: Failed to parse file
 
 Parser output:
 [error details from script]
@@ -410,10 +431,10 @@ Next steps:
 4. Use /xlsform-update to modify imported questions
 
 Questions imported:
-  ✓ 1. respondent_name (text)
-  ✓ 2. gender (select_one)
-  ✓ 3. age (integer)
-  ✓ 4. favorite_fruits (select_multiple)
+  SUCCESS: 1. respondent_name (text)
+  SUCCESS: 2. gender (select_one)
+  SUCCESS: 3. age (integer)
+  SUCCESS: 4. favorite_fruits (select_multiple)
   ... (11 more)
 
 Run /xlsform-validate now to check the form.

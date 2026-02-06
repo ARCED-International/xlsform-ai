@@ -35,6 +35,26 @@ Identify what's being updated:
 3. Show current properties
 4. Confirm the change
 
+### Cross-Platform Compatibility
+
+When creating Python code for updates that runs on bash/PowerShell/Linux:
+
+1. **Avoid Unicode characters** in print statements
+   - Use ASCII: `SUCCESS` instead of checkmark symbols
+   - Use ASCII: `ERROR` instead of X symbols
+
+2. **Handle encoding explicitly** at script start
+   ```python
+   import sys
+   if sys.platform == 'win32':
+       sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+   ```
+
+3. **Escape quotes properly** for bash
+   - Use double quotes outside: `"..."`
+   - Escape inner quotes: `'...\'...'`
+   - Or use raw strings: `r"..."`
+
 ## Proposed Changes
 
 Present what will change:
@@ -131,12 +151,12 @@ Action: Update label column
 1. **Verify** the changes were applied correctly
 2. **Show structured output:**
 ```
-✓ Updated question: first_name
+SUCCESS: Updated question: first_name
 
   Changes:
-    - label: "First Name" → "Respondent First Name"
-    - required: no → yes
-    - constraint: none → regex(., '^[a-zA-Z\s\-\.']$')
+    - label: "First Name" -> "Respondent First Name"
+    - required: no -> yes
+    - constraint: none -> regex(., '^[a-zA-Z\s\-\.']$')
 
   Row 2 updated
 ```
@@ -160,7 +180,7 @@ Proposed change:
 
 Confirming update...
 
-✓ Updated question: age
+SUCCESS: Updated question: age
   Changes:
     - constraint: added (. >= 0 and . <= 120)
     - constraint_message: added
@@ -175,12 +195,12 @@ I'll make the name question required.
 Found: first_name (text) on row 2
 
 Proposed change:
-  required: no → yes
+  required: no -> yes
   required_message: "This field is required"
 
-✓ Updated question: first_name
+SUCCESS: Updated question: first_name
   Changes:
-    - required: no → yes
+    - required: no -> yes
     - required_message: added
 ```
 
