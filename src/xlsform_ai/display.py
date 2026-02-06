@@ -27,6 +27,7 @@ def _get_banner():
 
 [dim]                    AI-Powered Survey & Form Creation Toolkit[/dim]
 [dim]                            by ARCED International[/dim]
+[dim]                                Version {__version__}[/dim]
 
 """
 
@@ -265,8 +266,12 @@ def print_info_panel(info: dict):
     """
     console.print(get_info_header())
 
+    # Version
+    console.print(f"\n[bold]Version[/bold]")
+    console.print(f"  XLSForm AI: [cyan]{__version__}[/cyan]")
+
     # Installation status
-    console.print("\n[bold]Installation Status[/bold]")
+    console.print(f"\n[bold]Installation Status[/bold]")
     if info.get("installed"):
         console.print("  [green][OK][/green] XLSForm AI CLI is properly installed")
     else:

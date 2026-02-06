@@ -120,6 +120,7 @@ def check_cli_installation() -> bool:
             return False
 
         print_success("XLSForm AI CLI is properly installed")
+        print_success(f"Version: {__version__}")
         print_success(f"Template version: {tm.get_template_path().name}")
         return True
 
@@ -179,6 +180,9 @@ def init_project(
     """
     # Show the beautiful banner at the start
     print_banner()
+
+    # Show version
+    console.print(f"[dim]XLSForm AI v{__version__}[/dim]\n")
 
     # Determine which agents to use
     if ai is None:
@@ -267,6 +271,7 @@ def init_project(
                 steps.append(("Finalize", True))
                 console.print(f"└── ● Finalize ([green]project ready[/green])")
                 console.print("")
+                console.print(f"[dim]XLSForm AI v{__version__}[/dim]")
                 console.print("[green]Project ready.[/green]\n")
 
                 # Speckit-style success boxes
