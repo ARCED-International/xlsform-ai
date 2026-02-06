@@ -1,6 +1,6 @@
 [project]
 name = "xlsform-ai-cli"
-version = "0.3.0"
+version = "0.4.0"
 description = "AI-powered XLSForm creation tool with Claude Code integration. An open source project by ARCED International."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -63,8 +63,8 @@ include-package-data = true
 where = ["src"]
 
 [tool.setuptools.package-data]
-xlsform_ai = ["templates/*.xlsx", "templates/*.md", "templates/*.json", "templates/*.py",
-              "templates/**/*.xlsx", "templates/**/*.md", "templates/**/*.json", "templates/**/*.py"]
+xlsform_ai = ["templates/*.xlsx", "templates/*.md", "templates/*.json", "templates/*.py", "templates/*.html",
+              "templates/**/*.xlsx", "templates/**/*.md", "templates/**/*.json", "templates/**/*.py", "templates/**/*.html"]
 
 [tool.setuptools_scm]
 allow_dirty = true
