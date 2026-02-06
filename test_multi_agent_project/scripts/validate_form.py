@@ -10,6 +10,12 @@ import sys
 import argparse
 from pathlib import Path
 
+# Ensure UTF-8 encoding for Windows console output
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 try:
     import openpyxl
 except ImportError:

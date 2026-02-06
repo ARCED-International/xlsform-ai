@@ -1,13 +1,20 @@
 """Beautiful display helpers for XLSForm AI CLI."""
 
+import sys
+
+# Ensure UTF-8 encoding for Windows console output
+if sys.platform == 'win32':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 from rich.text import Text
 
-from . import __version__
-
-console = Console()
+# Console with UTF-8 encoding for Windows compatibility
+console = Console(force_terminal=True, legacy_windows=False)
 
 
 def _get_banner():
