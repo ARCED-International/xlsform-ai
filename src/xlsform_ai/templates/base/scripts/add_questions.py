@@ -395,7 +395,9 @@ if __name__ == "__main__":
                     # Check if activity logging is enabled in config
                     config = ProjectConfig()
                     if config.is_activity_logging_enabled():
-                        logger = ActivityLogger()
+                        # Initialize logger with project root directory (parent of scripts folder)
+                        project_root = Path(__file__).parent.parent
+                        logger = ActivityLogger(project_dir=project_root)
                         questions_summary = ", ".join([f"{q['name']} ({q['type']})" for q in result["added"]])
                         logger.log_action(
                             action_type="add_questions",
