@@ -10,6 +10,7 @@ DEFAULT_CONFIG = {
     "version": "1.0",
     "project_name": "",
     "xlsform_file": "survey.xlsx",
+    "activity_log_file": "activity_log.html",
     "created": None,
     "last_modified": None,
     "author": None,  # Auto-detected on first use
@@ -71,6 +72,9 @@ class ProjectConfig:
                     migrated = True
                 if "active_collaborator" not in self._config:
                     self._config["active_collaborator"] = None
+                    migrated = True
+                if "activity_log_file" not in self._config:
+                    self._config["activity_log_file"] = "activity_log.html"
                     migrated = True
 
                 if migrated:
@@ -218,6 +222,36 @@ class ProjectConfig:
         """
         config = self.load()
         return config.get("active_collaborator")
+
+    def is_activity_logging_enabled(self) -> bool:
+        """Check if activity logging is enabled in configuration.
+
+        Returns:
+            True if logging is enabled, False otherwise.
+            Defaults to True for backward compatibility.
+        """
+        config = self.load()
+        settings = config.get("settings", {})
+        return settings.get("log_activity", True)
+
+    def get_activity_log_file(self) -> str:
+        """Get the configured activity log file name.
+
+        Returns:
+            Activity log file name (e.g., "activity_log.html")
+        """
+        config = self.load()
+        return config.get("activity_log_file", "activity_log.html")
+
+    def set_activity_log_file(self, filename: str):
+        """Set the activity log file name.
+
+        Args:
+            filename: New activity log file name to use
+        """
+        config = self.load()
+        config["activity_log_file"] = filename
+        self.save()
 
 
 if __name__ == "__main__":

@@ -284,9 +284,13 @@ def init_project(
                     f"     [cyan]3.3[/cyan] [yellow]/xlsform-validate[/yellow] - Validate your form\n"
                     f"     [cyan]3.4[/cyan] [yellow]/xlsform-update[/yellow] - Update existing questions\n\n"
                     f"[bold cyan]💡 File Configuration:[/bold cyan]\n"
-                    f"     [dim]Default: survey.xlsx[/dim]\n"
+                    f"     [dim]Default XLSForm: survey.xlsx[/dim]\n"
                     f"     [dim]To change: python scripts/config.py set-file my_form.xlsx[/dim]\n"
                     f"     [dim]Or edit xlsform-ai.json to set xlsform_file[/dim]\n\n"
+                    f"[bold cyan]📝 Activity Log:[/bold cyan]\n"
+                    f"     [dim]Default: activity_log.html[/dim]\n"
+                    f"     [dim]To change: Edit xlsform-ai.json to set activity_log_file[/dim]\n"
+                    f"     [dim]To disable: Set settings.log_activity to false in xlsform-ai.json[/dim]\n\n"
                     f"[dim]Your activity log will be preserved across re-installations.[/dim]",
                     title="[bold green]Next Steps[/bold green]",
                     border_style="green",

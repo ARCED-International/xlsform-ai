@@ -72,13 +72,20 @@ class ActivityLogger:
         Returns:
             Path to log file
         """
-        # Use a fixed filename - no timestamps
-        log_filename = "activity_log.html"
+        # Get the configured log file name
+        try:
+            from config import ProjectConfig
+            config = ProjectConfig(self.project_dir)
+            log_filename = config.get_activity_log_file()
+        except Exception:
+            # Fallback to default if config is not available
+            log_filename = "activity_log.html"
+
         log_path = self.project_dir / log_filename
 
-        # Find all existing activity log files (including old timestamped ones)
+        # Find all existing activity log files (including old ones with different names)
         existing_logs = []
-        for file in self.project_dir.glob("activity_log*.html"):
+        for file in self.project_dir.glob("*.html"):
             try:
                 with open(file, 'r', encoding='utf-8') as f:
                     # Check first 1000 chars for tag
@@ -98,7 +105,7 @@ class ActivityLogger:
         # Keep the most recent log file
         most_recent_log = existing_logs[0]
 
-        # If the most recent log is not named "activity_log.html", rename it
+        # If the most recent log is not named according to config, rename it
         if most_recent_log.name != log_filename:
             try:
                 most_recent_log.rename(log_path)

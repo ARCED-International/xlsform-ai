@@ -390,17 +390,20 @@ if __name__ == "__main__":
                         print(f"    Constraint: {q['constraint']}")
 
             # Log activity
-            if LOGGING_AVAILABLE:
+            if LOGGING_AVAILABLE and CONFIG_AVAILABLE:
                 try:
-                    logger = ActivityLogger()
-                    questions_summary = ", ".join([f"{q['name']} ({q['type']})" for q in result["added"]])
-                    logger.log_action(
-                        action_type="add_questions",
-                        description=f"Added {result['total']} question(s)",
-                        details=f"Questions: {questions_summary}\nRows: {', '.join([str(q['row']) for q in result['added']])}"
-                    )
-                    log_file = logger.log_file
-                    print(f"\nActivity logged to: {log_file.name}")
+                    # Check if activity logging is enabled in config
+                    config = ProjectConfig()
+                    if config.is_activity_logging_enabled():
+                        logger = ActivityLogger()
+                        questions_summary = ", ".join([f"{q['name']} ({q['type']})" for q in result["added"]])
+                        logger.log_action(
+                            action_type="add_questions",
+                            description=f"Added {result['total']} question(s)",
+                            details=f"Questions: {questions_summary}\nRows: {', '.join([str(q['row']) for q in result['added']])}"
+                        )
+                        log_file = logger.log_file
+                        print(f"\nActivity logged to: {log_file.name}")
                 except Exception as e:
                     print(f"\nNote: Could not log activity: {e}")
 
