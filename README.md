@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 [![GitHub](https://img.shields.io/badge/github-ARCED--International-blue.svg)](https://github.com/ARCED-International/xlsform-ai)
 
-**AI-powered XLSForm creation tool with Claude Code integration.**
+**AI-powered XLSForm creation tool with multi-agent coding support.**
 
 <img src="https://www.arced-international.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Farced-int_logo.5040257d.png&w=3840&q=75" alt="ARCED International Logo" width="200">
 
@@ -14,9 +14,9 @@ XLSForm AI helps you create, modify, and validate XLSForms intelligently. Parse 
 
 ## What is XLSForm AI?
 
-XLSForm AI is a CLI tool that sets up projects with specialized Claude Code skills and commands for XLSForm development. It combines:
+XLSForm AI is a CLI tool that sets up projects with specialized skills and commands for XLSForm development, compatible with multiple AI coding agents. It combines:
 
-- **Comprehensive XLSForm knowledge** built into Claude Code
+- **Comprehensive XLSForm knowledge** integrated with your AI coding agent
 - **Smart file parsing** to import questions from PDFs, Word docs, and Excel files
 - **Intelligent question type detection** from natural language
 - **xlwings integration** for live Excel editing with format preservation
@@ -61,7 +61,7 @@ XLSForm AI is a CLI tool that sets up projects with specialized Claude Code skil
 
 - Python 3.10 or higher
 - Node.js 18+ (for watch/reload features)
-- Claude Code with CLI access
+- An AI coding assistant (Claude Code recommended, but other agents supported)
 - Excel (optional, for xlwings features)
 
 ### Install CLI Tool
@@ -108,10 +108,14 @@ my-survey/
 
 ### Start Creating Forms
 
-1. **Open the project in Claude Code:**
+1. **Open the project in your preferred AI coding environment:**
 ```bash
 cd my-survey
+
+# Using Claude Code (recommended)
 claude
+
+# Or use with other AI coding agents that support local file access
 ```
 
 2. **Add questions using natural language:**
@@ -590,7 +594,8 @@ These tools are part of ARCED International's commitment to providing high-quali
 
 - [XLSForm](https://xlsform.org/) for the form specification
 - [ODK](https://odk.org/) for the XForm standard
-- [Claude Code](https://claude.ai/code) for the AI-powered development environment
+- [Claude Code](https://claude.ai/code) for the AI-powered development environment (recommended)
+- Compatible with other AI coding agents that support local file system access
 
 ## Support
 
