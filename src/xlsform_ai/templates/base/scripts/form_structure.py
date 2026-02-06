@@ -26,6 +26,12 @@ METADATA_TYPES = {
 def is_metadata_field(question_type: str) -> bool:
     """Check if a question type is a metadata field.
 
+# CRITICAL: Add scripts directory to Python path for sibling imports
+# This allows the script to find sibling modules whether run from project root or scripts dir
+_scripts_dir = Path(__file__).parent.resolve()
+if str(_scripts_dir) not in sys.path:
+    sys.path.insert(0, str(_scripts_dir))
+
     Args:
         question_type: XLSForm question type
 

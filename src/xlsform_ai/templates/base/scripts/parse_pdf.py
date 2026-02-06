@@ -6,6 +6,12 @@ Extracts questions from PDF files and converts them to structured JSON format.
 Usage: python parse_pdf.py <file.pdf> --pages 1-10
 """
 
+# CRITICAL: Add scripts directory to Python path for sibling imports
+# This allows the script to find sibling modules whether run from project root or scripts dir
+_scripts_dir = Path(__file__).parent.resolve()
+if str(_scripts_dir) not in sys.path:
+    sys.path.insert(0, str(_scripts_dir))
+
 import sys
 import json
 import argparse
