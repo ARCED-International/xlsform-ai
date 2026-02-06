@@ -575,6 +575,8 @@ With 12+ years of evidence-led execution, serving 40+ countries, and impacting 5
 
 **[FolderManifest](https://www.foldermanifest.com)** - Offline folder audit manifest software for Windows. Generate folder trees, verify checksum manifests, and clean up duplicate files. A lightweight paid desktop tool for professionals who need robust file auditing capabilities.
 
+<img src="https://www.foldermanifest.com/assets/logo-D_p3Ev9M.svg" alt="FolderManifest Logo" width="100">
+
 **[FolderManifest Free Tools](https://www.foldermanifest.com/free-tools)** - Free online tools for everyone:
 
 - **[Compare Files Online](https://www.foldermanifest.com/free-tools/compare-files)** - Upload 2 files to instantly check if they are identical using SHA-256 checksums
