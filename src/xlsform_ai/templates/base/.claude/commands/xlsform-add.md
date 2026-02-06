@@ -29,6 +29,23 @@ arguments:
 
 If you write inline Python code for file operations, you have failed this command.
 
+## SPECIAL CASE: Metadata Fields
+
+**When user requests "Add the metadata fields" or similar:**
+
+Use the dedicated metadata script:
+```bash
+python scripts/add_metadata.py
+```
+
+**DO NOT write inline code to add metadata fields.** The metadata script:
+- Checks for existing metadata fields to prevent duplicates
+- Handles row shifting automatically
+- Uses UTF-8 safe output
+- Works on Windows without encoding errors
+
+**Standard metadata fields:** start, end, today, deviceid, subscriberid, simserial, phonenumber, username
+
 ## Key Principles
 
 1. **Best Practices by Default**: Always add appropriate constraints and required fields

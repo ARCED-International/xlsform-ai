@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XLSForm AI Activity Log - test_multi_agent_project</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 200px;
+            height: auto;
+            margin-bottom: 20px;
+            filter: brightness(0) invert(1);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px 40px;
+            background: #f8f9fa;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #2a5298;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .filters {
+            background: #f8f9fa;
+            padding: 20px 40px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .filter-group {
+            display: inline-block;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-weight: 600;
+            color: #2a5298;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+        }
+
+        .filter-group select, .filter-group input[type="date"], .filter-group input[type="text"] {
+            padding: 8px 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 0.9em;
+            background: white;
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        .filter-group select:focus, .filter-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .search-box {
+            width: 300px;
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 25px;
+            font-size: 0.95em;
+            margin-left: 20px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .results-count {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-left: 20px;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, #667eea, #764ba2);
+        }
+
+        .entry {
+            position: relative;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .entry.hidden {
+            display: none;
+        }
+
+        .entry::before {
+            content: '';
+            position: absolute;
+            left: -36px;
+            top: 25px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #667eea;
+            border: 3px solid white;
+            box-shadow: 0 0 0 3px #667eea;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .entry-type {
+            display: inline-block;
+            padding: 5px 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .entry-date {
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+
+        .entry-description {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #2a5298;
+            margin-bottom: 10px;
+        }
+
+        .entry-details {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #495057;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .entry-meta {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+
+        .entry-meta span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6c757d;
+            font-size: 1.2em;
+            display: none;
+        }
+
+        .no-results::before {
+            content: "🔍";
+            display: block;
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            background: #2a5298;
+            color: white;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .footer a {
+            color: white;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .stats {
+                grid-template-columns: 1fr;
+            }
+
+            .entry-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .search-box {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="https://www.arced-international.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Farced-int_logo.5040257d.png&w=3840&q=75" alt="ARCED International Logo" class="logo">
+            <h1>XLSForm AI Activity Log</h1>
+            <p class="subtitle">Project: test_multi_agent_project</p>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-value">1</div>
+                <div class="stat-label">Total Actions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">Feb 06, 2026</div>
+                <div class="stat-label">Project Created</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">Feb 06, 2026</div>
+                <div class="stat-label">Last Updated</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <div class="filter-group">
+                <label>Action Type</label>
+                <select id="filter-action-type">
+                    <option value="">All Types</option>
+                    <option value="add_questions">add_questions</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>Author</label>
+                <select id="filter-author">
+                    <option value="">All Authors</option>
+                    <option value="Claude Code">Claude Code</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>From Date</label>
+                <input type="date" id="filter-date-from" min="2026-02-06">
+            </div>
+
+            <div class="filter-group">
+                <label>To Date</label>
+                <input type="date" id="filter-date-to" max="2026-02-06">
+            </div>
+
+            <input type="text" class="search-box" id="filter-search" placeholder="Search descriptions and details...">
+            <div class="results-count" id="results-count">1 shown</div>
+        </div>
+
+        <div class="content">
+            <h2 style="margin-bottom: 20px; color: #2a5298;">Activity Timeline</h2>
+            <div class="timeline" id="timeline">

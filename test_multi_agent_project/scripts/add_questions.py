@@ -6,9 +6,16 @@ from pathlib import Path
 
 # Ensure UTF-8 encoding for Windows console output
 if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    import locale
+    import codecs
+    # Try to set stdout/stderr encoding to UTF-8
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except AttributeError:
+        # Python < 3.7 doesn't have reconfigure, use environment variable approach
+        import os
+        os.environ['PYTHONIOENCODING'] = 'utf-8'
 
 # Try to import logger, fail gracefully if not available
 try:
@@ -184,6 +191,39 @@ def add_questions(questions_data, survey_file=None):
 
         if header_row is None:
             return {"success": False, "error": "Could not find header row with 'type' column"}
+
+        # Check for duplicate question names (prevent adding existing questions)
+        name_col = 2  # Standard 'name' column position
+        existing_names = set()
+        for row_idx in range(header_row + 1, ws.max_row + 1):
+            name_val = ws.cell(row_idx, name_col).value
+            if name_val:
+                existing_names.add(str(name_val).strip())
+
+        # Filter out questions that already exist
+        duplicates = []
+        filtered_questions = []
+        for q in questions_data:
+            q_name = q.get("name", "")
+            if q_name in existing_names:
+                duplicates.append(q_name)
+            else:
+                filtered_questions.append(q)
+
+        if duplicates:
+            print(f"Note: Skipping {len(duplicates)} question(s) that already exist: {', '.join(duplicates)}")
+
+        if not filtered_questions:
+            return {
+                "success": True,
+                "added": [],
+                "total": 0,
+                "skipped": duplicates,
+                "message": "All questions already exist in the form"
+            }
+
+        # Use filtered list for actual addition
+        questions_data = filtered_questions
 
         # Find insertion point using smart logic (or fallback to simple logic)
         if FORM_STRUCTURE_AVAILABLE:

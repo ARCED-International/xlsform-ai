@@ -4,9 +4,13 @@ import sys
 
 # Ensure UTF-8 encoding for Windows console output
 if sys.platform == 'win32':
-    import io
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+    # Try to set stdout/stderr encoding to UTF-8
+    try:
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    except AttributeError:
+        # Python < 3.7 doesn't have reconfigure
+        pass
 
 from rich.console import Console
 from rich.panel import Panel
@@ -60,7 +64,8 @@ def _get_header(title: str, color: str = "cyan") -> str:
         Formatted header string
     """
     border = "+" + "=" * 78 + "+"
-    return f"[bold {color}]{border}\n|                                                                      |\n|                          [{color}]{title}[/{color}]                            |\n|                                                                      |\n{border}[/{color}]"
+    # Use simple tag structure - close combined tags properly
+    return f"[bold {color}]{border}[/]\n|                                                                      |\n|                          [{color}]{title}[/{color}]                            |\n|                                                                      |\n[bold {color}]{border}[/]"
 
 
 # Clean headers using simple ASCII borders
