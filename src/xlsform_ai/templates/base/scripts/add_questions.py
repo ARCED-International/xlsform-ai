@@ -185,11 +185,16 @@ def add_questions(questions_data, survey_file=None):
     Returns:
         dict with success status and details
     """
+    # Initialize config once for use throughout the function
+    # This ensures consistency and supports custom project directories
+    config = None
+    if CONFIG_AVAILABLE:
+        config = ProjectConfig()
+
     try:
         # Determine file to use
         if survey_file is None:
-            if CONFIG_AVAILABLE:
-                config = ProjectConfig()
+            if config:
                 survey_file = config.get_full_xlsform_path()
             else:
                 survey_file = Path("survey.xlsx")
@@ -353,19 +358,19 @@ def add_questions(questions_data, survey_file=None):
         wb.save(survey_file)
 
         # Log activity
-        if LOGGING_AVAILABLE and CONFIG_AVAILABLE:
+        if LOGGING_AVAILABLE and config:
             try:
                 # Check if activity logging is enabled in config
-                config = ProjectConfig()
                 if config.is_activity_logging_enabled():
-                    # Initialize logger with project root directory (parent of scripts folder)
-                    project_root = Path(__file__).parent.parent
-                    logger = ActivityLogger(project_dir=project_root)
-                    questions_summary = ", ".join([f"{q['name']} ({q['type']})" for q in result["added"]])
+                    # Use project directory from config
+                    # This respects the project_dir setting from xlsform-ai.json
+                    # and supports both relative and absolute paths
+                    logger = ActivityLogger(project_dir=config.project_dir)
+                    questions_summary = ", ".join([f"{q['name']} ({q['type']})" for q in added])
                     logger.log_action(
                         action_type="add_questions",
-                        description=f"Added {result['total']} question(s)",
-                        details=f"Questions: {questions_summary}\nRows: {', '.join([str(q['row']) for q in result['added']])}"
+                        description=f"Added {len(added)} question(s)",
+                        details=f"Questions: {questions_summary}\nRows: {', '.join([str(q['row']) for q in added])}"
                     )
                     log_file = logger.log_file
                     print(f"\n[OK] Activity logged to: {log_file.name}")
