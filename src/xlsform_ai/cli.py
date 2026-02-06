@@ -109,7 +109,7 @@ def check_cli_installation() -> bool:
         # Check for key template components
         required = [
             template_path / ".claude" / "skills" / "xlsform-core" / "SKILL.md",
-            template_path / ".claude" / "CLAUDE.md",
+            template_path / "shared" / "AGENT_MEMORY_TEMPLATE.md",
         ]
 
         missing = [f for f in required if not f.exists()]

@@ -11,7 +11,7 @@ This release brings a **massive expansion** of the agent memory system and a **c
 ## 🚀 New Features
 
 ### Agent Memory System (5x Expansion)
-- **Expanded CLAUDE.md from 480 to 2,472 lines** (+413% increase)
+- **Expanded AGENT_MEMORY_TEMPLATE.md from 480 to 2,566 lines** (+413% increase)
 - Complete restructure with 5-level hierarchical documentation
 - **Multi-agent system documentation** - All 17 AI assistants now documented
 - **Skill system documentation** - How to use /skill:xlsform-core and /skill:activity-logging
@@ -53,7 +53,7 @@ This release brings a **massive expansion** of the agent memory system and a **c
 
 ## 📚 Documentation Improvements
 
-### Agent Memory File (CLAUDE.md)
+### Agent Memory File (AGENT_MEMORY_TEMPLATE.md)
 New structure with progressive disclosure:
 
 **Level 1: Executive Summary** (~100 lines)
@@ -116,7 +116,7 @@ All changes tested and verified:
 - `CHANGELOG_v0.5.0.md` - This changelog
 
 ### Updated Documentation
-- `CLAUDE.md` - Agent memory file (480 → 2,472 lines)
+- `AGENT_MEMORY_TEMPLATE.md` - Agent memory file (480 → 2,472 lines)
 - All command `.md` files - Protocols extracted and integrated
 
 ---
@@ -201,4 +201,4 @@ Future releases will build on this foundation:
 
 **For detailed information about the activity logging fix, see `ACTIVITY_LOGGING_FIX.md`**
 
-**For complete system documentation, see `src/xlsform_ai/templates/base/shared/CLAUDE.md`**
+**For complete system documentation, see `src/xlsform_ai/templates/base/shared/AGENT_MEMORY_TEMPLATE.md`**

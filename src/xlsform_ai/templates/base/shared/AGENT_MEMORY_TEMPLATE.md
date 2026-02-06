@@ -6,6 +6,63 @@ This is an XLSForm project with AI-assisted development capabilities using multi
 
 ---
 
+# ⚠️ CRITICAL: MANDATORY LOGGING REQUIREMENT ⚠️
+
+## **EVERY XLSForm Modification MUST Be Logged - NO EXCEPTIONS**
+
+**This is NOT optional. This is NOT a suggestion. This is MANDATORY.**
+
+### When MUST You Log Activity?
+
+**You MUST log activity AFTER EVERY modification to `survey.xlsx`:**
+
+✅ **AFTER adding questions** - Use `add_questions()` → **MUST LOG**
+✅ **AFTER updating questions** - Modify any field → **MUST LOG**
+✅ **AFTER removing questions** - Delete any row → **MUST LOG**
+✅ **AFTER moving questions** - Reorder anything → **MUST LOG**
+✅ **AFTER importing** - From PDF/Word/Excel → **MUST LOG**
+✅ **AFTER validating** - Even validation → **MUST LOG**
+
+### How to Log (REQUIRED)
+
+**Step 1:** Import the logger (DO THIS EVERY TIME):
+```python
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path('scripts')))
+
+from log_activity import ActivityLogger
+```
+
+**Step 2:** Create logger and log (DO THIS AFTER EVERY CHANGE):
+```python
+logger = ActivityLogger()
+logger.log_action(
+    action_type="add_questions",  # or update_questions, remove_questions, etc.
+    description="Added 3 question(s)",
+    details="Questions: q1, q2, q3\nRows: 10, 11, 12"
+)
+```
+
+### What Happens If You Don't Log?
+
+❌ **No audit trail** - Can't track who changed what
+❌ **Broken collaboration** - Team can't see changes
+❌ **Project management fails** - Can't review history
+❌ **Violates protocol** - Breaks the universal implementation protocol
+
+### Simple Rule to Follow
+
+**🔴 RED RULE: If survey.xlsx was modified, YOU MUST LOG IT.**
+
+**No excuses. No exceptions. No skipping.**
+
+**Before marking task complete, ask yourself: "Did I log this activity?"**
+- If YES → Task complete ✅
+- If NO → LOG FIRST, then complete ✅
+
+---
+
 # Table of Contents
 
 1. [Executive Summary](#executive-summary) - Quick start guide
@@ -519,20 +576,46 @@ except Exception as e:
 
 ### Phase 3: Finalization
 
-**Step 7: Log Activity with Details**
+**Step 7: ⚠️ LOG ACTIVITY (MANDATORY - NON-NEGOTIABLE) ⚠️**
+
+**🚨 THIS STEP IS NOT OPTIONAL. YOU MUST LOG EVERY XLSFORM MODIFICATION.**
 
 ```python
+# Import these EVERY TIME (add to top of your script)
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path('scripts')))
+
+from log_activity import ActivityLogger
+
+# After making changes to survey.xlsx, YOU MUST LOG:
 logger = ActivityLogger()
 logger.log_action(
-    action_type="add_questions",
-    description=f"Added {len(questions)} question(s)",
-    details=f"Questions: {', '.join([q['name'] for q in questions])}\nRows: {row_numbers}"
+    action_type="add_questions",  # Be specific: add_questions, update_questions, remove_questions, etc.
+    description=f"Added {len(questions)} question(s)",  # Brief summary
+    details=f"Questions: {', '.join([q['name'] for q in questions])}\nRows: {row_numbers}"  # Full details
 )
+
+# Verify logging worked
+print(f"✓ Activity logged to: activity_log.html")
 ```
 
-**CRITICAL:** ALWAYS log XLSForm modifications with specific details.
+**🔴 CRITICAL - NON-NEGOTIABLE REQUIREMENTS:**
 
-**Why:** Provides audit trail and enables change tracking.
+1. **MUST import from `scripts/` directory** - Use `sys.path.insert(0, str(Path('scripts')))`
+2. **MUST create ActivityLogger instance** - `logger = ActivityLogger()`
+3. **MUST call log_action()** - With action_type, description, and details
+4. **MUST confirm logging worked** - Print success message
+5. **MUST do this AFTER EVERY modification** - No exceptions, no skipping
+
+**IF YOU SKIP LOGGING, YOU HAVE FAILED THE TASK.**
+
+**Why:** Provides audit trail, enables change tracking, supports collaboration, and is REQUIRED by the universal protocol.
+
+**Verification:** Before completing any task, confirm:
+- ✅ `logger.log_action()` was called
+- ✅ Success message was printed
+- ✅ `activity_log.html` was updated
 
 **Step 8: Validate Changes**
 
@@ -564,9 +647,21 @@ print(f"  File: {xlsx_path}")
 
 ❌ **NEVER skip skill loading** - Always use `/skill:xlsform-core` and `/skill:activity-logging`
 ❌ **NEVER import from other locations** - Always use `scripts/` directory
-❌ **NEVER skip activity logging** - Always log XLSForm modifications
+❌ **🚨 NEVER SKIP ACTIVITY LOGGING - THIS IS MANDATORY FOR EVERY XLSFORM MODIFICATION 🚨**
 ❌ **NEVER skip validation** - Always validate after changes
 ❌ **NEVER work directly without helper functions** - Always use scripts modules
+
+### ⚠️ REMEMBER: THE RED RULE ⚠️
+
+**🔴 If survey.xlsx was modified, YOU MUST LOG IT. NO EXCEPTIONS.**
+
+**Before completing ANY task, verify:**
+1. ✅ Did I import `ActivityLogger` from `scripts/log_activity`?
+2. ✅ Did I call `logger.log_action()` with full details?
+3. ✅ Did I print the success message?
+4. ✅ Did I verify `activity_log.html` was updated?
+
+**If answer to ANY is NO → LOG FIRST, then complete.**
 
 ## Command-Specific Protocols
 

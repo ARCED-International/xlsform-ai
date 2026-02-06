@@ -101,7 +101,7 @@ my-survey/
 ├── .claude/                 # Claude Code configuration
 │   ├── commands/            # Slash commands
 │   ├── skills/              # XLSForm knowledge
-│   └── CLAUDE.md            # Project memory
+│   └── AGENT_MEMORY_TEMPLATE.md  # Project memory
 ├── scripts/                 # Utility scripts
 └── package.json             # npm scripts
 ```
@@ -363,7 +363,7 @@ pip install xlwings
 │   │       ├── SKILL.md     # Main skill file
 │   │       ├── references/  # Detailed documentation
 │   │       └── assets/      # Templates
-│   └── CLAUDE.md            # Project memory
+│   └── AGENT_MEMORY_TEMPLATE.md  # Project memory
 ├── scripts/                 # Utility scripts
 │   ├── parse_pdf.py         # PDF parser
 │   ├── parse_docx.py        # Word parser
@@ -471,7 +471,7 @@ xlsform-ai cleanup --dry-run    # Preview what would be removed
 
 ### Project-Specific Docs
 
-- `.claude/CLAUDE.md` - Project memory and quick reference
+- Agent memory file (copied from template) and quick reference
 - `.claude/skills/xlsform-core/SKILL.md` - XLSForm knowledge
 - `.claude/skills/xlsform-core/references/` - Detailed guides
 

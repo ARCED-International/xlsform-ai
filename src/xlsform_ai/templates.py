@@ -200,15 +200,15 @@ class TemplateManager:
                                         continue
                                 shutil.copytree(skill_dir, dest)
 
-                    # Copy shared CLAUDE.md (agent-specific memory file)
-                    shared_claude = shared_src / "CLAUDE.md"
-                    if shared_claude.exists():
+                    # Copy shared AGENT_MEMORY_TEMPLATE.md (agent-specific memory file)
+                    shared_memory = shared_src / "AGENT_MEMORY_TEMPLATE.md"
+                    if shared_memory.exists():
                         memory_file = agent_config.get("memory_file")
                         if memory_file:
                             memory_path = project_path / memory_file
                             if not memory_path.exists() or overwrite:
                                 memory_path.parent.mkdir(parents=True, exist_ok=True)
-                                shutil.copy2(shared_claude, memory_path)
+                                shutil.copy2(shared_memory, memory_path)
 
                     print(f"[OK] Configured {agent} assistant")
 
