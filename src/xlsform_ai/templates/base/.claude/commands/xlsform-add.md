@@ -57,7 +57,7 @@ python scripts/add_metadata.py
 
 2. **Structured Output**: Keep output concise and scannable
    ```
-   ✓ Added 2 questions
+   [OK] Added 2 questions
      Row 2: text | first_name | "First Name"
    ```
    Avoid verbose explanations, use structured lists
@@ -274,7 +274,7 @@ choices: strongly_agree, agree, neutral, disagree, strongly_disagree
 1. **Verify** the changes were applied correctly
 2. **Show a concise summary** with this format:
 ```
-✓ Added 2 questions
+[OK] Added 2 questions
 
   Row 2: text | first_name | "First Name"
     Required: yes

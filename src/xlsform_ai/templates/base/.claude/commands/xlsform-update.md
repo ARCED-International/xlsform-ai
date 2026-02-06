@@ -137,7 +137,7 @@ Action: Update label column
 1. **Verify** the changes were applied correctly
 2. **Show structured output:**
 ```
-✓ Updated question: first_name
+[OK] Updated question: first_name
 
   Changes:
     - label: "First Name" → "Respondent First Name"
@@ -166,7 +166,7 @@ Proposed change:
 
 Confirming update...
 
-✓ Updated question: age
+[OK] Updated question: age
   Changes:
     - constraint: added (. >= 0 and . <= 120)
     - constraint_message: added
@@ -184,7 +184,7 @@ Proposed change:
   required: no → yes
   required_message: "This field is required"
 
-✓ Updated question: first_name
+[OK] Updated question: first_name
   Changes:
     - required: no → yes
     - required_message: added

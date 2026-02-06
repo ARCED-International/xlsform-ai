@@ -237,7 +237,7 @@ Result:
 1. **Verify** the move was successful
 2. **Show structured output:**
 ```
-✓ Moved: age_question
+[OK] Moved: age_question
 
   From: Row 15
   To: Row 3 (top of form)
@@ -264,7 +264,7 @@ Found: first_name (text) on row 10
 
 Moving to row 2 (top of form, after header)...
 
-✓ Moved: first_name
+[OK] Moved: first_name
   From: Row 10
   To: Row 2
 ```
@@ -281,7 +281,7 @@ Found:
 
 Moving age to row 3 (after name)...
 
-✓ Moved: age
+[OK] Moved: age
   From: Row 5
   To: Row 3
 ```
@@ -306,7 +306,7 @@ Current group structure:
 
 Moving to row 8 (inside group, after age)...
 
-✓ Moved: income
+[OK] Moved: income
   From: Row 10
   To: Row 8 (inside demographics group)
 
@@ -394,7 +394,7 @@ Moving in reverse order (to maintain positions)...
 Step 1: Move age to row 3
 Step 2: Move name to row 2
 
-✓ Moved: 2 questions
+[OK] Moved: 2 questions
   New order:
     Row 2: name
     Row 3: age
@@ -413,7 +413,7 @@ Current order:
 
 Reversing...
 
-✓ Reordered: 3 questions
+[OK] Reordered: 3 questions
   New order:
     1. q3
     2. q2
@@ -434,7 +434,7 @@ Moving from contact_info to demographics...
 Warning: contact_info group will be empty after this move.
 Action: Removing empty contact_info group.
 
-✓ Moved: phone
+[OK] Moved: phone
   From: contact_info group
   To: demographics group (after age question)
 

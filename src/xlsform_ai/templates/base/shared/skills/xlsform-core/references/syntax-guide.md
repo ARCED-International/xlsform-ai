@@ -206,7 +206,7 @@ end repeat
 
 **Always** close the most recent structure first:
 ```
-✓ Correct:
+[OK] Correct:
 begin repeat
   begin group
   end group
@@ -261,50 +261,50 @@ Add translations using `::language_code` suffix:
 
 ### 1. Column Name Typos
 ```
-❌ Choices, choice, Type, Name
-✓ choices, type, name
+[FAIL] Choices, choice, Type, Name
+[OK] choices, type, name
 ```
 
 ### 2. list_name Mismatch
 ```
-❌ Survey: select_one fruit
+[FAIL] Survey: select_one fruit
    Choices: list_name = fruits
 
-✓ Survey: select_one fruits
+[OK] Survey: select_one fruits
    Choices: list_name = fruits
 ```
 
 ### 3. Duplicate Names
 ```
-❌ Multiple questions with name = "question1"
-✓ Each question has unique name
+[FAIL] Multiple questions with name = "question1"
+[OK] Each question has unique name
 ```
 
 ### 4. Invalid Name Characters
 ```
-❌ name starts with digit: 1st_question
-❌ name has spaces: respondent name
-✓ name: first_question, respondent_name
+[FAIL] name starts with digit: 1st_question
+[FAIL] name has spaces: respondent name
+[OK] name: first_question, respondent_name
 ```
 
 ### 5. Spaces in select_multiple Choice Names
 ```
-❌ select_multiple with choice name = "choice 1"
-✓ choice name = "choice_1" or "choice1"
+[FAIL] select_multiple with choice name = "choice 1"
+[OK] choice name = "choice_1" or "choice1"
 ```
 
 ### 6. Unmatched begin/end
 ```
-❌ begin group without end group
-❌ Nested groups closed in wrong order
-✓ Every begin has matching end, properly nested
+[FAIL] begin group without end group
+[FAIL] Nested groups closed in wrong order
+[OK] Every begin has matching end, properly nested
 ```
 
 ### 7. Formula Syntax Errors
 ```
-❌ ${age > 18} (missing closing brace)
-❌ age >= 18 (missing ${)
-✓ ${age} >= 18
+[FAIL] ${age > 18} (missing closing brace)
+[FAIL] age >= 18 (missing ${)
+[OK] ${age} >= 18
 ```
 
 ## Formatting Notes

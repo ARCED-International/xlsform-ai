@@ -147,7 +147,7 @@ def print_cleanup_rich(result):
 
     # Errors branch
     if result["errors"]:
-        error_branch = tree.add("⚠️  Errors", style="red")
+        error_branch = tree.add("[WARNING]  Errors", style="red")
         for error in result["errors"]:
             error_branch.add(f"✗ {error}", style="red")
 
@@ -156,7 +156,7 @@ def print_cleanup_rich(result):
 
     # Print informational panel
     if result["dry_run"]:
-        console.print("\n[yellow]⚠️  DRY RUN MODE[/yellow]")
+        console.print("\n[yellow][WARNING]  DRY RUN MODE[/yellow]")
         console.print("[yellow]No files were actually removed.[/yellow]")
         console.print("[yellow]Run without --dry-run to perform actual cleanup.[/yellow]\n")
     else:
@@ -168,7 +168,7 @@ def print_cleanup_rich(result):
                 f"[bold cyan]🔄 Reinstall XLSForm AI:[/bold cyan]\n"
                 f"  [cyan]xlsform-ai init --here[/cyan] [dim](to reuse same directory)[/dim]\n"
                 f"  [cyan]xlsform-ai init <new-project>[/cyan] [dim](to create new project)[/dim]\n\n"
-                f"[bold cyan]💡 Note:[/bold cyan]\n"
+                f"[bold cyan][INFO] Note:[/bold cyan]\n"
                 f"  [dim]Your activity logs were preserved and will be reused on reinstall.[/dim]\n"
                 f"  [dim]Your XLSForm files (*.xlsx) are safe and ready to use.[/dim]",
                 title="[bold green]Next Steps[/bold green]",
@@ -179,7 +179,7 @@ def print_cleanup_rich(result):
             console.print("\n[red]✗ Cleanup completed with errors[/red]")
             console.print("[yellow]Some files could not be removed. Check the errors above.[/yellow]\n")
         else:
-            console.print("\n[yellow]⚠️  No XLSForm AI files found[/yellow]")
+            console.print("\n[yellow][WARNING]  No XLSForm AI files found[/yellow]")
             console.print("[yellow]This directory doesn't appear to be an XLSForm AI project.[/yellow]\n")
 
 

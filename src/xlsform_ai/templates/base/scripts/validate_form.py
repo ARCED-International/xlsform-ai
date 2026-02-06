@@ -180,19 +180,19 @@ def main():
         print(f"# Validation Report\n")
 
         if errors:
-            print(f"❌ {len(errors)} Critical Error(s):\n")
+            print(f"[FAIL] {len(errors)} Critical Error(s):\n")
             for error in errors:
                 print(f"  - {error}")
             print()
 
         if warnings:
-            print(f"⚠️  {len(warnings)} Warning(s):\n")
+            print(f"[WARNING]  {len(warnings)} Warning(s):\n")
             for warning in warnings:
                 print(f"  - {warning}")
             print()
 
         if not errors and not warnings:
-            print("✓ All checks passed! No errors found.\n")
+            print("[OK] All checks passed! No errors found.\n")
 
     # Exit code
     sys.exit(1 if errors else 0)

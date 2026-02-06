@@ -79,7 +79,7 @@ These MUST be fixed for the form to work:
 
 Example output:
 ```
-❌ ERROR: Duplicate question names found
+[FAIL] ERROR: Duplicate question names found
   - Row 5, Row 23: name = 'age'
   - Row 12, Row 34: name = 'location'
 
@@ -96,7 +96,7 @@ Fix: Rename the duplicates (e.g., age → age_2, location → household_location
 
 Example output:
 ```
-❌ ERROR: Duplicate choice names in same list
+[FAIL] ERROR: Duplicate choice names in same list
   - List 'gender': Row 3, Row 7 both have name = 'male'
 
 Impact: Duplicate choices are indistinguishable in data export.
@@ -112,7 +112,7 @@ Fix: Rename one of the duplicates
 
 Example output:
 ```
-❌ ERROR: Referenced choice lists don't exist
+[FAIL] ERROR: Referenced choice lists don't exist
   - Row 15: select_one fruits (list 'fruits' not found in choices sheet)
   - Row 28: select_multiple colors (list 'colors' not found)
 
@@ -129,7 +129,7 @@ Fix: Create the missing choice lists or fix the list_name typo
 
 Example output:
 ```
-❌ ERROR: Invalid question types
+[FAIL] ERROR: Invalid question types
   - Row 8: 'selct_one' (did you mean 'select_one'?)
   - Row 19: 'interger' (did you mean 'integer'?)
 
@@ -146,7 +146,7 @@ Fix: Correct the typos in the type column
 
 Example output:
 ```
-❌ ERROR: Invalid question names
+[FAIL] ERROR: Invalid question names
   - Row 3: '1st_question' (starts with digit)
   - Row 10: 'respondent name' (contains space)
 
@@ -164,7 +164,7 @@ Fix: Use 'first_question' and 'respondent_name' instead
 
 Example output:
 ```
-❌ ERROR: Unbalanced structures
+[FAIL] ERROR: Unbalanced structures
   - begin_group at Row 5 missing matching end_group
   - begin_repeat at Row 15 missing matching end_repeat
 
@@ -180,7 +180,7 @@ Fix: Add the missing end_group and end_repeat rows
 
 Example output:
 ```
-❌ ERROR: Spaces in select_multiple choice names
+[FAIL] ERROR: Spaces in select_multiple choice names
   - List 'toppings' has choice 'choice 1' (contains space)
 
 Impact: Selected values will be corrupted (space-separated).
@@ -199,7 +199,7 @@ These SHOULD be fixed to avoid issues:
 
 Example output:
 ```
-⚠️  WARNING: Constraints without error messages
+[WARNING]  WARNING: Constraints without error messages
   - Row 12: constraint '. >= 18' has no constraint_message
 
 Impact: Users won't know why their input was rejected.
@@ -220,7 +220,7 @@ Recommendation: Add "Must be 18 or older" as constraint_message
 
 Example output:
 ```
-⚠️  WARNING: begin group without label
+[WARNING]  WARNING: begin group without label
   - Row 8: begin_group demographics has empty label
 
 Impact: Users won't see a group header.
@@ -237,7 +237,7 @@ Recommendation: Add a descriptive label like "Demographic Information"
 
 Example output:
 ```
-⚠️  WARNING: Possible formula syntax errors
+[WARNING]  WARNING: Possible formula syntax errors
   - Row 14: relevant 'age >= 18' (missing ${}, should be '${age} >= 18')
   - Row 20: calculation 'price * 0.18' (missing ${}, should be '${price} * 0.18')
 ```
@@ -283,8 +283,8 @@ File: survey.xlsx
 Last modified: [timestamp]
 
 ## Summary
-❌ 3 Critical Errors
-⚠️  5 Warnings
+[FAIL] 3 Critical Errors
+[WARNING]  5 Warnings
 💡 2 Suggestions
 
 ## Critical Errors (Must Fix)
@@ -338,7 +338,7 @@ Your response:
 # XLSForm Validation Report
 
 File: survey.xlsx
-✓ All checks passed! No errors found.
+[OK] All checks passed! No errors found.
 
 Your form is ready for use. Consider running validation again after making changes.
 
@@ -351,12 +351,12 @@ Your response:
 
 File: survey.xlsx
 
-❌ 2 Critical Errors
-⚠️  1 Warning
+[FAIL] 2 Critical Errors
+[WARNING]  1 Warning
 
 ## Critical Errors
 
-❌ ERROR: Duplicate question names
+[FAIL] ERROR: Duplicate question names
   - Row 8, Row 25: name = 'age'
 
 Fix options:
@@ -366,7 +366,7 @@ Fix options:
 
 Which would you like?
 
-❌ ERROR: Missing choice list
+[FAIL] ERROR: Missing choice list
   - Row 15: select_one fruits (list 'fruits' not found)
 
 Fix options:
@@ -376,7 +376,7 @@ Fix options:
 
 ## Warnings
 
-⚠️  WARNING: Constraint without message
+[WARNING]  WARNING: Constraint without message
   - Row 12: constraint '. >= 18' needs constraint_message
 
 Recommendation: Add "Age must be 18 or older"
@@ -396,13 +396,13 @@ Your response:
 Validating 2 files...
 
 ## File 1: survey.xlsx
-❌ 1 Error
-⚠️  2 Warnings
+[FAIL] 1 Error
+[WARNING]  2 Warnings
 
 [details...]
 
 ## File 2: backup_survey.xlsx
-✓ All checks passed!
+[OK] All checks passed!
 
 [details...]
 ```
@@ -414,7 +414,7 @@ User: /xlsform-validate --sheet choices
 Your response:
 Validating choices sheet only...
 
-✓ Choice sheet is valid:
+[OK] Choice sheet is valid:
   - 5 choice lists
   - 47 total choices
   - No duplicate names within lists

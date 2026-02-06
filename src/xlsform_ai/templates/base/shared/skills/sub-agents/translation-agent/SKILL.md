@@ -94,7 +94,7 @@ if choice has label::en:
 # Placeholders must match across languages
 label::en: "Hello ${name}, how are you?"
 label::fr: "Bonjour ${name}, comment allez-vous?"
-# ✓ ${name} placeholder matches
+# [OK] ${name} placeholder matches
 
 label::en: "Hello ${name}, how are you?"
 label::fr: "Bonjour ${nom}, comment allez-vous?"
@@ -111,7 +111,7 @@ select_one fruits
 - Option 1::fr: pomme
 - Option 2::en: banana
 - Option 2::fr: banane
-# ✓ 2 options in both languages
+# [OK] 2 options in both languages
 
 select_one fruits
 - Option 1::en: apple
@@ -388,11 +388,11 @@ choice,apple,label,Apple,Pomme,Tufaha,تفاحة
 **Execution:**
 ```
 [PARALLEL PHASE]
-  ├─ Validate English (baseline): ✓ Complete
-  ├─ Validate French: ✓ 2 missing, 1 issue
-  ├─ Validate Swahili: ✓ Complete
+  ├─ Validate English (baseline): [OK] Complete
+  ├─ Validate French: [OK] 2 missing, 1 issue
+  ├─ Validate Swahili: [OK] Complete
   ├─ Validate Arabic: ⚠ 5 missing, 3 issues
-  └─ Validate Portuguese: ✓ Complete
+  └─ Validate Portuguese: [OK] Complete
 
 [MERGE]
   Total missing: 7

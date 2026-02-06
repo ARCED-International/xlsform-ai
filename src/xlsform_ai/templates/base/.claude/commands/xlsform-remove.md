@@ -160,7 +160,7 @@ Removing row 15...
 1. **Verify** the removal was successful
 2. **Show structured output:**
 ```
-✓ Removed: old_question
+[OK] Removed: old_question
 
   Removed from: Row 10
   Type: text
@@ -186,7 +186,7 @@ Found: Row 10 - text old_question "Old Question"
 Checking dependencies...
 No dependencies found. Safe to remove.
 
-✓ Removed: old_question
+[OK] Removed: old_question
   Removed from: Row 10
 ```
 
@@ -201,7 +201,7 @@ Checking if any questions use this list...
 
 No questions use this list. Safe to remove.
 
-✓ Removed: unused_fruits choice list
+[OK] Removed: unused_fruits choice list
   Choices removed: 5
 ```
 
@@ -295,7 +295,7 @@ Found:
 
 Removing rows 20-23...
 
-✓ Removed: household_member repeat
+[OK] Removed: household_member repeat
   Questions removed: 3
   Rows removed: 20-23
 ```
@@ -323,7 +323,7 @@ Removing from bottom up (to preserve row numbers)...
   Removed q2 (row 11)
   Removed q1 (row 10)
 
-✓ Removed: 3 questions
+[OK] Removed: 3 questions
   Total rows removed: 3
   Choice lists removed: options (5 choices)
 ```

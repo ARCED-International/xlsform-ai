@@ -12,12 +12,12 @@ Comprehensive validation checks to ensure XLSForm quality.
 
 **Examples:**
 ```
-❌ Bad:
+[FAIL] Bad:
 | type | name | label |
 | text | name | Name |
 | text | name | Surname |
 
-✓ Good:
+[OK] Good:
 | type | name | label |
 | text | first_name | First name |
 | text | surname | Surname |
@@ -38,12 +38,12 @@ Comprehensive validation checks to ensure XLSForm quality.
 
 **Examples:**
 ```
-❌ Bad:
+[FAIL] Bad:
 | list_name | name | label |
 | gender | male | Male |
 | gender | male | Boy |
 
-✓ Good:
+[OK] Good:
 | list_name | name | label |
 | gender | male | Male |
 | gender | boy | Boy |
@@ -59,11 +59,11 @@ Comprehensive validation checks to ensure XLSForm quality.
 
 **Examples:**
 ```
-❌ Bad:
+[FAIL] Bad:
 Survey: select_one fruits
 Choices: list_name = fruit (typo)
 
-✓ Good:
+[OK] Good:
 Survey: select_one fruits
 Choices: list_name = fruits (exact match)
 ```
@@ -104,12 +104,12 @@ Choices: list_name = fruits (exact match)
 
 **Examples:**
 ```
-❌ Bad:
+[FAIL] Bad:
 | list_name | name | label |
 | toppings | choice 1 | Cheese |
 | toppings | choice 2 | Pepperoni |
 
-✓ Good:
+[OK] Good:
 | list_name | name | label |
 | toppings | choice_1 | Cheese |
 | toppings | choice_2 | Pepperoni |
@@ -128,12 +128,12 @@ Choices: list_name = fruits (exact match)
 
 **Examples:**
 ```
-❌ Invalid:
+[FAIL] Invalid:
 - 1st_question (starts with digit)
 - respondent name (contains space)
 - @username (contains @)
 
-✓ Valid:
+[OK] Valid:
 - first_question
 - _internal
 - question-1
@@ -153,13 +153,13 @@ Choices: list_name = fruits (exact match)
 
 **Examples:**
 ```
-❌ Bad:
+[FAIL] Bad:
 begin group A
 begin group B
 end group A
 end group B
 
-✓ Good:
+[OK] Good:
 begin group A
 begin group B
 end group B
@@ -187,7 +187,7 @@ end group A
 
 **Example:**
 ```
-❌ Bad:
+[FAIL] Bad:
 | type | name | label | audio | audio |
 ```
 
@@ -201,20 +201,20 @@ end group A
 
 **Missing field reference syntax:**
 ```
-❌ Bad: age >= 18
-✓ Good: ${age} >= 18
+[FAIL] Bad: age >= 18
+[OK] Good: ${age} >= 18
 ```
 
 **Wrong current field reference:**
 ```
-❌ In constraint: age >= 18
-✓ In constraint: . >= 18
+[FAIL] In constraint: age >= 18
+[OK] In constraint: . >= 18
 ```
 
 **Mismatched quotes/brackets:**
 ```
-❌ ${country = 'USA'
-✓ ${country} = 'USA'
+[FAIL] ${country = 'USA'
+[OK] ${country} = 'USA'
 ```
 
 ---
@@ -229,11 +229,11 @@ end group A
 
 **Best Practice:**
 ```
-✓ Good:
+[OK] Good:
 | type | name | label |
 | begin group | demographics | Demographic Information |
 
-⚠️ Acceptable but not recommended:
+[WARNING] Acceptable but not recommended:
 | type | name | label |
 | begin group | demographics | |
 ```
@@ -260,8 +260,8 @@ end group A
 
 **Examples:**
 ```
-❌ Bad: My Form 2024
-✓ Good: my_form_2024
+[FAIL] Bad: My Form 2024
+[OK] Good: my_form_2024
 ```
 
 ---
@@ -276,11 +276,11 @@ end group A
 
 **Examples:**
 ```
-⚠️ Missing:
+[WARNING] Missing:
 | constraint |
 | . >= 18 |
 
-✓ Complete:
+[OK] Complete:
 | constraint | constraint_message |
 | . >= 18 | Must be 18 or older |
 ```
@@ -293,11 +293,11 @@ end group A
 
 **Examples:**
 ```
-⚠️ Missing:
+[WARNING] Missing:
 | required |
 | yes |
 
-✓ Complete:
+[OK] Complete:
 | required | required_message |
 | yes | This field is required |
 ```
@@ -310,7 +310,7 @@ end group A
 
 **Example:**
 ```
-✓ Good:
+[OK] Good:
 | type | name | label | relevant |
 | select_multiple toppings | favorite | Favorite toppings | |
 | text | other_text | Other | selected(${favorite}, 'other') |
@@ -330,11 +330,11 @@ Choices sheet must include:
 
 **Examples:**
 ```
-❌ May cause issues:
+[FAIL] May cause issues:
 | type | name | calculation |
 | text | today | today() |
 
-✓ Better:
+[OK] Better:
 | type | name | calculation |
 | date | today | today() |
 ```

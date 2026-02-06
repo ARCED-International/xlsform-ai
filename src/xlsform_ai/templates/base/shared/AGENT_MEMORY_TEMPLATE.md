@@ -6,7 +6,7 @@ This is an XLSForm project with AI-assisted development capabilities using multi
 
 ---
 
-# ⚠️ CRITICAL: MANDATORY LOGGING REQUIREMENT ⚠️
+# [WARNING] CRITICAL: MANDATORY LOGGING REQUIREMENT [WARNING]
 
 ## **EVERY XLSForm Modification MUST Be Logged - NO EXCEPTIONS**
 
@@ -16,12 +16,12 @@ This is an XLSForm project with AI-assisted development capabilities using multi
 
 **You MUST log activity AFTER EVERY modification to `survey.xlsx`:**
 
-✅ **AFTER adding questions** - Use `add_questions()` → **MUST LOG**
-✅ **AFTER updating questions** - Modify any field → **MUST LOG**
-✅ **AFTER removing questions** - Delete any row → **MUST LOG**
-✅ **AFTER moving questions** - Reorder anything → **MUST LOG**
-✅ **AFTER importing** - From PDF/Word/Excel → **MUST LOG**
-✅ **AFTER validating** - Even validation → **MUST LOG**
+[OK] **AFTER adding questions** - Use `add_questions()` → **MUST LOG**
+[OK] **AFTER updating questions** - Modify any field → **MUST LOG**
+[OK] **AFTER removing questions** - Delete any row → **MUST LOG**
+[OK] **AFTER moving questions** - Reorder anything → **MUST LOG**
+[OK] **AFTER importing** - From PDF/Word/Excel → **MUST LOG**
+[OK] **AFTER validating** - Even validation → **MUST LOG**
 
 ### How to Log (REQUIRED)
 
@@ -46,20 +46,20 @@ logger.log_action(
 
 ### What Happens If You Don't Log?
 
-❌ **No audit trail** - Can't track who changed what
-❌ **Broken collaboration** - Team can't see changes
-❌ **Project management fails** - Can't review history
-❌ **Violates protocol** - Breaks the universal implementation protocol
+[FAIL] **No audit trail** - Can't track who changed what
+[FAIL] **Broken collaboration** - Team can't see changes
+[FAIL] **Project management fails** - Can't review history
+[FAIL] **Violates protocol** - Breaks the universal implementation protocol
 
 ### Simple Rule to Follow
 
-**🔴 RED RULE: If survey.xlsx was modified, YOU MUST LOG IT.**
+**[CRITICAL] RED RULE: If survey.xlsx was modified, YOU MUST LOG IT.**
 
 **No excuses. No exceptions. No skipping.**
 
 **Before marking task complete, ask yourself: "Did I log this activity?"**
-- If YES → Task complete ✅
-- If NO → LOG FIRST, then complete ✅
+- If YES → Task complete [OK]
+- If NO → LOG FIRST, then complete [OK]
 
 ---
 
@@ -90,14 +90,14 @@ XLSForm AI is an AI-powered toolkit for creating, modifying, and validating XLSF
 
 ## Key Capabilities
 
-- ✅ **17 AI assistants supported** - Use whichever you prefer
-- ✅ **Automatic question type detection** - From natural language
-- ✅ **PDF/Word/Excel import** - Parse existing questionnaires
-- ✅ **Smart form validation** - Catch errors before deployment
-- ✅ **Automatic parallel processing** - For large tasks (50+ questions, 10+ pages)
-- ✅ **Activity logging** - Track all changes with audit trail
-- ✅ **Multi-language support** - Built-in translation workflows
-- ✅ **Knowledge base integration** - XLSForm best practices at your fingertips
+- [OK] **17 AI assistants supported** - Use whichever you prefer
+- [OK] **Automatic question type detection** - From natural language
+- [OK] **PDF/Word/Excel import** - Parse existing questionnaires
+- [OK] **Smart form validation** - Catch errors before deployment
+- [OK] **Automatic parallel processing** - For large tasks (50+ questions, 10+ pages)
+- [OK] **Activity logging** - Track all changes with audit trail
+- [OK] **Multi-language support** - Built-in translation workflows
+- [OK] **Knowledge base integration** - XLSForm best practices at your fingertips
 
 ## Quick Reference Card
 
@@ -188,11 +188,11 @@ When you run `xlsform-ai init`, each agent receives:
 ### Agent-Agnostic Design
 
 The system ensures **feature parity** across all agents:
-- ✅ All agents can add questions
-- ✅ All agents can import from PDF/Word/Excel
-- ✅ All agents can validate forms
-- ✅ All agents can use sub-agents for parallel processing
-- ✅ All agents log activities automatically
+- [OK] All agents can add questions
+- [OK] All agents can import from PDF/Word/Excel
+- [OK] All agents can validate forms
+- [OK] All agents can use sub-agents for parallel processing
+- [OK] All agents log activities automatically
 
 ## Skill System
 
@@ -576,9 +576,9 @@ except Exception as e:
 
 ### Phase 3: Finalization
 
-**Step 7: ⚠️ LOG ACTIVITY (MANDATORY - NON-NEGOTIABLE) ⚠️**
+**Step 7: [WARNING] LOG ACTIVITY (MANDATORY - NON-NEGOTIABLE) [WARNING]**
 
-**🚨 THIS STEP IS NOT OPTIONAL. YOU MUST LOG EVERY XLSFORM MODIFICATION.**
+**[ALERT] THIS STEP IS NOT OPTIONAL. YOU MUST LOG EVERY XLSFORM MODIFICATION.**
 
 ```python
 # Import these EVERY TIME (add to top of your script)
@@ -597,10 +597,10 @@ logger.log_action(
 )
 
 # Verify logging worked
-print(f"✓ Activity logged to: activity_log.html")
+print(f"[OK] Activity logged to: activity_log.html")
 ```
 
-**🔴 CRITICAL - NON-NEGOTIABLE REQUIREMENTS:**
+**[CRITICAL] CRITICAL - NON-NEGOTIABLE REQUIREMENTS:**
 
 1. **MUST import from `scripts/` directory** - Use `sys.path.insert(0, str(Path('scripts')))`
 2. **MUST create ActivityLogger instance** - `logger = ActivityLogger()`
@@ -613,9 +613,9 @@ print(f"✓ Activity logged to: activity_log.html")
 **Why:** Provides audit trail, enables change tracking, supports collaboration, and is REQUIRED by the universal protocol.
 
 **Verification:** Before completing any task, confirm:
-- ✅ `logger.log_action()` was called
-- ✅ Success message was printed
-- ✅ `activity_log.html` was updated
+- [OK] `logger.log_action()` was called
+- [OK] Success message was printed
+- [OK] `activity_log.html` was updated
 
 **Step 8: Validate Changes**
 
@@ -645,21 +645,21 @@ print(f"  File: {xlsx_path}")
 
 ### What NOT To Do
 
-❌ **NEVER skip skill loading** - Always use `/skill:xlsform-core` and `/skill:activity-logging`
-❌ **NEVER import from other locations** - Always use `scripts/` directory
-❌ **🚨 NEVER SKIP ACTIVITY LOGGING - THIS IS MANDATORY FOR EVERY XLSFORM MODIFICATION 🚨**
-❌ **NEVER skip validation** - Always validate after changes
-❌ **NEVER work directly without helper functions** - Always use scripts modules
+[FAIL] **NEVER skip skill loading** - Always use `/skill:xlsform-core` and `/skill:activity-logging`
+[FAIL] **NEVER import from other locations** - Always use `scripts/` directory
+[FAIL] **[ALERT] NEVER SKIP ACTIVITY LOGGING - THIS IS MANDATORY FOR EVERY XLSFORM MODIFICATION [ALERT]**
+[FAIL] **NEVER skip validation** - Always validate after changes
+[FAIL] **NEVER work directly without helper functions** - Always use scripts modules
 
-### ⚠️ REMEMBER: THE RED RULE ⚠️
+### [WARNING] REMEMBER: THE RED RULE [WARNING]
 
-**🔴 If survey.xlsx was modified, YOU MUST LOG IT. NO EXCEPTIONS.**
+**[CRITICAL] If survey.xlsx was modified, YOU MUST LOG IT. NO EXCEPTIONS.**
 
 **Before completing ANY task, verify:**
-1. ✅ Did I import `ActivityLogger` from `scripts/log_activity`?
-2. ✅ Did I call `logger.log_action()` with full details?
-3. ✅ Did I print the success message?
-4. ✅ Did I verify `activity_log.html` was updated?
+1. [OK] Did I import `ActivityLogger` from `scripts/log_activity`?
+2. [OK] Did I call `logger.log_action()` with full details?
+3. [OK] Did I print the success message?
+4. [OK] Did I verify `activity_log.html` was updated?
 
 **If answer to ANY is NO → LOG FIRST, then complete.**
 
@@ -2461,37 +2461,37 @@ cat scripts/knowledge_base/data/odk_best_practices.md
 
 All 17 agents have full feature parity. Every agent can:
 
-- ✅ Add, update, remove, move questions
-- ✅ Import from PDF, Word, Excel
-- ✅ Validate forms
-- ✅ Use all 6 slash commands
-- ✅ Access xlsform-core skill
-- ✅ Access activity-logging skill
-- ✅ Log activities automatically
-- ✅ Use sub-agents for parallel processing
-- ✅ View and filter activity logs
+- [OK] Add, update, remove, move questions
+- [OK] Import from PDF, Word, Excel
+- [OK] Validate forms
+- [OK] Use all 6 slash commands
+- [OK] Access xlsform-core skill
+- [OK] Access activity-logging skill
+- [OK] Log activities automatically
+- [OK] Use sub-agents for parallel processing
+- [OK] View and filter activity logs
 
 ### Agent-Specific Details
 
 | Agent | Commands | Skills | Memory File | Command Format |
 |-------|----------|--------|-------------|----------------|
-| Claude | ✓ | ✓ | `.claude/CLAUDE.md` | `/command` |
-| Copilot | ✓ | ✓ | `.copilot/MEMORY.md` | `/command` |
-| Gemini | ✓ | ✓ | `.gemini/GEMINI.md` | `/command` |
-| Cursor | ✓ | ✓ | `.cursor/MEMORY.md` | `Use command` |
-| Qwen | ✓ | ✓ | `.qwen/QWEN.md` | `/command` |
-| OpenCode | ✓ | ✓ | `.opencode/MEMORY.md` | `/command` |
-| Codex | ✓ | ✓ | `.codex/MEMORY.md` | `/command` |
-| Windsurf | ✓ | ✓ | `.windsurf/MEMORY.md` | `/command` |
-| KiloCode | ✓ | ✓ | `.kilocode/MEMORY.md` | `/command` |
-| Auggie | ✓ | ✓ | `.auggie/MEMORY.md` | `/command` |
-| CodeBuddy | ✓ | ✓ | `.codebuddy/MEMORY.md` | `/command` |
-| Qoder | ✓ | ✓ | `.qoder/MEMORY.md` | `/command` |
-| Roo | ✓ | ✓ | `.roo/MEMORY.md` | `/command` |
-| Amazon Q | ✓ | ✓ | `.amazon-q/Q.md` | `/command` |
-| Amp | ✓ | ✓ | `.amp/MEMORY.md` | `/command` |
-| Shai | ✓ | ✓ | `.shai/SHAI.md` | `/command` |
-| Bob | ✓ | ✓ | `.bob/MEMORY.md` | `/command` |
+| Claude | [OK] | [OK] | `.claude/CLAUDE.md` | `/command` |
+| Copilot | [OK] | [OK] | `.copilot/MEMORY.md` | `/command` |
+| Gemini | [OK] | [OK] | `.gemini/GEMINI.md` | `/command` |
+| Cursor | [OK] | [OK] | `.cursor/MEMORY.md` | `Use command` |
+| Qwen | [OK] | [OK] | `.qwen/QWEN.md` | `/command` |
+| OpenCode | [OK] | [OK] | `.opencode/MEMORY.md` | `/command` |
+| Codex | [OK] | [OK] | `.codex/MEMORY.md` | `/command` |
+| Windsurf | [OK] | [OK] | `.windsurf/MEMORY.md` | `/command` |
+| KiloCode | [OK] | [OK] | `.kilocode/MEMORY.md` | `/command` |
+| Auggie | [OK] | [OK] | `.auggie/MEMORY.md` | `/command` |
+| CodeBuddy | [OK] | [OK] | `.codebuddy/MEMORY.md` | `/command` |
+| Qoder | [OK] | [OK] | `.qoder/MEMORY.md` | `/command` |
+| Roo | [OK] | [OK] | `.roo/MEMORY.md` | `/command` |
+| Amazon Q | [OK] | [OK] | `.amazon-q/Q.md` | `/command` |
+| Amp | [OK] | [OK] | `.amp/MEMORY.md` | `/command` |
+| Shai | [OK] | [OK] | `.shai/SHAI.md` | `/command` |
+| Bob | [OK] | [OK] | `.bob/MEMORY.md` | `/command` |
 
 **Note:** Amazon Q has limited slash command support (configuration-dependent).
 

@@ -283,11 +283,11 @@ def init_project(
                     f"     [cyan]3.2[/cyan] [yellow]/xlsform-import[/yellow] - Import from PDF/Word\n"
                     f"     [cyan]3.3[/cyan] [yellow]/xlsform-validate[/yellow] - Validate your form\n"
                     f"     [cyan]3.4[/cyan] [yellow]/xlsform-update[/yellow] - Update existing questions\n\n"
-                    f"[bold cyan]💡 File Configuration:[/bold cyan]\n"
+                    f"[bold cyan][INFO] File Configuration:[/bold cyan]\n"
                     f"     [dim]Default XLSForm: survey.xlsx[/dim]\n"
                     f"     [dim]To change: python scripts/config.py set-file my_form.xlsx[/dim]\n"
                     f"     [dim]Or edit xlsform-ai.json to set xlsform_file[/dim]\n\n"
-                    f"[bold cyan]📝 Activity Log:[/bold cyan]\n"
+                    f"[bold cyan][NOTE] Activity Log:[/bold cyan]\n"
                     f"     [dim]Default: activity_log.html[/dim]\n"
                     f"     [dim]To change: Edit xlsform-ai.json to set activity_log_file[/dim]\n"
                     f"     [dim]To disable: Set settings.log_activity to false in xlsform-ai.json[/dim]\n\n"
@@ -356,7 +356,7 @@ def cleanup_project(dry_run: bool = False):
 
     # Show mode
     if dry_run:
-        console.print("\n[bold yellow]⚠️  Dry Run Mode[/bold yellow]")
+        console.print("\n[bold yellow][WARNING]  Dry Run Mode[/bold yellow]")
         console.print("[yellow]Previewing what would be removed...[/yellow]\n")
     else:
         console.print("\n[bold]Cleaning up XLSForm AI files...[/bold]\n")

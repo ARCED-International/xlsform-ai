@@ -250,7 +250,7 @@ Action: Warning added, placeholder used in output
 **Output File:** survey.xml
 
 ### Compatibility Report
-- ✅ All 150 questions converted
+- [OK] All 150 questions converted
 - ⚠ 5 calculations need manual review
 - ⚠ 2 media files missing (placeholders used)
 
@@ -317,10 +317,10 @@ Invoked by:
 Exporting to 4 formats...
 
 [PARALLEL]
-  ├─ ODK XForm: ✓ survey_odk.xml
-  ├─ KoboToolbox: ✓ survey_kobo.xlsx
-  ├─ PyXForm JSON: ✓ survey.json
-  └─ CommCare: ✓ survey_commcare.xlsx (2 warnings)
+  ├─ ODK XForm: [OK] survey_odk.xml
+  ├─ KoboToolbox: [OK] survey_kobo.xlsx
+  ├─ PyXForm JSON: [OK] survey.json
+  └─ CommCare: [OK] survey_commcare.xlsx (2 warnings)
 
 All exports complete. See output/ directory.
 ```
@@ -337,15 +337,15 @@ All exports complete. See output/ directory.
 [Strategy] Parallel export (4 chunks)
 
 [PARALLEL PHASE]
-  Chunk 1 (questions 1-50): ✓ Converted
-  Chunk 2 (questions 51-100): ✓ Converted
-  Chunk 3 (questions 101-150): ✓ Converted
-  Chunk 4 (questions 151-200): ✓ Converted
+  Chunk 1 (questions 1-50): [OK] Converted
+  Chunk 2 (questions 51-100): [OK] Converted
+  Chunk 3 (questions 101-150): [OK] Converted
+  Chunk 4 (questions 151-200): [OK] Converted
 
 [MERGE PHASE]
   Combining XForm sections...
   Validating complete XForm...
-  ✓ Final output: survey.xml (200 questions)
+  [OK] Final output: survey.xml (200 questions)
 ```
 
 ## Validation Checklist
