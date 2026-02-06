@@ -281,7 +281,7 @@ class ActivityLogger:
         logo_data_uri = self._get_base64_logo()
 
         # Try to read the template file
-        template_path = Path(__file__).parent.parent / 'activity_log_template.html'
+        template_path = Path(__file__).parent / 'activity_log_template.html'
 
         # Fallback: use built-in template if file doesn't exist
         if not template_path.exists():

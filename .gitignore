@@ -42,6 +42,10 @@ coverage.xml
 .hypothesis/
 .pytest_cache/
 
+# Test projects
+test_*/
+test_*
+
 # Virtual environments
 venv/
 env/
