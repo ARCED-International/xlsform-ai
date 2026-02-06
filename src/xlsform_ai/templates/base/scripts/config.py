@@ -12,6 +12,10 @@ DEFAULT_CONFIG = {
     "xlsform_file": "survey.xlsx",
     "created": None,
     "last_modified": None,
+    "author": None,  # Auto-detected on first use
+    "author_updated": None,  # Timestamp when author was set
+    "collaborators": [],  # List of collaborator names
+    "active_collaborator": None,  # Currently active collaborator
     "settings": {
         "auto_validate": True,
         "log_activity": True,
@@ -34,7 +38,9 @@ class ProjectConfig:
         self._config = None
 
     def load(self) -> dict:
-        """Load configuration from file.
+        """Load configuration from file with migration support.
+
+        Migrates old configs to include new author-related fields.
 
         Returns:
             Configuration dictionary
@@ -51,6 +57,25 @@ class ProjectConfig:
             try:
                 with open(self.config_file, 'r', encoding='utf-8') as f:
                     self._config = json.load(f)
+
+                # Migrate old configs - add new fields if missing
+                migrated = False
+                if "author" not in self._config:
+                    self._config["author"] = None
+                    migrated = True
+                if "author_updated" not in self._config:
+                    self._config["author_updated"] = None
+                    migrated = True
+                if "collaborators" not in self._config:
+                    self._config["collaborators"] = []
+                    migrated = True
+                if "active_collaborator" not in self._config:
+                    self._config["active_collaborator"] = None
+                    migrated = True
+
+                if migrated:
+                    self.save()
+
             except (json.JSONDecodeError, IOError):
                 # Fallback to defaults if config is corrupt
                 self._config = DEFAULT_CONFIG.copy()
@@ -109,6 +134,90 @@ class ProjectConfig:
         config = self.load()
         config["project_name"] = name
         self.save()
+
+    def get_author(self) -> Optional[str]:
+        """Get the configured author name.
+
+        Returns:
+            Author name or None if not configured
+        """
+        config = self.load()
+        return config.get("author")
+
+    def set_author(self, author: str):
+        """Set the author name in configuration.
+
+        Args:
+            author: Author name to set
+        """
+        config = self.load()
+        config["author"] = author
+        config["author_updated"] = datetime.now().isoformat()
+        self.save()
+
+    def get_effective_author(self) -> str:
+        """Get effective author name with intelligent fallback.
+
+        Priority:
+        1. Configured author in xlsform-ai.json
+        2. Detected system username (with generic filtering)
+        3. Fallback to "User"
+
+        Returns:
+            Author name (with intelligent fallback)
+        """
+        # Try configured author first
+        configured = self.get_author()
+        if configured:
+            return configured
+
+        # Import and use author utilities
+        try:
+            from author_utils import get_detected_author
+            return get_detected_author()
+        except ImportError:
+            return "User"
+
+    def add_collaborator(self, name: str) -> None:
+        """Add a new collaborator to the project.
+
+        Args:
+            name: Collaborator name
+        """
+        config = self.load()
+        if "collaborators" not in config:
+            config["collaborators"] = []
+        if name not in config["collaborators"]:
+            config["collaborators"].append(name)
+        self.save()
+
+    def get_collaborators(self) -> list:
+        """Get list of all collaborators.
+
+        Returns:
+            List of collaborator names
+        """
+        config = self.load()
+        return config.get("collaborators", [])
+
+    def set_active_collaborator(self, name: str) -> None:
+        """Set the currently active collaborator.
+
+        Args:
+            name: Collaborator name
+        """
+        config = self.load()
+        config["active_collaborator"] = name
+        self.save()
+
+    def get_active_collaborator(self) -> Optional[str]:
+        """Get the currently active collaborator.
+
+        Returns:
+            Active collaborator name or None
+        """
+        config = self.load()
+        return config.get("active_collaborator")
 
 
 if __name__ == "__main__":

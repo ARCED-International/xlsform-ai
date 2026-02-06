@@ -212,11 +212,13 @@ class TemplateManager:
                 try:
                     # Preserve existing xlsform_file if config exists
                     existing_survey_file = None
+                    existing_author = None
                     if config_file.exists():
                         try:
                             with open(config_file, 'r', encoding='utf-8') as f:
                                 existing_config = json.load(f)
                                 existing_survey_file = existing_config.get("xlsform_file")
+                                existing_author = existing_config.get("author")
                         except Exception:
                             pass
 
@@ -227,6 +229,23 @@ class TemplateManager:
                     # Preserve existing survey file setting (IMPORTANT: never change user's survey file)
                     if existing_survey_file:
                         config_data["xlsform_file"] = existing_survey_file
+
+                    # Auto-detect author for new projects or if not already set
+                    if not existing_author:
+                        try:
+                            # Import author_utils from scripts directory
+                            import sys
+                            scripts_dir = project_path / "scripts"
+                            if scripts_dir.exists() and str(scripts_dir) not in sys.path:
+                                sys.path.insert(0, str(scripts_dir))
+                            from author_utils import get_detected_author
+
+                            detected_author = get_detected_author()
+                            config_data["author"] = detected_author
+                            config_data["author_updated"] = datetime.now().isoformat()
+                        except Exception:
+                            # Silently fall back if detection fails
+                            pass
 
                     # Add multi-agent configuration
                     config_data["enabled_agents"] = agents
@@ -243,6 +262,11 @@ class TemplateManager:
                         json.dump(config_data, f, indent=2)
 
                     print(f"[OK] Created xlsform-ai.json configuration")
+
+                    # Show author information
+                    if config_data.get("author"):
+                        print(f"[INFO] Author detected: {config_data['author']}")
+                        print(f"[INFO] You can change this later by editing xlsform-ai.json")
                 except Exception as e:
                     print(f"Note: Could not create config file: {e}")
 
