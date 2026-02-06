@@ -1070,19 +1070,28 @@
             function loadData() {
                 try {
                     const footer = document.querySelector('.footer');
-                    const jsonStr = footer.textContent.match(/XLSFORM_AI_DATA_START\s*([\s\S]*?)\s*XLSFORM_AI_DATA_END/);
 
-                    if (jsonStr && jsonStr[1]) {
-                        activityData = JSON.parse(jsonStr[1].trim());
+                    // Get the innerHTML and extract JSON between comments
+                    let htmlContent = footer.innerHTML;
+
+                    // Extract the JSON content between the comment markers
+                    const jsonMatch = htmlContent.match(/<!--\s*XLSFORM_AI_DATA_START\s*-->([\s\S]*?)<!--\s*XLSFORM_AI_DATA_END\s*-->/);
+
+                    if (jsonMatch && jsonMatch[1]) {
+                        const jsonStr = jsonMatch[1].trim();
+                        activityData = JSON.parse(jsonStr);
                         filteredEntries = [...activityData.entries];
                         updateMetaInfo();
+                        console.log('Successfully loaded activity data:', activityData.total_actions, 'entries');
                         return true;
                     } else {
-                        console.error('Could not find data in footer');
+                        console.error('Could not find data markers in footer');
+                        console.log('Footer HTML:', htmlContent.substring(0, 200));
                         return false;
                     }
                 } catch (e) {
                     console.error('Error loading data:', e);
+                    console.error('Stack:', e.stack);
                     return false;
                 }
             }
