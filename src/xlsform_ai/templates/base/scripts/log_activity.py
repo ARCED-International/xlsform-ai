@@ -42,6 +42,18 @@ class ActivityLogger:
 
         # Store effective author for this session
         self._effective_author = self._get_effective_author()
+        self._effective_location = self._get_effective_location()
+        self._xlsform_path = self._get_xlsform_path()
+
+    def _get_xlsform_path(self) -> Optional[Path]:
+        """Get XLSForm file path for reading settings metadata."""
+        try:
+            from config import ProjectConfig
+            config = ProjectConfig(self.project_dir)
+            return config.get_full_xlsform_path()
+        except Exception:
+            default_path = self.project_dir / "survey.xlsx"
+            return default_path if default_path.exists() else None
 
     def _get_effective_author(self) -> str:
         """Get effective author name with intelligent fallback.
@@ -132,6 +144,23 @@ class ActivityLogger:
 
         return log_path
 
+    def _get_effective_location(self) -> str:
+        """Get effective location label for activity logging."""
+        try:
+            from config import ProjectConfig
+            config = ProjectConfig(self.project_dir)
+            location = config.get_location()
+            if location:
+                return location
+        except Exception:
+            pass
+
+        try:
+            from author_utils import get_effective_location
+            return get_effective_location(self.project_dir)
+        except Exception:
+            return "Unknown"
+
     def log_action(self, action_type: str, description: str, details: str = "",
                    author: Optional[str] = None, location: Optional[str] = None):
         """Log an action to the activity log.
@@ -145,6 +174,7 @@ class ActivityLogger:
         """
         # Load existing data
         data = self._load_log_data()
+        self._update_form_settings_metadata(data)
 
         # Add new entry
         entry = {
@@ -155,7 +185,7 @@ class ActivityLogger:
             "description": description,
             "details": details,
             "author": author or self._effective_author,
-            "location": location or "Unknown"
+            "location": location or self._effective_location or "Unknown"
         }
 
         data["entries"].append(entry)
@@ -167,6 +197,20 @@ class ActivityLogger:
 
         return self.log_file
 
+    def _update_form_settings_metadata(self, data: dict) -> None:
+        """Update log metadata with current form title and ID."""
+        try:
+            from settings_utils import read_form_settings
+        except Exception:
+            return
+
+        if not self._xlsform_path or not self._xlsform_path.exists():
+            return
+
+        settings = read_form_settings(self._xlsform_path)
+        data["form_title"] = settings.get("form_title", "")
+        data["form_id"] = settings.get("form_id", "")
+
     def _load_log_data(self) -> dict:
         """Load existing log data or create new structure.
 
@@ -177,6 +221,8 @@ class ActivityLogger:
             "version": LOG_VERSION,
             "tag": LOG_FILE_TAG,
             "project_name": self.project_name,
+            "form_title": "",
+            "form_id": "",
             "created": datetime.now().isoformat(),
             "last_updated": datetime.now().isoformat(),
             "total_actions": 0,

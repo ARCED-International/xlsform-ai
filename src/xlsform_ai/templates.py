@@ -220,12 +220,14 @@ class TemplateManager:
                     # Preserve existing xlsform_file if config exists
                     existing_survey_file = None
                     existing_author = None
+                    existing_location = None
                     if config_file.exists():
                         try:
                             with open(config_file, 'r', encoding='utf-8') as f:
                                 existing_config = json.load(f)
                                 existing_survey_file = existing_config.get("xlsform_file")
                                 existing_author = existing_config.get("author")
+                                existing_location = existing_config.get("location")
                         except Exception:
                             pass
 
@@ -252,6 +254,25 @@ class TemplateManager:
                             config_data["author_updated"] = datetime.now().isoformat()
                         except Exception:
                             # Silently fall back if detection fails
+                            pass
+                    else:
+                        config_data["author"] = existing_author
+
+                    if existing_location:
+                        config_data["location"] = existing_location
+                    else:
+                        try:
+                            import sys
+                            scripts_dir = project_path / "scripts"
+                            if scripts_dir.exists() and str(scripts_dir) not in sys.path:
+                                sys.path.insert(0, str(scripts_dir))
+                            from author_utils import get_best_location
+
+                            detected_location = get_best_location(project_path, allow_network=True)
+                            if detected_location:
+                                config_data["location"] = detected_location
+                                config_data["location_updated"] = datetime.now().isoformat()
+                        except Exception:
                             pass
 
                     # Add multi-agent configuration

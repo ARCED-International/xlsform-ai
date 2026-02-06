@@ -13,6 +13,8 @@ XLSForms are Excel workbooks that define forms for data collection. They have th
 2. **choices** - Defines answer options for select questions
 3. **settings** - Form metadata (form title, ID, version)
 
+See `references/settings-sheet.md` for required settings and update workflow.
+
 ### Adding a Simple Question
 
 To add a question to the survey sheet:

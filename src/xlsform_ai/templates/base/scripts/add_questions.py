@@ -51,6 +51,13 @@ try:
 except ImportError:
     DISPLAY_AVAILABLE = False
 
+# Try to import settings utilities, fail gracefully if not available
+try:
+    from settings_utils import missing_required_settings
+    SETTINGS_AVAILABLE = True
+except ImportError:
+    SETTINGS_AVAILABLE = False
+
 # Try to import AI components, fail gracefully if not available
 try:
     from knowledge_base.rag_engine import RAGEngine
@@ -356,6 +363,17 @@ def add_questions(questions_data, survey_file=None):
 
         # Save workbook
         wb.save(survey_file)
+
+        if SETTINGS_AVAILABLE:
+            try:
+                missing = missing_required_settings(survey_file)
+                if missing:
+                    missing_list = ", ".join(missing)
+                    print(f"\n[WARNING] Missing required settings: {missing_list}")
+                    print("         Please fill the settings sheet (form_title, form_id) or run:")
+                    print('         python scripts/update_settings.py --title "Form Title" --id "form_id"')
+            except Exception:
+                pass
 
         # Log activity
         if LOGGING_AVAILABLE and config:

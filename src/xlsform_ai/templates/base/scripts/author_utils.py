@@ -5,8 +5,10 @@ for generic usernames, and integration with project configuration.
 """
 
 import getpass
+import locale
 import os
 import platform
+import time
 from pathlib import Path
 from typing import Optional
 
@@ -110,6 +112,128 @@ def load_author_from_config(project_dir: Optional[Path] = None) -> Optional[str]
             return config.get('author')
     except Exception:
         return None
+
+
+def load_location_from_config(project_dir: Optional[Path] = None) -> Optional[str]:
+    """Load location from project configuration file if available."""
+    if project_dir is None:
+        project_dir = Path.cwd()
+
+    config_file = project_dir / "xlsform-ai.json"
+
+    if not config_file.exists():
+        return None
+
+    try:
+        import json
+        with open(config_file, 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            return config.get('location')
+    except Exception:
+        return None
+
+
+def detect_location() -> str:
+    """Best-effort location detection without network access.
+
+    Priority:
+    1. Explicit environment variables
+    2. Locale country code and timezone
+    3. Fallback to "Unknown"
+    """
+    env_keys = [
+        'XLSFORM_AI_LOCATION', 'LOCATION', 'CITY', 'TOWN', 'REGION',
+        'STATE', 'PROVINCE', 'COUNTRY'
+    ]
+    for key in env_keys:
+        value = os.getenv(key)
+        if value:
+            return value.strip()
+
+    locale_code = None
+    try:
+        locale_code = locale.getlocale()[0]
+    except Exception:
+        locale_code = None
+
+    if not locale_code:
+        lang = os.getenv('LANG') or os.getenv('LC_ALL') or os.getenv('LC_MESSAGES')
+        if lang:
+            locale_code = lang.split('.')[0]
+
+    country = None
+    if locale_code and '_' in locale_code:
+        country = locale_code.split('_', 1)[1]
+
+    tz_name = time.tzname[0] if time.tzname else None
+
+    parts = []
+    if country:
+        parts.append(country)
+    if tz_name:
+        parts.append(tz_name)
+
+    if parts:
+        return " / ".join(parts)
+
+    return "Unknown"
+
+
+def get_effective_location(project_dir: Optional[Path] = None) -> str:
+    """Get the best available location value for activity logging."""
+    config_location = load_location_from_config(project_dir)
+    if config_location:
+        return config_location
+
+    return detect_location()
+
+
+def detect_location_online(timeout_seconds: float = 2.0) -> Optional[str]:
+    """Best-effort IP-based location lookup using a public endpoint."""
+    try:
+        import requests
+    except Exception:
+        return None
+
+    try:
+        response = requests.get("https://ipapi.co/json/", timeout=timeout_seconds)
+        if response.status_code != 200:
+            return None
+        data = response.json()
+        if not isinstance(data, dict):
+            return None
+        city = (data.get("city") or "").strip()
+        region = (data.get("region") or "").strip()
+        country_code = (data.get("country_code") or "").strip()
+        country_name = (data.get("country_name") or "").strip()
+
+        parts = []
+        if city:
+            parts.append(city)
+        if region and region not in parts:
+            parts.append(region)
+        if country_code:
+            parts.append(country_code)
+        elif country_name:
+            parts.append(country_name)
+
+        return ", ".join(parts) if parts else None
+    except Exception:
+        return None
+
+
+def get_best_location(project_dir: Optional[Path] = None, allow_network: bool = True) -> str:
+    """Get the most accurate location with optional network fallback."""
+    config_location = load_location_from_config(project_dir)
+    if config_location:
+        return config_location
+
+    if allow_network:
+        online_location = detect_location_online()
+        if online_location:
+            return online_location
+
+    return detect_location()
 
 
 def save_author_to_config(author: str, project_dir: Optional[Path] = None) -> bool:

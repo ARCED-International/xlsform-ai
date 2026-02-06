@@ -109,10 +109,51 @@
             font-weight: 500;
         }
 
+        .header-form-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            font-size: 0.75rem;
+            color: var(--color-gray-500);
+        }
+
         .header-meta {
             display: flex;
             gap: 2rem;
             font-size: 0.8125rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.4rem 0.6rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-gray-200);
+            background: white;
+            color: var(--color-gray-600);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .header-link:hover {
+            color: var(--color-gray-900);
+            border-color: var(--color-gray-300);
+            background: var(--color-gray-50);
+        }
+
+        .header-link svg {
+            width: 14px;
+            height: 14px;
+            fill: currentColor;
         }
 
         .meta-item {
@@ -141,27 +182,44 @@
             padding: 2rem 2.5rem;
         }
 
-        /* ========== TOOLBAR ========== */
-        .toolbar {
+        /* ========== SUMMARY CARDS ========== */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .summary-card {
             background: white;
             border: 1px solid var(--color-gray-200);
             border-radius: var(--radius-lg);
-            padding: 1rem 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            padding: 1.25rem 1.5rem;
             box-shadow: var(--shadow-sm);
-            flex-wrap: wrap;
         }
 
-        .toolbar-left, .toolbar-right {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
+        .summary-label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-gray-500);
+            margin-bottom: 0.5rem;
         }
 
+        .summary-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-gray-900);
+        }
+
+        .summary-subtext {
+            font-size: 0.75rem;
+            color: var(--color-gray-500);
+            margin-top: 0.25rem;
+        }
+
+        /* ========== BUTTONS ========== */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -218,6 +276,34 @@
             gap: 1rem;
             align-items: end;
             box-shadow: var(--shadow-sm);
+        }
+
+        .filter-actions {
+            margin-left: auto;
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .icon-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-gray-300);
+            background: white;
+            color: var(--color-gray-600);
+            font-size: 0.875rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .icon-btn:hover {
+            color: var(--color-gray-900);
+            border-color: var(--color-gray-400);
+            background: var(--color-gray-50);
         }
 
         .filter-group {
@@ -340,12 +426,12 @@
         }
 
         .data-table th.sort-asc .sort-indicator::after {
-            content: '▲';
+            content: '\25B2';
             color: var(--color-primary);
         }
 
         .data-table th.sort-desc .sort-indicator::after {
-            content: '▼';
+            content: '\25BC';
             color: var(--color-primary);
         }
 
@@ -419,7 +505,10 @@
         }
 
         .cell-author {
-            display: flex;
+        }
+
+        .cell-author-content {
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
         }
@@ -432,10 +521,13 @@
             color: var(--color-gray-600);
             font-size: 0.8125rem;
             cursor: pointer;
-            display: flex;
+            transition: color var(--transition);
+        }
+
+        .cell-details-preview-content {
+            display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-            transition: color var(--transition);
         }
 
         .cell-details-preview:hover {
@@ -747,6 +839,29 @@
             display: none;
         }
 
+        .page-footer {
+            max-width: 1400px;
+            margin: 2rem auto 3rem;
+            padding: 0 2.5rem;
+            color: var(--color-gray-500);
+            font-size: 0.8125rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-footer a {
+            color: var(--color-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .page-footer a:hover {
+            text-decoration: underline;
+        }
+
         /* ========== RESPONSIVE ========== */
         @media (max-width: 1024px) {
             .header {
@@ -833,45 +948,47 @@
                 <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTIiIGhlaWdodD0iNTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUyIiBoZWlnaHQ9IjUyIiByeD0iNiIgZmlsbD0iIzJDNUY3RCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxOCIgZm9udC13ZWlnaHQ9ImJvbGQiPkFJPC90ZXh0Pjwvc3ZnPg==" alt="Logo" class="logo">
                 <div class="header-titles">
                     <h1 class="header-title">Activity Log - XLSForm</h1>
-                    <div class="header-subtitle">Track project changes and collaboration</div>
+                    <div class="header-subtitle">Track changes and collaboration</div>
+                    <div class="header-form-meta">
+                        <span id="meta-form-title">Form title: -</span>
+                        <span id="meta-form-id">Form ID: -</span>
+                    </div>
                 </div>
             </div>
-            <div class="header-meta">
-                <div class="meta-item">
-                    <span class="meta-label">Total Actions</span>
-                    <span class="meta-value" id="meta-total">1</span>
-                </div>
-                <div class="meta-item">
-                    <span class="meta-label">Created</span>
-                    <span class="meta-value" id="meta-created">Feb 06, 2026</span>
-                </div>
-                <div class="meta-item">
-                    <span class="meta-label">Last Updated</span>
-                    <span class="meta-value" id="meta-updated">Feb 06, 2026 15:27</span>
-                </div>
+            <div class="header-actions">
+                <a class="header-link" href="https://github.com/ARCED-International/xlsform-ai" target="_blank" rel="noopener" title="View on GitHub">
+                    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                        <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"></path>
+                    </svg>
+                    <span>GitHub</span>
+                </a>
             </div>
         </div>
     </div>
 
     <!-- Main Content -->
     <div class="main">
-        <!-- Toolbar -->
-        <div class="toolbar">
-            <div class="toolbar-left">
-                <button class="btn" id="btn-columns">
-                    <span>👁️</span>
-                    <span>Columns</span>
-                </button>
-                <button class="btn" id="btn-export">
-                    <span>📤</span>
-                    <span>Export</span>
-                </button>
+        <!-- Summary Cards -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-label">Total Actions</div>
+                <div class="summary-value" id="summary-total">0</div>
+                <div class="summary-subtext" id="summary-total-sub">All logged entries</div>
             </div>
-            <div class="toolbar-right">
-                <button class="btn" id="btn-copy">
-                    <span>📋</span>
-                    <span>Copy Selected</span>
-                </button>
+            <div class="summary-card">
+                <div class="summary-label">Unique Authors</div>
+                <div class="summary-value" id="summary-authors">0</div>
+                <div class="summary-subtext" id="summary-authors-sub">Contributors captured</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Date Range</div>
+                <div class="summary-value" id="summary-range">-</div>
+                <div class="summary-subtext" id="summary-range-sub">Across all activity</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-label">Last Updated</div>
+                <div class="summary-value" id="summary-updated">-</div>
+                <div class="summary-subtext" id="summary-updated-sub">Most recent activity</div>
             </div>
         </div>
 
@@ -908,6 +1025,11 @@
             <div class="results-badge" id="results-count">1 shown</div>
 
             <button class="btn" id="btn-clear">Clear</button>
+
+            <div class="filter-actions">
+                <button class="icon-btn" id="btn-columns" title="Show/Hide Columns">&#x1F441;&#xFE0F;</button>
+                <button class="icon-btn" id="btn-export" title="Export">&#x1F4E4;</button>
+            </div>
         </div>
 
         <!-- Table -->
@@ -961,10 +1083,10 @@
 
             <!-- No Results -->
             <div class="no-results" id="no-results">
-                <div class="no-results-icon">🔍</div>
-                <div class="no-results-text">No activities match your filters</div>
-            </div>
+            <div class="no-results-icon">&#x1F50D;</div>
+            <div class="no-results-text">No activities match your filters</div>
         </div>
+    </div>
 
         <!-- Pagination -->
         <div class="pagination">
@@ -972,11 +1094,11 @@
                 Showing <span id="page-start">1</span>-<span id="page-end">1</span> of <span id="total-rows">1</span>
             </div>
             <div class="pagination-controls">
-                <button class="btn-page" id="btn-first" title="First page">⏮</button>
-                <button class="btn-page" id="btn-prev" title="Previous">◀</button>
+                <button class="btn-page" id="btn-first" title="First page">&#x23EE;</button>
+                <button class="btn-page" id="btn-prev" title="Previous">&#x25C0;</button>
                 <span class="page-info">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
-                <button class="btn-page" id="btn-next" title="Next">▶</button>
-                <button class="btn-page" id="btn-last" title="Last page">⏭</button>
+                <button class="btn-page" id="btn-next" title="Next">&#x25B6;</button>
+                <button class="btn-page" id="btn-last" title="Last page">&#x23ED;</button>
             </div>
             <div class="pagination-size">
                 <select id="rows-per-page">
@@ -995,7 +1117,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Show/Hide Columns</h3>
-                <button class="btn-close" id="btn-close-columns">×</button>
+                <button class="btn-close" id="btn-close-columns">&times;</button>
             </div>
             <div class="modal-body">
                 <div class="column-toggle">
@@ -1027,15 +1149,15 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Export Data</h3>
-                <button class="btn-close" id="btn-close-export">×</button>
+                <button class="btn-close" id="btn-close-export">&times;</button>
             </div>
             <div class="modal-body">
                 <button class="btn-export-option" id="btn-export-csv">
-                    <span>📄</span>
+                    <span>&#x1F4C4;</span>
                     <span>Export as CSV</span>
                 </button>
                 <button class="btn-export-option" id="btn-export-json">
-                    <span>📋</span>
+                    <span>&#x1F4CB;</span>
                     <span>Export as JSON</span>
                 </button>
             </div>
@@ -1045,6 +1167,10 @@
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
+    <div class="page-footer">
+        <div>Report automatically generated by <a href="https://github.com/ARCED-International/xlsform-ai" target="_blank" rel="noopener">XLSForm AI</a>.</div>
+        <div>Made with &#x2764; by <a href="https://arced-international.com" target="_blank" rel="noopener">ARCED International</a>.</div>
+    </div>
 
     <!-- Footer (Hidden - contains data) -->
     <div class="footer">
@@ -1098,17 +1224,40 @@
 
             // ========== META INFO ==========
             function updateMetaInfo() {
-                document.getElementById('meta-total').textContent = activityData.total_actions || 0;
+                const metaTotal = document.getElementById('meta-total');
+                if (metaTotal) {
+                    metaTotal.textContent = activityData.total_actions || 0;
+                }
+
+                const metaFormTitle = document.getElementById('meta-form-title');
+                if (metaFormTitle) {
+                    const title = (activityData.form_title || '').trim();
+                    metaFormTitle.textContent = title ? `Form title: ${title}` : 'Form title: Not set';
+                }
+
+                const metaFormId = document.getElementById('meta-form-id');
+                if (metaFormId) {
+                    const formId = (activityData.form_id || '').trim();
+                    metaFormId.textContent = formId ? `Form ID: ${formId}` : 'Form ID: Not set';
+                }
 
                 if (activityData.created) {
                     const created = new Date(activityData.created);
-                    document.getElementById('meta-created').textContent = formatDateShort(created);
+                    const metaCreated = document.getElementById('meta-created');
+                    if (metaCreated) {
+                        metaCreated.textContent = formatDateShort(created);
+                    }
                 }
 
                 if (activityData.last_updated) {
                     const updated = new Date(activityData.last_updated);
-                    document.getElementById('meta-updated').textContent = formatDateTimeShort(updated);
+                    const metaUpdated = document.getElementById('meta-updated');
+                    if (metaUpdated) {
+                        metaUpdated.textContent = formatDateTimeShort(updated);
+                    }
                 }
+
+                updateSummaryCards();
             }
 
             function formatDateShort(date) {
@@ -1123,6 +1272,40 @@
                     hour: '2-digit',
                     minute: '2-digit'
                 });
+            }
+
+            function getEntryDate(entry) {
+                if (entry.timestamp) {
+                    return new Date(entry.timestamp);
+                }
+                if (entry.date && entry.time) {
+                    return new Date(`${entry.date}T${entry.time}`);
+                }
+                if (entry.date) {
+                    return new Date(entry.date);
+                }
+                return null;
+            }
+
+            function updateSummaryCards() {
+                const entries = activityData.entries || [];
+                const total = activityData.total_actions || entries.length;
+                const authors = new Set(entries.map(entry => entry.author).filter(Boolean));
+
+                document.getElementById('summary-total').textContent = total;
+                document.getElementById('summary-authors').textContent = authors.size;
+
+                const dates = entries.map(getEntryDate).filter(Boolean);
+                if (dates.length) {
+                    const minDate = new Date(Math.min(...dates));
+                    const maxDate = new Date(Math.max(...dates));
+                    document.getElementById('summary-range').textContent = `${formatDateShort(minDate)} - ${formatDateShort(maxDate)}`;
+                } else {
+                    document.getElementById('summary-range').textContent = '-';
+                }
+
+                const lastUpdated = activityData.last_updated ? new Date(activityData.last_updated) : (dates.length ? new Date(Math.max(...dates)) : null);
+                document.getElementById('summary-updated').textContent = lastUpdated ? formatDateTimeShort(lastUpdated) : '-';
             }
 
             // ========== TABLE RENDERING ==========
@@ -1146,6 +1329,9 @@
                         tbody.appendChild(detailsTr);
                     }
                 });
+
+                // Apply column widths after rendering
+                applyColumnWidths();
 
                 // Update pagination info
                 updatePaginationInfo();
@@ -1187,14 +1373,16 @@
                 // Author cell
                 const authorCell = document.createElement('td');
                 authorCell.className = 'cell-author';
-                authorCell.innerHTML = `<span class="author-icon">👤</span> ${escapeHtml(entry.author || 'Unknown')}`;
+                const authorContent = `<span class="cell-author-content"><span class="author-icon">&#x1F464;</span> ${escapeHtml(entry.author || 'Unknown')}</span>`;
+                authorCell.innerHTML = authorContent;
                 tr.appendChild(authorCell);
 
                 // Details cell
                 const detailsCell = document.createElement('td');
                 detailsCell.className = 'cell-details-preview';
                 const preview = (entry.details || '').substring(0, 50);
-                detailsCell.innerHTML = `<span class="expand-icon">▶</span> ${escapeHtml(preview)}${entry.details && entry.details.length > 50 ? '...' : ''}`;
+                const detailsContent = `<span class="cell-details-preview-content"><span class="expand-icon">&#x25B6;</span> ${escapeHtml(preview)}${entry.details && entry.details.length > 50 ? '...' : ''}</span>`;
+                detailsCell.innerHTML = detailsContent;
                 tr.appendChild(detailsCell);
 
                 // Click handler for details
@@ -1210,9 +1398,16 @@
 
                 if (entry.date) {
                     dateStr = entry.date;
-                } else if (entry.timestamp) {
+                }
+                if (entry.time) {
+                    timeStr = entry.time;
+                }
+                if (!dateStr && entry.timestamp) {
                     const date = new Date(entry.timestamp);
                     dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                }
+                if (!timeStr && entry.timestamp) {
+                    const date = new Date(entry.timestamp);
                     timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
                 }
 
@@ -1249,8 +1444,8 @@
                         ` : ''}
 
                         <div class="details-meta">
-                            <span>📅 ${entry.timestamp || ''}</span>
-                            ${entry.location ? `<span>📍 ${escapeHtml(entry.location)}</span>` : ''}
+                            <span>&#x1F4C5; ${entry.timestamp || ''}</span>
+                            ${entry.location ? `<span>&#x1F4CD; ${escapeHtml(entry.location)}</span>` : ''}
                         </div>
                     </div>
                 `;
@@ -1421,27 +1616,28 @@
             function toggleColumn(column) {
                 const th = document.querySelector(`th[data-column="${column}"]`);
                 if (th) {
-                    const index = Array.from(th.parentElement.children).indexOf(th);
                     const table = document.getElementById('activity-table');
+                    const headers = Array.from(table.querySelectorAll('th[data-column]'));
+                    const targetIndex = headers.indexOf(th);  // Get position in ALL headers
                     const isVisible = !th.style.display || th.style.display !== 'none';
 
                     // Toggle header
                     th.style.display = isVisible ? 'none' : '';
 
-                    // Toggle body cells
-                    table.querySelectorAll('tbody tr').forEach(row => {
-                        const cell = row.cells[index];
-                        if (cell && !cell.parentElement.classList.contains('table-row-details')) {
-                            cell.style.display = isVisible ? 'none' : '';
+                    // Toggle body cells using the same index position
+                    table.querySelectorAll('tbody tr.table-row').forEach(row => {
+                        const cells = row.querySelectorAll('td');
+                        if (cells[targetIndex] && !row.classList.contains('table-row-details')) {
+                            cells[targetIndex].style.display = isVisible ? 'none' : '';
                         }
                     });
 
-                    // Toggle details rows colspan
+                    // Update details rows colspan
                     table.querySelectorAll('tbody tr.table-row-details').forEach(row => {
                         const cell = row.cells[0];
                         if (cell) {
-                            const visibleCols = Array.from(th.parentElement.children).filter(h => !h.style.display || h.style.display !== 'none').length;
-                            cell.colSpan = visibleCols;
+                            const visibleCount = headers.filter(h => !h.style.display || h.style.display !== 'none').length;
+                            cell.colSpan = visibleCount;
                         }
                     });
                 }
@@ -1582,8 +1778,6 @@
                 document.getElementById('btn-export-json').addEventListener('click', exportToJSON);
 
                 // Copy
-                document.getElementById('btn-copy').addEventListener('click', copySelected);
-
                 // Close modals on backdrop click
                 document.querySelectorAll('.modal').forEach(modal => {
                     modal.addEventListener('click', (e) => {
@@ -1611,13 +1805,51 @@
                 if (loadData()) {
                     populateFilterDropdowns();
                     setupEventListeners();
-                    renderTable();
+                    renderTable();  // This will apply column widths
                     updateResultsCount();
                     console.log(`Loaded ${activityData.entries.length} entries`);
                 } else {
                     document.getElementById('no-results').classList.add('active');
                     document.querySelector('.no-results-text').textContent = 'Failed to load activity data';
                 }
+            }
+
+            // ========== COLUMN WIDTHS ==========
+            function applyColumnWidths() {
+                const table = document.getElementById('activity-table');
+                const headers = Array.from(table.querySelectorAll('th[data-column]'));
+                const columnWidths = {};
+
+                // Read widths from headers
+                headers.forEach(th => {
+                    const column = th.dataset.column;
+                    const width = th.dataset.width;
+                    if (width) {
+                        columnWidths[column] = width;
+                    }
+                });
+
+                // Apply widths to header cells
+                headers.forEach(th => {
+                    const column = th.dataset.column;
+                    if (columnWidths[column]) {
+                        th.style.width = columnWidths[column] + 'px';
+                        th.style.minWidth = columnWidths[column] + 'px';
+                    }
+                });
+
+                // Apply widths to body cells using the same index as headers
+                const allRows = table.querySelectorAll('tbody tr.table-row');
+                allRows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    headers.forEach((th, index) => {
+                        const column = th.dataset.column;
+                        if (columnWidths[column] && cells[index]) {
+                            cells[index].style.width = columnWidths[column] + 'px';
+                            cells[index].style.minWidth = columnWidths[column] + 'px';
+                        }
+                    });
+                });
             }
 
             // Start

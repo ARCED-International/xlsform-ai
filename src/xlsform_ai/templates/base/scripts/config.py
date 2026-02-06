@@ -23,6 +23,8 @@ DEFAULT_CONFIG = {
     "last_modified": None,
     "author": None,  # Auto-detected on first use
     "author_updated": None,  # Timestamp when author was set
+    "location": None,  # Optional location label for activity logs
+    "location_updated": None,  # Timestamp when location was set
     "collaborators": [],  # List of collaborator names
     "active_collaborator": None,  # Currently active collaborator
     "settings": {
@@ -74,6 +76,12 @@ class ProjectConfig:
                     migrated = True
                 if "author_updated" not in self._config:
                     self._config["author_updated"] = None
+                    migrated = True
+                if "location" not in self._config:
+                    self._config["location"] = None
+                    migrated = True
+                if "location_updated" not in self._config:
+                    self._config["location_updated"] = None
                     migrated = True
                 if "collaborators" not in self._config:
                     self._config["collaborators"] = []
@@ -156,6 +164,11 @@ class ProjectConfig:
         config = self.load()
         return config.get("author")
 
+    def get_location(self) -> Optional[str]:
+        """Get the configured location label."""
+        config = self.load()
+        return config.get("location")
+
     def set_author(self, author: str):
         """Set the author name in configuration.
 
@@ -165,6 +178,13 @@ class ProjectConfig:
         config = self.load()
         config["author"] = author
         config["author_updated"] = datetime.now().isoformat()
+        self.save()
+
+    def set_location(self, location: str):
+        """Set the location label in configuration."""
+        config = self.load()
+        config["location"] = location
+        config["location_updated"] = datetime.now().isoformat()
         self.save()
 
     def get_effective_author(self) -> str:
