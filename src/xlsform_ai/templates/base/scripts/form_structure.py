@@ -409,6 +409,25 @@ if __name__ == "__main__":
     # Parse structure
     form_structure = FormStructure(ws, header_row)
 
+    # Log structure analysis
+    try:
+        from log_activity import ActivityLogger
+        logger = ActivityLogger()
+        structure_info = (
+            f"Total questions: {len(form_structure.structure['questions'])}\n"
+            f"Groups: {len(form_structure.structure['groups'])}\n"
+            f"Repeats: {len(form_structure.structure['repeats'])}\n"
+            f"Metadata fields: {len(form_structure.structure['metadata'])}"
+        )
+        logger.log_action(
+            action_type="analyze_structure",
+            description="Analyzed form structure",
+            details=structure_info
+        )
+    except Exception:
+        # Silently fail if logging is not available
+        pass
+
     print(f"\nMetadata fields: {len(form_structure.structure['metadata'])}")
     for m in form_structure.structure['metadata']:
         print(f"  Row {m['row']}: {m['type']} - {m['name']}")

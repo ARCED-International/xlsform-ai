@@ -144,6 +144,13 @@ class TemplateManager:
                 shutil.copytree(scripts_src, scripts_dst)
                 print(f"[OK] Created scripts directory")
 
+                # Verify activity log template was copied
+                template_in_dst = scripts_dst / "activity_log_template.html"
+                if template_in_dst.exists():
+                    print(f"[OK] Activity log template included")
+                else:
+                    print(f"[WARNING] Activity log template not found in scripts directory")
+
             # Copy package.json if it exists
             package_json_src = self.base_template / "package.json"
             package_json_dst = project_path / "package.json"

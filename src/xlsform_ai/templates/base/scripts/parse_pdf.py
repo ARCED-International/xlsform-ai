@@ -155,6 +155,23 @@ def main():
     # Refine question types
     detect_question_types(questions)
 
+    # Log import activity
+    try:
+        from log_activity import ActivityLogger
+        logger = ActivityLogger()
+        question_summary = ", ".join([f"{q.get('text', 'Unknown')[:30]} ({q.get('type', 'unknown')})" for q in questions[:5]])
+        if len(questions) > 5:
+            question_summary += f"... and {len(questions) - 5} more"
+
+        logger.log_action(
+            action_type="import_pdf",
+            description=f"Imported {len(questions)} questions from PDF",
+            details=f"Source: {args.pdf_file}\nPages: {args.pages or 'all'}\nQuestions: {question_summary}"
+        )
+    except Exception:
+        # Silently fail if logging is not available
+        pass
+
     # Output
     output = {
         'source': args.pdf_file,

@@ -153,6 +153,19 @@ def main():
         "warnings": warnings
     }
 
+    # Log validation activity
+    try:
+        from log_activity import ActivityLogger
+        logger = ActivityLogger()
+        logger.log_action(
+            action_type="validate",
+            description=f"Form validation {'passed' if results['valid'] else 'failed'}",
+            details=f"Errors: {len(errors)}\nWarnings: {len(warnings)}\nSuggestions: {len(suggestions)}"
+        )
+    except Exception:
+        # Silently fail if logging is not available
+        pass
+
     # Use beautiful display if available
     if DISPLAY_AVAILABLE:
         print_validation_results(results)

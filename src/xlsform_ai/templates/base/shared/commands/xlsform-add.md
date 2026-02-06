@@ -14,6 +14,59 @@ arguments:
 
 # Add XLSForm Questions
 
+## Implementation Protocol
+
+**CRITICAL: Follow this exact protocol when implementing this command:**
+
+### 1. Use the Required Skills
+
+**ALWAYS use these skills before working with XLSForm:**
+
+```
+/skill:xlsform-core
+```
+Provides XLSForm syntax, question types, and best practices.
+
+```
+/skill:activity-logging
+```
+Ensures proper activity logging protocols.
+
+### 2. Import from Scripts Directory
+
+**CRITICAL: Always import from the `scripts/` directory:**
+
+```python
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path('scripts')))
+
+from form_structure import FormStructure
+from add_questions import add_questions
+from log_activity import ActivityLogger
+```
+
+**NEVER import from other locations.**
+
+### 3. Log the Action
+
+After successfully adding questions:
+
+```python
+logger = ActivityLogger()
+logger.log_action(
+    action_type="add_questions",
+    description=f"Added {count} question(s)",
+    details=f"Questions: {question_summary}\nRows: {rows}"
+)
+```
+
+### What NOT To Do
+
+- **NEVER work directly without using skills**
+- **NEVER import from other locations** (always use `scripts/`)
+- **NEVER skip activity logging** for XLSForm modifications
+
 ## Key Principles
 
 1. **Best Practices by Default**: Always add appropriate constraints and required fields

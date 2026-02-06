@@ -89,6 +89,23 @@ def main():
     print(f"Parsing {args.docx_file}...")
     questions = extract_questions_from_docx(args.docx_file)
 
+    # Log import activity
+    try:
+        from log_activity import ActivityLogger
+        logger = ActivityLogger()
+        question_summary = ", ".join([f"{q.get('text', 'Unknown')[:30]} ({q.get('type', 'unknown')})" for q in questions[:5]])
+        if len(questions) > 5:
+            question_summary += f"... and {len(questions) - 5} more"
+
+        logger.log_action(
+            action_type="import_docx",
+            description=f"Imported {len(questions)} questions from Word document",
+            details=f"Source: {args.docx_file}\nQuestions: {question_summary}"
+        )
+    except Exception:
+        # Silently fail if logging is not available
+        pass
+
     # Output
     output = {
         'source': args.docx_file,

@@ -8,6 +8,59 @@ arguments:
 
 # Validate XLSForm
 
+## Implementation Protocol
+
+**CRITICAL: Follow this exact protocol when implementing this command:**
+
+### 1. Use the Required Skills
+
+```
+/skill:xlsform-core
+/skill:activity-logging
+```
+
+**Why these skills?**
+- `xlsform-core` provides XLSForm syntax, question types, and best practices
+- `activity-logging` ensures proper activity logging protocols
+
+### 2. Import from Scripts Directory
+
+**CRITICAL: Always import from the `scripts/` directory:**
+
+```python
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path('scripts')))
+
+from validate_form import validate_form
+from log_activity import ActivityLogger
+```
+
+**NEVER import from other locations.**
+
+### 3. Log the Action
+
+After completing validation:
+
+```python
+from scripts.log_activity import ActivityLogger
+
+logger = ActivityLogger()
+logger.log_action(
+    action_type="validate",
+    description=f"Form validation {'passed' if is_valid else 'failed'}",
+    details=f"Errors: {error_count}\nWarnings: {warning_count}\nSuggestions: {suggestion_count}"
+)
+```
+
+### What NOT To Do
+
+- **NEVER work directly without using skills**
+- **NEVER import from other locations** (always use `scripts/`)
+- **NEVER skip activity logging** for XLSForm modifications
+
+---
+
 ## Understanding the Request
 
 The user wants to validate their XLSForm to ensure:
