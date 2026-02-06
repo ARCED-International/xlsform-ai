@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity Log - XLSForm</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --color-primary: #2C5F7D;
+            --color-primary-light: #3d7aa0;
+            --color-primary-dark: #1e4256;
+            --color-secondary: #97C8EB;
+            --color-accent: #E8A87C;
+            --color-success: #4A9C6D;
+            --color-warning: #D9A84B;
+            --color-error: #C75B5B;
+            --color-gray-50: #FAFAFA;
+            --color-gray-100: #F5F5F5;
+            --color-gray-200: #EEEEEE;
+            --color-gray-300: #E0E0E0;
+            --color-gray-400: #BDBDBD;
+            --color-gray-500: #9E9E9E;
+            --color-gray-600: #757575;
+            --color-gray-700: #616161;
+            --color-gray-800: #424242;
+            --color-gray-900: #212121;
+            --font-display: 'Work Sans', -apple-system, sans-serif;
+            --font-serif: 'Crimson Pro', Georgia, serif;
+            --font-mono: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+            --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --radius-sm: 4px;
+            --radius-md: 6px;
+            --radius-lg: 10px;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-display);
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--color-gray-800);
+            background: linear-gradient(135deg, var(--color-gray-50) 0%, var(--color-gray-100) 100%);
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--color-gray-200);
+            padding: 2rem 2.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem;
+        }
+
+        .header-branding {
+            display: flex;
+            align-items: center;
+            gap: 1.25rem;
+        }
+
+        .logo {
+            height: 52px;
+            width: auto;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+
+        .header-titles {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .header-title {
+            font-family: var(--font-serif);
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--color-gray-900);
+            letter-spacing: -0.02em;
+            line-height: 1.2;
+        }
+
+        .header-subtitle {
+            font-size: 0.875rem;
+            color: var(--color-gray-500);
+            font-weight: 500;
+        }
+
+        .header-meta {
+            display: flex;
+            gap: 2rem;
+            font-size: 0.8125rem;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+        }
+
+        .meta-label {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-gray-400);
+        }
+
+        .meta-value {
+            font-weight: 600;
+            color: var(--color-gray-700);
+        }
+
+        /* ========== MAIN CONTENT ========== */
+        .main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 2.5rem;
+        }
+
+        /* ========== TOOLBAR ========== */
+        .toolbar {
+            background: white;
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            flex-wrap: wrap;
+        }
+
+        .toolbar-left, .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.625rem 1rem;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            font-family: var(--font-display);
+            border: 1px solid var(--color-gray-300);
+            border-radius: var(--radius-md);
+            background: white;
+            color: var(--color-gray-700);
+            cursor: pointer;
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .btn:hover {
+            background: var(--color-gray-50);
+            border-color: var(--color-gray-400);
+            color: var(--color-gray-900);
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .btn-primary {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--color-primary-dark);
+            border-color: var(--color-primary-dark);
+        }
+
+        .divider {
+            width: 1px;
+            height: 24px;
+            background: var(--color-gray-300);
+        }
+
+        /* ========== FILTERS ========== */
+        .filters {
+            background: white;
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: end;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+        }
+
+        .filter-label {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-gray-500);
+        }
+
+        .filter-input {
+            padding: 0.625rem 0.875rem;
+            border: 1px solid var(--color-gray-300);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            font-family: var(--font-display);
+            background: white;
+            min-width: 160px;
+            transition: var(--transition);
+        }
+
+        .filter-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(44, 95, 125, 0.1);
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            max-width: 400px;
+        }
+
+        .results-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            background: var(--color-primary);
+            color: white;
+            border-radius: var(--radius-md);
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+
+        /* ========== TABLE ========== */
+        .table-wrapper {
+            background: white;
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.875rem;
+        }
+
+        .data-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: var(--color-gray-50);
+        }
+
+        .data-table th {
+            position: relative;
+            padding: 0;
+            background: var(--color-gray-50);
+            border-bottom: 2px solid var(--color-primary);
+            border-right: 1px solid var(--color-gray-200);
+            user-select: none;
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .data-table th:last-child {
+            border-right: none;
+        }
+
+        .data-table th:hover {
+            background: var(--color-gray-100);
+        }
+
+        .th-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.875rem 1rem;
+            gap: 0.5rem;
+        }
+
+        .th-text {
+            font-family: var(--font-display);
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-gray-700);
+        }
+
+        .sort-indicator {
+            font-size: 0.625rem;
+            color: var(--color-gray-400);
+            transition: color var(--transition);
+        }
+
+        .data-table th.sort-asc .sort-indicator::after {
+            content: '▲';
+            color: var(--color-primary);
+        }
+
+        .data-table th.sort-desc .sort-indicator::after {
+            content: '▼';
+            color: var(--color-primary);
+        }
+
+        .resize-handle {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            cursor: col-resize;
+            background: transparent;
+            transition: background var(--transition);
+        }
+
+        .resize-handle:hover, .resize-handle.active {
+            background: var(--color-primary);
+        }
+
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--color-gray-100);
+            transition: background var(--transition);
+        }
+
+        .data-table tbody tr:hover {
+            background: var(--color-gray-50);
+        }
+
+        .data-table td {
+            padding: 0.875rem 1rem;
+            border-right: 1px solid var(--color-gray-100);
+        }
+
+        .data-table td:last-child {
+            border-right: none;
+        }
+
+        /* Cell Styles */
+        .cell-date {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .date-main {
+            font-weight: 600;
+            color: var(--color-gray-900);
+            font-size: 0.875rem;
+        }
+
+        .date-time {
+            font-size: 0.75rem;
+            color: var(--color-gray-500);
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            background: var(--color-primary);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .cell-description {
+            font-weight: 500;
+            color: var(--color-gray-800);
+        }
+
+        .cell-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .author-icon {
+            font-size: 1rem;
+        }
+
+        .cell-details-preview {
+            color: var(--color-gray-600);
+            font-size: 0.8125rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: color var(--transition);
+        }
+
+        .cell-details-preview:hover {
+            color: var(--color-primary);
+        }
+
+        .expand-icon {
+            font-size: 0.625rem;
+            transition: transform var(--transition);
+        }
+
+        .table-row.expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+
+        /* Details Row */
+        .table-row-details {
+            background: var(--color-gray-50);
+        }
+
+        .details-container {
+            padding: 1.5rem;
+        }
+
+        .details-section {
+            margin-bottom: 1rem;
+        }
+
+        .details-section:last-child {
+            margin-bottom: 0;
+        }
+
+        .details-label {
+            font-size: 0.6875rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--color-gray-500);
+            margin-bottom: 0.5rem;
+        }
+
+        .details-content {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-gray-200);
+            font-family: var(--font-mono);
+            font-size: 0.8125rem;
+            color: var(--color-gray-700);
+            white-space: pre-wrap;
+            word-break: break-word;
+            line-height: 1.6;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .details-meta {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            font-size: 0.8125rem;
+            color: var(--color-gray-600);
+        }
+
+        .details-meta span {
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        /* ========== PAGINATION ========== */
+        .pagination {
+            background: white;
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--radius-lg);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-top: 1.5rem;
+            flex-wrap: wrap;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .pagination-info {
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-page {
+            padding: 0.5rem 0.75rem;
+            background: white;
+            border: 1px solid var(--color-gray-300);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 36px;
+        }
+
+        .btn-page:hover:not(:disabled) {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-page:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .page-info {
+            padding: 0 0.75rem;
+            font-size: 0.875rem;
+            color: var(--color-gray-600);
+            font-weight: 500;
+        }
+
+        .pagination-size select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--color-gray-300);
+            border-radius: var(--radius-md);
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        /* ========== MODAL ========== */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            max-width: 420px;
+            width: 100%;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--color-gray-200);
+        }
+
+        .modal-title {
+            font-family: var(--font-serif);
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-gray-900);
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            line-height: 1;
+            cursor: pointer;
+            color: var(--color-gray-400);
+            padding: 0.25rem;
+            transition: color var(--transition);
+        }
+
+        .btn-close:hover {
+            color: var(--color-gray-900);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        .column-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 0;
+            border-bottom: 1px solid var(--color-gray-100);
+        }
+
+        .column-toggle:last-child {
+            border-bottom: none;
+        }
+
+        .column-toggle input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .column-toggle label {
+            font-size: 0.9375rem;
+            color: var(--color-gray-700);
+            cursor: pointer;
+            user-select: none;
+            font-weight: 500;
+        }
+
+        .btn-export-option {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            margin-bottom: 0.75rem;
+            background: white;
+            border: 1px solid var(--color-gray-300);
+            border-radius: var(--radius-md);
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .btn-export-option:last-child {
+            margin-bottom: 0;
+        }
+
+        .btn-export-option:hover {
+            background: var(--color-primary);
+            border-color: var(--color-primary);
+            color: white;
+        }
+
+        /* ========== TOAST ========== */
+        .toast {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--color-gray-900);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            z-index: 1001;
+            opacity: 0;
+            transform: translateY(1rem);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            font-weight: 500;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .toast-success {
+            background: var(--color-success);
+        }
+
+        .toast-error {
+            background: var(--color-error);
+        }
+
+        /* ========== EMPTY STATE ========== */
+        .no-results {
+            text-align: center;
+            padding: 4rem 2rem;
+            display: none;
+        }
+
+        .no-results.active {
+            display: block;
+        }
+
+        .no-results-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.4;
+        }
+
+        .no-results-text {
+            font-size: 1.125rem;
+            color: var(--color-gray-700);
+            font-weight: 500;
+        }
+
+        /* ========== FOOTER (HIDDEN) ========== */
+        .footer {
+            display: none;
+        }
+
+        /* ========== RESPONSIVE ========== */
+        @media (max-width: 1024px) {
+            .header {
+                padding: 1.5rem;
+            }
+
+            .main {
+                padding: 1.5rem;
+            }
+
+            .header-meta {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .toolbar-left, .toolbar-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            .filters {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                width: 100%;
+            }
+
+            .filter-input, .search-box {
+                width: 100%;
+            }
+
+            .pagination {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .pagination-controls {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+        }
+
+        /* ========== PRINT STYLES ========== */
+        @media print {
+            .toolbar, .filters, .pagination {
+                display: none !important;
+            }
+
+            .table-row-details {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* ========== ANIMATIONS ========== */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(0.5rem);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .data-table tbody tr {
+            animation: fadeIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-inner">
+            <div class="header-branding">
+                <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTIiIGhlaWdodD0iNTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjUyIiBoZWlnaHQ9IjUyIiByeD0iNiIgZmlsbD0iIzJDNUY3RCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSJ3aGl0ZSIgZm9udC1zaXplPSIxOCIgZm9udC13ZWlnaHQ9ImJvbGQiPkFJPC90ZXh0Pjwvc3ZnPg==" alt="Logo" class="logo">
+                <div class="header-titles">
+                    <h1 class="header-title">Activity Log - XLSForm</h1>
+                    <div class="header-subtitle">Track project changes and collaboration</div>
+                </div>
+            </div>
+            <div class="header-meta">
+                <div class="meta-item">
+                    <span class="meta-label">Total Actions</span>
+                    <span class="meta-value" id="meta-total">1</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Created</span>
+                    <span class="meta-value" id="meta-created">Feb 06, 2026</span>
+                </div>
+                <div class="meta-item">
+                    <span class="meta-label">Last Updated</span>
+                    <span class="meta-value" id="meta-updated">Feb 06, 2026 15:27</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <button class="btn" id="btn-columns">
+                    <span>👁️</span>
+                    <span>Columns</span>
+                </button>
+                <button class="btn" id="btn-export">
+                    <span>📤</span>
+                    <span>Export</span>
+                </button>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn" id="btn-copy">
+                    <span>📋</span>
+                    <span>Copy Selected</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label class="filter-label" for="filter-action-type">Action Type</label>
+                <select id="filter-action-type" class="filter-input">
+                    <option value="">All Types</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label" for="filter-author">Author</label>
+                <select id="filter-author" class="filter-input">
+                    <option value="">All Authors</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label" for="filter-date-from">From Date</label>
+                <input type="date" id="filter-date-from" class="filter-input">
+            </div>
+
+            <div class="filter-group">
+                <label class="filter-label" for="filter-date-to">To Date</label>
+                <input type="date" id="filter-date-to" class="filter-input">
+            </div>
+
+            <div class="filter-group" style="flex: 1;">
+                <input type="text" id="filter-search" class="filter-input search-box" placeholder="Search activities...">
+            </div>
+
+            <div class="results-badge" id="results-count">1 shown</div>
+
+            <button class="btn" id="btn-clear">Clear</button>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <div class="table-container">
+                <table class="data-table" id="activity-table">
+                    <thead>
+                        <tr>
+                            <th data-column="date" data-width="160">
+                                <div class="th-content">
+                                    <span class="th-text">Date & Time</span>
+                                    <span class="sort-indicator"></span>
+                                </div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th data-column="action_type" data-width="140">
+                                <div class="th-content">
+                                    <span class="th-text">Action</span>
+                                    <span class="sort-indicator"></span>
+                                </div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th data-column="description" data-width="280">
+                                <div class="th-content">
+                                    <span class="th-text">Description</span>
+                                    <span class="sort-indicator"></span>
+                                </div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th data-column="author" data-width="160">
+                                <div class="th-content">
+                                    <span class="th-text">Author</span>
+                                    <span class="sort-indicator"></span>
+                                </div>
+                                <div class="resize-handle"></div>
+                            </th>
+                            <th data-column="details" data-width="220">
+                                <div class="th-content">
+                                    <span class="th-text">Details</span>
+                                    <span class="sort-indicator"></span>
+                                </div>
+                                <div class="resize-handle"></div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                        <!-- Rows will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- No Results -->
+            <div class="no-results" id="no-results">
+                <div class="no-results-icon">🔍</div>
+                <div class="no-results-text">No activities match your filters</div>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div class="pagination">
+            <div class="pagination-info">
+                Showing <span id="page-start">1</span>-<span id="page-end">1</span> of <span id="total-rows">1</span>
+            </div>
+            <div class="pagination-controls">
+                <button class="btn-page" id="btn-first" title="First page">⏮</button>
+                <button class="btn-page" id="btn-prev" title="Previous">◀</button>
+                <span class="page-info">Page <span id="current-page">1</span> of <span id="total-pages">1</span></span>
+                <button class="btn-page" id="btn-next" title="Next">▶</button>
+                <button class="btn-page" id="btn-last" title="Last page">⏭</button>
+            </div>
+            <div class="pagination-size">
+                <select id="rows-per-page">
+                    <option value="10">10 rows</option>
+                    <option value="25">25 rows</option>
+                    <option value="50">50 rows</option>
+                    <option value="100">100 rows</option>
+                    <option value="-1">All</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Column Visibility Modal -->
+    <div class="modal" id="columns-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Show/Hide Columns</h3>
+                <button class="btn-close" id="btn-close-columns">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="column-toggle">
+                    <input type="checkbox" id="col-date" checked data-column="date">
+                    <label for="col-date">Date & Time</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="col-action_type" checked data-column="action_type">
+                    <label for="col-action_type">Action Type</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="col-description" checked data-column="description">
+                    <label for="col-description">Description</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="col-author" checked data-column="author">
+                    <label for="col-author">Author</label>
+                </div>
+                <div class="column-toggle">
+                    <input type="checkbox" id="col-details" checked data-column="details">
+                    <label for="col-details">Details</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal" id="export-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Export Data</h3>
+                <button class="btn-close" id="btn-close-export">×</button>
+            </div>
+            <div class="modal-body">
+                <button class="btn-export-option" id="btn-export-csv">
+                    <span>📄</span>
+                    <span>Export as CSV</span>
+                </button>
+                <button class="btn-export-option" id="btn-export-json">
+                    <span>📋</span>
+                    <span>Export as JSON</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+
+    <!-- Footer (Hidden - contains data) -->
+    <div class="footer">
+        <!-- XLSFORM_AI_DATA_START -->
+        {DATA}
+        <!-- XLSFORM_AI_DATA_END -->
+    </div>
+
+
+</html>

@@ -71,6 +71,6 @@ Thumbs.db
 # Project specific
 *.xlsx
 !src/xlsform_ai/templates/base/.claude/skills/xlsform-core/assets/xlsform-template.xlsx
-activity_log*.html
+activity_log.html
 xlsform-ai.json
 MULTI_AGENT_IMPLEMENTATION_SUMMARY.md
