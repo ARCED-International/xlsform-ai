@@ -63,9 +63,10 @@ def _check_ai_files(project_path: Path) -> List[str]:
         if (project_path / file).exists():
             ai_indicators.append(file)
 
-    # Scripts directory
-    if (project_path / "scripts").exists():
-        ai_indicators.append("scripts/")
+    # Tooling directories
+    for directory in ["scripts", "tools"]:
+        if (project_path / directory).exists():
+            ai_indicators.append(f"{directory}/")
 
     # Agent-specific directories (check all configured agents)
     for agent_name in get_supported_agents():

@@ -32,6 +32,7 @@ def cleanup_project(project_dir=None, dry_run=False, require_confirm=True):
     to_remove = [
         ".claude",           # Claude Code configuration
         "scripts",           # Helper scripts
+        "tools",             # Offline validation binaries
         "package.json",      # npm scripts
     ]
 

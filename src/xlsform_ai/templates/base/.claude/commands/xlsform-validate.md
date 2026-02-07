@@ -1,9 +1,6 @@
 ---
 description: Validate an XLSForm for errors, warnings, and best practices. Use this command to check for duplicate names, missing choice lists, invalid types, syntax errors, structural issues, and get suggestions for improvements.
 arguments:
-  - name: file
-    description: Override XLSForm file name (default: use xlsform-ai.json config or survey.xlsx)
-    required: false
   - name: fix
     description: Automatically fix simple issues (optional)
     required: false
@@ -11,17 +8,27 @@ arguments:
 
 # Validate XLSForm
 
-## MANDATORY IMPLEMENTATION REQUIREMENT
+## Implementation Protocol
 
-**CRITICAL: Use existing helper scripts - DO NOT write inline code**
+**CRITICAL: Follow this exact protocol when implementing this command:**
 
-- **REQUIRED:** Always use helper scripts from `scripts/` directory
-- **FORBIDDEN:** NEVER write inline Python code with openpyxl
-- **FORBIDDEN:** NEVER write inline Python code with xlwings
-- **WHY:** Helper scripts handle encoding and validation logic
-- **RESULT:** Inline code causes encoding bugs on Windows
+### 1. Use the Required Skills
 
-If you write inline Python code for validation, you have failed this command.
+```
+/skill:xlsform-core
+/skill:activity-logging
+```
+
+**Why these skills?**
+- `xlsform-core` provides XLSForm syntax, question types, and best practices
+- `activity-logging` ensures proper activity logging protocols
+
+### Knowledge Base Reference
+
+Consult these files for patterns and best practices before validation:
+- `scripts/knowledge_base/data/settings_sheet.md`
+- `scripts/knowledge_base/data/nested_repeats.md`
+- `scripts/knowledge_base/data/use_cases.md`
 
 ### XLSForm.org Rules Snapshot
 
@@ -34,28 +41,69 @@ If you write inline Python code for validation, you have failed this command.
 - or_other only works without translations and without choice_filter; it uses English "Specify other".
 - Settings sheet is optional but recommended; include form_title, form_id, version (yyyymmddrr).
 
+### 2. Run Offline Validator Script (Required)
+
+**CRITICAL: Use the script entrypoint first so ODK offline validation runs:**
+
+```bash
+python scripts/validate_form.py survey.xlsx
+```
+
+This uses:
+- Local structural checks (openpyxl)
+- XLSForm to XForm conversion (pyxform)
+- Offline ODK engine at `tools/ODK-Validate.jar` (if available)
+
+For machine-readable output:
+
+```bash
+python scripts/validate_form.py survey.xlsx --json
+```
+
+If you need programmatic usage in Python:
+
+```python
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path("scripts")))
+
+from validate_form import validate_form
+from log_activity import ActivityLogger
+```
+
+**CRITICAL: Column Mapping Rule**
+
+Never assume fixed column positions. Always read headers from row 1 and use `build_column_mapping()` when interpreting columns.
+
+### 3. Log the Action
+
+After completing validation:
+
+```python
+from scripts.log_activity import ActivityLogger
+
+logger = ActivityLogger()
+logger.log_action(
+    action_type="validate",
+    description=f"Form validation {'passed' if is_valid else 'failed'}",
+    details=f"Errors: {error_count}\nWarnings: {warning_count}\nSuggestions: {suggestion_count}"
+)
+```
+
+### What NOT To Do
+
+- **NEVER work directly without using skills**
+- **NEVER import from other locations** (always use `scripts/`)
+- **NEVER skip activity logging** for XLSForm modifications
+
+---
+
 ## Understanding the Request
 
 The user wants to validate their XLSForm to ensure:
 - No critical errors that prevent conversion
 - No warnings that might cause issues
 - Following best practices
-
-## Implementation - MANDATORY METHOD
-
-**You MUST use the helper script - this is not optional:**
-
-**Default validation:**
-```bash
-python scripts/validate_form.py survey.xlsx
-```
-
-**Custom file:**
-```bash
-python scripts/validate_form.py path/to/form.xlsx
-```
-
-**REMINDER: Never write inline Python code. Always use the script.**
 
 ## Load the Form
 
@@ -72,6 +120,71 @@ python scripts/validate_form.py path/to/form.xlsx
    - If file is open in Excel, note it (might see live changes)
    - Use openpyxl for closed files
    - Use xlwings if file is open and changes need to be made
+
+### Safe Execution (No temp files, no python -c)
+
+- **Do NOT** create temporary scripts (e.g., `temp_validate.py`)
+- **Do NOT** use `python -c` (quote escaping is brittle)
+- **Do** use heredocs / here-strings
+
+**PowerShell:**
+```powershell
+@'
+import openpyxl
+
+wb = openpyxl.load_workbook("survey.xlsx")
+ws = wb["survey"]
+print(f"Total rows: {ws.max_row}")
+wb.close()
+'@ | python -
+```
+
+**bash/zsh:**
+```bash
+python - <<'PY'
+import openpyxl
+
+wb = openpyxl.load_workbook("survey.xlsx")
+ws = wb["survey"]
+print(f"Total rows: {ws.max_row}")
+wb.close()
+PY
+```
+
+### Cross-Platform Compatibility
+
+When creating Python code for validation that runs on bash/PowerShell/Linux:
+
+1. **Avoid Unicode characters** in print statements
+   - Use ASCII: `SUCCESS` instead of checkmark symbols
+   - Use ASCII: `ERROR` instead of X symbols
+   - Use ASCII: `INFO` for suggestion hints
+
+2. **Handle encoding explicitly** at script start
+   ```python
+   import sys
+   if sys.platform == 'win32':
+       sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+   ```
+
+3. **Escape quotes properly** for bash
+   - Use double quotes outside: `"..."`
+   - Escape inner quotes: `'...\'...'`
+   - Or use raw strings: `r"..."`
+
+4. **Always add the scripts path before importing helpers**
+   ```python
+   import sys
+   from pathlib import Path
+
+   scripts_dir = Path("scripts").resolve()
+   if str(scripts_dir) not in sys.path:
+       sys.path.insert(0, str(scripts_dir))
+   ```
+
+### Stop on Errors
+
+- If any exception occurs, stop immediately and report the error.
 
 ## Validation Checks
 
@@ -90,12 +203,12 @@ These MUST be fixed for the form to work:
 
 Example output:
 ```
-[FAIL] ERROR: Duplicate question names found
+ERROR: ERROR: Duplicate question names found
   - Row 5, Row 23: name = 'age'
   - Row 12, Row 34: name = 'location'
 
 Impact: These names must be unique. Duplicates will cause form conversion to fail.
-Fix: Rename the duplicates (e.g., age → age_2, location → household_location)
+Fix: Rename the duplicates (e.g., age -> age_2, location -> household_location)
 ```
 
 #### B. Duplicate Choice Names in Same List
@@ -107,7 +220,7 @@ Fix: Rename the duplicates (e.g., age → age_2, location → household_location
 
 Example output:
 ```
-[FAIL] ERROR: Duplicate choice names in same list
+ERROR: ERROR: Duplicate choice names in same list
   - List 'gender': Row 3, Row 7 both have name = 'male'
 
 Impact: Duplicate choices are indistinguishable in data export.
@@ -123,7 +236,7 @@ Fix: Rename one of the duplicates
 
 Example output:
 ```
-[FAIL] ERROR: Referenced choice lists don't exist
+ERROR: ERROR: Referenced choice lists don't exist
   - Row 15: select_one fruits (list 'fruits' not found in choices sheet)
   - Row 28: select_multiple colors (list 'colors' not found)
 
@@ -140,7 +253,7 @@ Fix: Create the missing choice lists or fix the list_name typo
 
 Example output:
 ```
-[FAIL] ERROR: Invalid question types
+ERROR: ERROR: Invalid question types
   - Row 8: 'selct_one' (did you mean 'select_one'?)
   - Row 19: 'interger' (did you mean 'integer'?)
 
@@ -157,7 +270,7 @@ Fix: Correct the typos in the type column
 
 Example output:
 ```
-[FAIL] ERROR: Invalid question names
+ERROR: ERROR: Invalid question names
   - Row 3: '1st_question' (starts with digit)
   - Row 10: 'respondent name' (contains space)
 
@@ -175,7 +288,7 @@ Fix: Use 'first_question' and 'respondent_name' instead
 
 Example output:
 ```
-[FAIL] ERROR: Unbalanced structures
+ERROR: ERROR: Unbalanced structures
   - begin_group at Row 5 missing matching end_group
   - begin_repeat at Row 15 missing matching end_repeat
 
@@ -191,7 +304,7 @@ Fix: Add the missing end_group and end_repeat rows
 
 Example output:
 ```
-[FAIL] ERROR: Spaces in select_multiple choice names
+ERROR: ERROR: Spaces in select_multiple choice names
   - List 'toppings' has choice 'choice 1' (contains space)
 
 Impact: Selected values will be corrupted (space-separated).
@@ -210,7 +323,7 @@ These SHOULD be fixed to avoid issues:
 
 Example output:
 ```
-[WARNING]  WARNING: Constraints without error messages
+WARNING:  WARNING: Constraints without error messages
   - Row 12: constraint '. >= 18' has no constraint_message
 
 Impact: Users won't know why their input was rejected.
@@ -231,7 +344,7 @@ Recommendation: Add "Must be 18 or older" as constraint_message
 
 Example output:
 ```
-[WARNING]  WARNING: begin group without label
+WARNING:  WARNING: begin group without label
   - Row 8: begin_group demographics has empty label
 
 Impact: Users won't see a group header.
@@ -248,7 +361,7 @@ Recommendation: Add a descriptive label like "Demographic Information"
 
 Example output:
 ```
-[WARNING]  WARNING: Possible formula syntax errors
+WARNING:  WARNING: Possible formula syntax errors
   - Row 14: relevant 'age >= 18' (missing ${}, should be '${age} >= 18')
   - Row 20: calculation 'price * 0.18' (missing ${}, should be '${price} * 0.18')
 ```
@@ -259,16 +372,16 @@ Best practice improvements:
 
 #### A. Naming Conventions
 ```
-💡 SUGGESTION: Use snake_case for question names
-  - Row 5: 'RespondentName' → consider 'respondent_name'
-  - Row 12: 'Household Size' → consider 'household_size'
+INFO: SUGGESTION: Use snake_case for question names
+  - Row 5: 'RespondentName' -> consider 'respondent_name'
+  - Row 12: 'Household Size' -> consider 'household_size'
 
 Benefits: Consistent, easier to work with, follows conventions
 ```
 
 #### B. Reusable Choice Lists
 ```
-💡 SUGGESTION: Reuse existing choice lists
+INFO: SUGGESTION: Reuse existing choice lists
   - You have 3 questions using identical 'yes_no' choices
   - Consider creating a single 'yes_no' list and reusing it
 
@@ -277,7 +390,7 @@ Benefits: Easier to maintain, consistent data
 
 #### C. Helpful Hints
 ```
-💡 SUGGESTION: Add hint text for complex questions
+INFO: SUGGESTION: Add hint text for complex questions
   - Row 25: Complex calculation question could use a hint
 
 Example hint: "This will be calculated automatically from previous answers"
@@ -285,48 +398,48 @@ Example hint: "This will be calculated automatically from previous answers"
 
 ## Validation Report
 
-Present results in this format:
+Expect the REPL output from `scripts/validate_form.py` to be structured like this:
 
 ```
-# XLSForm Validation Report
-
-File: survey.xlsx
-Last modified: [timestamp]
-
-## Summary
-[FAIL] 3 Critical Errors
-[WARNING]  5 Warnings
-💡 2 Suggestions
-
-## Critical Errors (Must Fix)
-
-[List all errors as shown above]
-
-## Warnings (Recommended Fixes)
-
-[List all warnings as shown above]
-
-## Suggestions (Best Practices)
-
-[List all suggestions as shown above]
-
----
-
-## Next Steps
-
-1. Fix all critical errors first
-2. Address warnings to improve user experience
-3. Consider implementing suggestions for best practices
-
-Run this validation again after making changes to verify fixes.
+# XLSFORM_VALIDATION_RESULT
+valid: false
+file: C:\path\survey.xlsx
+timestamp_utc: 2026-02-07T12:00:00+00:00
+summary:
+  errors: 3
+  warnings: 2
+  suggestions: 0
+engines:
+  local.status: failed
+  local.errors: 2
+  local.warnings: 1
+  odk_validate.status: completed
+  odk_validate.ran: true
+  odk_validate.jar: C:\path\tools\ODK-Validate.jar
+  odk_validate.exit_code: 1
+errors:
+  - Missing choice list 'fruits' referenced at survey row 15
+  - [odk] Error: The following files failed validation...
+warnings:
+  - [odk] Warning: ...
+suggestions:
+  - none
 ```
+
+If validation dependencies are unavailable, status may show:
+- `odk_validate.status: jar_not_found`
+- `odk_validate.status: java_not_found`
+- `odk_validate.status: pyxform_not_found`
+- `odk_validate.status: xform_conversion_failed`
+
+Treat these as warnings and recommend running `xlsform-ai init --force` to refresh tooling.
 
 ## Auto-Fix Mode
 
 When user provides `--fix` flag or asks to fix issues:
 
 1. **Fix only safe, unambiguous issues:**
-   - Correct obvious typos in type (selct_one → select_one)
+   - Correct obvious typos in type (selct_one -> select_one)
    - Add missing constraint_message with generic text
    - Remove duplicate columns
 
@@ -346,55 +459,34 @@ When user provides `--fix` flag or asks to fix issues:
 User: /xlsform-validate
 
 Your response:
-# XLSForm Validation Report
-
-File: survey.xlsx
-[OK] All checks passed! No errors found.
-
-Your form is ready for use. Consider running validation again after making changes.
-
----
+# XLSFORM_VALIDATION_RESULT
+valid: true
+summary:
+  errors: 0
+  warnings: 0
+  suggestions: 0
+engines:
+  local.status: passed
+  odk_validate.status: completed
 
 User: /xlsform-validate
 
 Your response:
-# XLSForm Validation Report
-
-File: survey.xlsx
-
-[FAIL] 2 Critical Errors
-[WARNING]  1 Warning
-
-## Critical Errors
-
-[FAIL] ERROR: Duplicate question names
-  - Row 8, Row 25: name = 'age'
+# XLSFORM_VALIDATION_RESULT
+valid: false
+summary:
+  errors: 2
+  warnings: 1
+errors:
+  - Duplicate question name 'age' at rows 8 and 25
+  - Missing choice list 'fruits' referenced at survey row 15
+warnings:
+  - [odk] Warning: ...
 
 Fix options:
 1. Rename row 25 to 'age_follow_up'
-2. Rename row 8 to 'initial_age'
-3. Enter custom name
-
-Which would you like?
-
-[FAIL] ERROR: Missing choice list
-  - Row 15: select_one fruits (list 'fruits' not found)
-
-Fix options:
-1. Create 'fruits' choice list now
-2. Fix typo (did you mean 'fruit'?)
-3. I'll fix it manually
-
-## Warnings
-
-[WARNING]  WARNING: Constraint without message
-  - Row 12: constraint '. >= 18' needs constraint_message
-
-Recommendation: Add "Age must be 18 or older"
-
----
-
-Run /xlsform-validate --fix to automatically fix safe issues.
+2. Create the 'fruits' list in choices
+3. Re-run /xlsform-validate after updates
 ```
 
 ## Special Cases
@@ -407,13 +499,13 @@ Your response:
 Validating 2 files...
 
 ## File 1: survey.xlsx
-[FAIL] 1 Error
-[WARNING]  2 Warnings
+ERROR: 1 Error
+WARNING:  2 Warnings
 
 [details...]
 
 ## File 2: backup_survey.xlsx
-[OK] All checks passed!
+SUCCESS: All checks passed!
 
 [details...]
 ```
@@ -425,7 +517,7 @@ User: /xlsform-validate --sheet choices
 Your response:
 Validating choices sheet only...
 
-[OK] Choice sheet is valid:
+SUCCESS: Choice sheet is valid:
   - 5 choice lists
   - 47 total choices
   - No duplicate names within lists

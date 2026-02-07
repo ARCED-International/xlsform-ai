@@ -479,6 +479,9 @@ Force sequential processing:
 
 **Note:** All configured agents receive the same commands and skills. The system ensures consistency across all agents.
 
+Offline validator location:
+- `tools/ODK-Validate.jar` (installed/updated during `xlsform-ai init`)
+
 ---
 
 # Implementation Protocols
@@ -649,15 +652,21 @@ print(f"[OK] Activity logged to: activity_log.html")
 **Step 8: Validate Changes**
 
 ```python
-from scripts.validate_form import validate_form
+import subprocess
+import sys
 
-errors, warnings, suggestions = validate_form(xlsx_path)
+result = subprocess.run(
+    [sys.executable, "scripts/validate_form.py", str(xlsx_path)],
+    capture_output=True,
+    text=True,
+    check=False
+)
+print(result.stdout)  # Contains # XLSFORM_VALIDATION_RESULT structured output
 
-if errors:
-    print(f"WARNING: {len(errors)} validation errors found")
-    # Report errors to user
+if result.returncode != 0:
+    print("WARNING: validation reported blocking errors")
 else:
-    print(f"SUCCESS: Form validated successfully")
+    print("SUCCESS: Form validated successfully")
 ```
 
 **Why:** Catches errors before deployment.
@@ -829,12 +838,12 @@ logger.log_action(
 **Protocol:**
 
 1. Load skills: `/skill:xlsform-core`, `/skill:activity-logging`
-2. Import: `from scripts.validate_form import validate_form`
-3. Run validation: `errors, warnings, suggestions = validate_form(xlsx_path)`
+2. Run: `python scripts/validate_form.py survey.xlsx`
+3. Review structured output block `# XLSFORM_VALIDATION_RESULT`
 4. Report results:
-   - Critical errors (must fix)
-   - Warnings (should fix)
-   - Suggestions (nice to have)
+    - Critical errors (must fix)
+    - Warnings (should fix)
+    - Suggestions (nice to have)
 5. Log action: `logger.log_action(action_type="validate", ...)`
 
 **Example:**
@@ -844,27 +853,26 @@ import sys
 from pathlib import Path
 sys.path.insert(0, str(Path('scripts')))
 
-from validate_form import validate_form
 from log_activity import ActivityLogger
+import subprocess
+import sys
 
-errors, warnings, suggestions = validate_form('survey.xlsx')
+result = subprocess.run(
+    [sys.executable, "scripts/validate_form.py", "survey.xlsx"],
+    capture_output=True,
+    text=True,
+    check=False
+)
 
 # Report results
-print(f"# Validation Report")
-print(f"Errors: {len(errors)}")
-print(f"Warnings: {len(warnings)}")
-print(f"Suggestions: {len(suggestions)}")
-
-if errors:
-    for error in errors:
-        print(f"  ERROR: {error}")
+print(result.stdout)
 
 # Log activity
 logger = ActivityLogger()
 logger.log_action(
     action_type="validate",
-    description=f"Form validation {'passed' if not errors else 'failed'}",
-    details=f"Errors: {len(errors)}\nWarnings: {len(warnings)}\nSuggestions: {len(suggestions)}"
+    description=f"Form validation {'passed' if result.returncode == 0 else 'failed'}",
+    details="See structured validator output in console"
 )
 ```
 
@@ -1156,14 +1164,19 @@ if not os.access(xlsx_path, os.R_OK | os.W_OK):
 
 **Detection:**
 ```python
-from scripts.validate_form import validate_form
+import subprocess
+import sys
 
-errors, warnings, suggestions = validate_form('survey.xlsx')
+result = subprocess.run(
+    [sys.executable, "scripts/validate_form.py", "survey.xlsx"],
+    capture_output=True,
+    text=True,
+    check=False
+)
 
-if errors:
-    print("CRITICAL ERRORS FOUND:")
-    for error in errors:
-        print(f"  - {error}")
+print(result.stdout)  # Structured block starts with # XLSFORM_VALIDATION_RESULT
+if result.returncode != 0:
+    print("CRITICAL ERRORS FOUND")
     # Do not proceed with deployment
 ```
 
@@ -1561,9 +1574,15 @@ add_questions('survey.xlsx', questions)
 
 **Purpose:** Validate XLSForm for errors
 
-**Key Functions:**
-- `validate_form()` - Main validation function
-- Returns: `(errors, warnings, suggestions)` as lists
+**Primary Interface:**
+- `python scripts/validate_form.py survey.xlsx`
+- Structured output marker: `# XLSFORM_VALIDATION_RESULT`
+- JSON output option: `python scripts/validate_form.py survey.xlsx --json`
+- Offline path: XLSForm -> XForm (pyxform) -> `tools/ODK-Validate.jar`
+- Common engine statuses: `completed`, `jar_not_found`, `java_not_found`, `pyxform_not_found`, `xform_conversion_failed`
+
+**Programmatic Function:**
+- `validate_form()` returns `(errors, warnings, suggestions)` for compatibility
 
 **Usage:**
 ```python

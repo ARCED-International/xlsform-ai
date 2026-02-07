@@ -41,20 +41,35 @@ Consult these files for patterns and best practices before validation:
 - or_other only works without translations and without choice_filter; it uses English "Specify other".
 - Settings sheet is optional but recommended; include form_title, form_id, version (yyyymmddrr).
 
-### 2. Import from Scripts Directory
+### 2. Run Offline Validator Script (Required)
 
-**CRITICAL: Always import from the `scripts/` directory:**
+**CRITICAL: Use the script entrypoint first so ODK offline validation runs:**
+
+```bash
+python scripts/validate_form.py survey.xlsx
+```
+
+This uses:
+- Local structural checks (openpyxl)
+- XLSForm to XForm conversion (pyxform)
+- Offline ODK engine at `tools/ODK-Validate.jar` (if available)
+
+For machine-readable output:
+
+```bash
+python scripts/validate_form.py survey.xlsx --json
+```
+
+If you need programmatic usage in Python:
 
 ```python
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path('scripts')))
+sys.path.insert(0, str(Path("scripts")))
 
 from validate_form import validate_form
 from log_activity import ActivityLogger
 ```
-
-**NEVER import from other locations.**
 
 **CRITICAL: Column Mapping Rule**
 
@@ -383,41 +398,41 @@ Example hint: "This will be calculated automatically from previous answers"
 
 ## Validation Report
 
-Present results in this format:
+Expect the REPL output from `scripts/validate_form.py` to be structured like this:
 
 ```
-# XLSForm Validation Report
-
-File: survey.xlsx
-Last modified: [timestamp]
-
-## Summary
-ERROR: 3 Critical Errors
-WARNING:  5 Warnings
-INFO: 2 Suggestions
-
-## Critical Errors (Must Fix)
-
-[List all errors as shown above]
-
-## Warnings (Recommended Fixes)
-
-[List all warnings as shown above]
-
-## Suggestions (Best Practices)
-
-[List all suggestions as shown above]
-
----
-
-## Next Steps
-
-1. Fix all critical errors first
-2. Address warnings to improve user experience
-3. Consider implementing suggestions for best practices
-
-Run this validation again after making changes to verify fixes.
+# XLSFORM_VALIDATION_RESULT
+valid: false
+file: C:\path\survey.xlsx
+timestamp_utc: 2026-02-07T12:00:00+00:00
+summary:
+  errors: 3
+  warnings: 2
+  suggestions: 0
+engines:
+  local.status: failed
+  local.errors: 2
+  local.warnings: 1
+  odk_validate.status: completed
+  odk_validate.ran: true
+  odk_validate.jar: C:\path\tools\ODK-Validate.jar
+  odk_validate.exit_code: 1
+errors:
+  - Missing choice list 'fruits' referenced at survey row 15
+  - [odk] Error: The following files failed validation...
+warnings:
+  - [odk] Warning: ...
+suggestions:
+  - none
 ```
+
+If validation dependencies are unavailable, status may show:
+- `odk_validate.status: jar_not_found`
+- `odk_validate.status: java_not_found`
+- `odk_validate.status: pyxform_not_found`
+- `odk_validate.status: xform_conversion_failed`
+
+Treat these as warnings and recommend running `xlsform-ai init --force` to refresh tooling.
 
 ## Auto-Fix Mode
 
@@ -444,55 +459,34 @@ When user provides `--fix` flag or asks to fix issues:
 User: /xlsform-validate
 
 Your response:
-# XLSForm Validation Report
-
-File: survey.xlsx
-SUCCESS: All checks passed! No errors found.
-
-Your form is ready for use. Consider running validation again after making changes.
-
----
+# XLSFORM_VALIDATION_RESULT
+valid: true
+summary:
+  errors: 0
+  warnings: 0
+  suggestions: 0
+engines:
+  local.status: passed
+  odk_validate.status: completed
 
 User: /xlsform-validate
 
 Your response:
-# XLSForm Validation Report
-
-File: survey.xlsx
-
-ERROR: 2 Critical Errors
-WARNING:  1 Warning
-
-## Critical Errors
-
-ERROR: ERROR: Duplicate question names
-  - Row 8, Row 25: name = 'age'
+# XLSFORM_VALIDATION_RESULT
+valid: false
+summary:
+  errors: 2
+  warnings: 1
+errors:
+  - Duplicate question name 'age' at rows 8 and 25
+  - Missing choice list 'fruits' referenced at survey row 15
+warnings:
+  - [odk] Warning: ...
 
 Fix options:
 1. Rename row 25 to 'age_follow_up'
-2. Rename row 8 to 'initial_age'
-3. Enter custom name
-
-Which would you like?
-
-ERROR: ERROR: Missing choice list
-  - Row 15: select_one fruits (list 'fruits' not found)
-
-Fix options:
-1. Create 'fruits' choice list now
-2. Fix typo (did you mean 'fruit'?)
-3. I'll fix it manually
-
-## Warnings
-
-WARNING:  WARNING: Constraint without message
-  - Row 12: constraint '. >= 18' needs constraint_message
-
-Recommendation: Add "Age must be 18 or older"
-
----
-
-Run /xlsform-validate --fix to automatically fix safe issues.
+2. Create the 'fruits' list in choices
+3. Re-run /xlsform-validate after updates
 ```
 
 ## Special Cases

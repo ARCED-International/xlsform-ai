@@ -6,11 +6,20 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
+from urllib import request as urlrequest
 
 from .agents import get_agent
 
 TEMPLATE_VERSION = "0.1.0"
 DEFAULT_AGENT = "claude"
+ODK_VALIDATE_RELEASE_API = "https://api.github.com/repos/getodk/validate/releases/latest"
+ODK_VALIDATE_USER_AGENT = "xlsform-ai-cli"
+ODK_VALIDATE_TIMEOUT_SECONDS = 30
+# Fallback only when release metadata cannot be fetched.
+ODK_VALIDATE_FALLBACK_TAG = "v1.20.0"
+ODK_VALIDATE_FALLBACK_URL = (
+    "https://github.com/getodk/validate/releases/download/v1.20.0/ODK-Validate-v1.20.0.jar"
+)
 
 
 class TemplateManager:
@@ -150,6 +159,14 @@ class TemplateManager:
                     print(f"[OK] Activity log template included")
                 else:
                     print(f"[WARNING] Activity log template not found in scripts directory")
+
+            if self._ensure_odk_validate_jar(project_path, overwrite=overwrite):
+                print("[OK] ODK Validate offline engine ready")
+            else:
+                print(
+                    "[WARNING] ODK Validate offline engine not installed. "
+                    "Run validation with local checks or install tools/ODK-Validate.jar manually."
+                )
 
             # Copy package.json if it exists
             package_json_src = self.base_template / "package.json"
@@ -367,6 +384,117 @@ class TemplateManager:
                 merged[key] = existing_val
 
         return merged
+
+    def _fetch_latest_odk_validate_release(self) -> Optional[dict]:
+        """Fetch latest ODK Validate release metadata from GitHub."""
+        try:
+            request = urlrequest.Request(
+                ODK_VALIDATE_RELEASE_API,
+                headers={
+                    "Accept": "application/vnd.github+json",
+                    "User-Agent": ODK_VALIDATE_USER_AGENT,
+                },
+            )
+            with urlrequest.urlopen(request, timeout=ODK_VALIDATE_TIMEOUT_SECONDS) as response:
+                payload = json.loads(response.read().decode("utf-8"))
+
+            tag = str(payload.get("tag_name", "")).strip()
+            assets = payload.get("assets") or []
+            jar_asset = None
+            for asset in assets:
+                name = str(asset.get("name", "")).lower()
+                if name.endswith(".jar"):
+                    jar_asset = asset
+                    break
+
+            if not tag or not jar_asset:
+                return None
+
+            return {
+                "tag": tag,
+                "asset_name": jar_asset.get("name", "ODK-Validate.jar"),
+                "download_url": jar_asset.get("browser_download_url"),
+                "digest": jar_asset.get("digest"),
+                "source": ODK_VALIDATE_RELEASE_API,
+            }
+        except Exception:
+            return None
+
+    def _ensure_odk_validate_jar(self, project_path: Path, overwrite: bool = False) -> bool:
+        """Ensure project has an offline ODK Validate jar in tools/."""
+        tools_dir = project_path / "tools"
+        tools_dir.mkdir(parents=True, exist_ok=True)
+
+        jar_path = tools_dir / "ODK-Validate.jar"
+        metadata_path = tools_dir / "ODK-Validate.json"
+
+        release = self._fetch_latest_odk_validate_release()
+        if not release:
+            release = {
+                "tag": ODK_VALIDATE_FALLBACK_TAG,
+                "asset_name": "ODK-Validate-v1.20.0.jar",
+                "download_url": ODK_VALIDATE_FALLBACK_URL,
+                "digest": None,
+                "source": "fallback",
+            }
+
+        target_tag = str(release.get("tag", "")).strip()
+        current_tag = ""
+        if metadata_path.exists():
+            try:
+                with open(metadata_path, "r", encoding="utf-8") as metadata_file:
+                    current_tag = str((json.load(metadata_file) or {}).get("tag", "")).strip()
+            except Exception:
+                current_tag = ""
+
+        if jar_path.exists() and current_tag == target_tag and not overwrite:
+            return True
+
+        download_url = str(release.get("download_url", "")).strip()
+        if not download_url:
+            return jar_path.exists()
+
+        temp_path = tools_dir / ".ODK-Validate.jar.download"
+        try:
+            request = urlrequest.Request(
+                download_url,
+                headers={
+                    "Accept": "application/octet-stream",
+                    "User-Agent": ODK_VALIDATE_USER_AGENT,
+                },
+            )
+            with urlrequest.urlopen(request, timeout=ODK_VALIDATE_TIMEOUT_SECONDS) as response:
+                with open(temp_path, "wb") as temp_file:
+                    shutil.copyfileobj(response, temp_file)
+
+            with open(temp_path, "rb") as temp_file:
+                signature = temp_file.read(2)
+            if signature != b"PK":
+                raise RuntimeError("Downloaded file is not a valid JAR archive")
+
+            temp_path.replace(jar_path)
+
+            metadata = {
+                "tag": target_tag,
+                "asset_name": release.get("asset_name"),
+                "download_url": download_url,
+                "source": release.get("source"),
+                "downloaded_at": datetime.now().isoformat(),
+            }
+            digest = release.get("digest")
+            if digest:
+                metadata["digest"] = digest
+            with open(metadata_path, "w", encoding="utf-8") as metadata_file:
+                json.dump(metadata, metadata_file, indent=2)
+
+            return True
+        except Exception:
+            if temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except Exception:
+                    pass
+            return jar_path.exists()
 
     def get_template_path(self) -> Path:
         """Get the path to the base template.

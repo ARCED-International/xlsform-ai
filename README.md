@@ -43,6 +43,7 @@ XLSForm AI is a CLI tool that sets up projects with specialized skills and comma
 - Validate question types
 - Verify choice list consistency
 - Enforce XLSForm syntax rules
+- Run offline `ODK-Validate.jar` checks with structured REPL output
 
 ### 🔄 Live Editing
 - xlwings integration for open Excel files
@@ -79,6 +80,7 @@ XLSForm AI is a CLI tool that sets up projects with specialized skills and comma
 
 - Python 3.10 or higher
 - Node.js 18+ (for watch/reload features)
+- Java 8+ (for offline ODK Validate jar)
 - An AI coding assistant (Claude Code recommended, but other agents supported)
 - Excel (optional, for xlwings features)
 
@@ -130,6 +132,8 @@ my-survey/
 ```
 
 ### Start Creating Forms
+
+`xlsform-ai init` also prepares offline validation tooling at `tools/ODK-Validate.jar` (latest release when network is available).
 
 1. **Open the project in your preferred AI coding environment:**
 ```bash
@@ -202,6 +206,28 @@ Validate your form for errors.
 # Validate specific file
 /xlsform-validate backup.xlsx
 ```
+
+Validation output is structured in REPL via `scripts/validate_form.py`:
+
+```text
+# XLSFORM_VALIDATION_RESULT
+valid: true|false
+summary:
+  errors: <count>
+  warnings: <count>
+  suggestions: <count>
+engines:
+  local.status: passed|failed
+  odk_validate.status: completed|jar_not_found|java_not_found|pyxform_not_found|xform_conversion_failed|disabled
+```
+
+For JSON output:
+
+```bash
+python scripts/validate_form.py survey.xlsx --json
+```
+
+Validation pipeline: XLSForm local checks -> XLSForm to XForm conversion (pyxform) -> offline ODK Validate jar.
 
 ### `/xlsform-update`
 
@@ -392,6 +418,9 @@ pip install xlwings
 
 ## Project Structure
 
+Important runtime artifact:
+- `tools/ODK-Validate.jar` is installed by `xlsform-ai init` for offline form validation.
+
 ```
 .
 ├── survey.xlsx              # Main XLSForm file (your work output)
@@ -502,13 +531,14 @@ xlsform-ai info
 Clean up XLSForm AI files from a project, keeping only your work outputs.
 
 ```bash
-xlsform-ai cleanup              # Remove .claude/, scripts/, package.json
+xlsform-ai cleanup              # Remove .claude/, scripts/, tools/, package.json
 xlsform-ai cleanup --dry-run    # Preview what would be removed
 ```
 
 **What gets removed:**
 - `.claude/` - Claude Code configuration
 - `scripts/` - Helper scripts
+- `tools/` - Offline validator binaries
 - `package.json` - npm configuration
 
 **What gets kept:**
