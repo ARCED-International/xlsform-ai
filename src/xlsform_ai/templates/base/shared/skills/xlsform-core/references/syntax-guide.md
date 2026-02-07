@@ -60,6 +60,9 @@ Keep data contiguous and avoid large blank blocks inside the sheet.
 - Allowed characters: letters, digits, hyphens, underscores, periods.
 - Case-sensitive.
 - Must be unique within the form.
+- Recommended: avoid leading numbers and trailing numeric suffixes in base names.
+- Prefer semantic names like `income_primary` over numeric variants like `income_1`.
+- Reason: repeat instances and select_multiple exports often generate `_1`, `_2` columns.
 
 ## Choices Sheet
 
@@ -140,6 +143,7 @@ It uses the English label "Specify other".
 
 - Required columns exist in survey and choices.
 - All question names are unique and valid.
+- Question names avoid risky leading/trailing numeric patterns in base names.
 - list_name matches between survey and choices.
 - select_multiple choice names do not contain spaces.
 - begin/end group and begin/end repeat are balanced.

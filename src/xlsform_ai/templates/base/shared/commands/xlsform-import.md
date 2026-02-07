@@ -326,7 +326,7 @@ For each question:
 Question 1/15:
 
 Type: [text]
-Name: [q1_name]
+Name: [respondent_name]
 Label: What is your name?
 Required: [yes]
 
@@ -344,7 +344,7 @@ Create unique, descriptive names:
 - "How old are you?" -> `age`
 - "What is your gender?" -> `gender`
 
-Check for duplicates and append numbers if needed.
+Check for duplicates and resolve with semantic names (avoid numeric suffixes).
 
 ### 2. Load Current Form
 
@@ -430,7 +430,7 @@ If questions with similar names exist:
 ```
 WARNING:  Warning: Similar questions found in current form
 
-Existing: q1_name "What is your name?"
+Existing: respondent_name "What is your name?"
 Importing: respondent_name "What is your name?"
 
 This may create duplicate content.

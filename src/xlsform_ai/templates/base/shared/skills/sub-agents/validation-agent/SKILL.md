@@ -62,6 +62,7 @@ Check relevance/formula columns:
 ### 6. Best Practices Compliance
 Ensure form follows XLSForm best practices:
 - Field names are lowercase, snake_case
+- Field names avoid leading numbers and trailing numeric suffixes in base names
 - No duplicate field names
 - Proper use of begin/end_repeat
 - Meaningful labels (not "Question1", "Q2")
@@ -165,6 +166,6 @@ constraint: . > 0
 
 ### Example 3: Cross-Chunk Validation
 After parallel import:
-- Chunk 1 has field `q1_name`
-- Chunk 2 has field `q1_name`
+- Chunk 1 has field `respondent_name`
+- Chunk 2 has field `respondent_name`
 → ERROR: Duplicate field name detected

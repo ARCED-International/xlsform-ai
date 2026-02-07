@@ -407,7 +407,7 @@ When designing form schemas:
 - [ ] Add constraints to validate data quality
 - [ ] Use relevance to show only relevant questions
 - [ ] Leverage repeats for repeated data collection
-- [ ] Name fields consistently (snake_case, descriptive)
+- [ ] Name fields consistently (snake_case, descriptive, avoid leading/trailing numeric base names)
 - [ ] Add clear, concise labels
 - [ ] Provide guidance hints for complex questions
 - [ ] Test form flow before deployment

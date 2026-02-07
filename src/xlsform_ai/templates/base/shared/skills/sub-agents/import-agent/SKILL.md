@@ -178,10 +178,10 @@ For choice lists:
 - **Low confidence detection**: Flag for manual review
 - **Ambiguous options**: Create generic choice list
 - **Missing labels**: Use placeholder "Question N"
-- **Duplicate names**: Auto-suffix (_1, _2, etc.)
+- **Duplicate names**: Use semantic disambiguation (module/context suffixes), not numeric suffixes
 
 ### Merge Errors (Parallel)
-- **Duplicate field names**: Append chunk ID to disambiguate
+- **Duplicate field names**: Resolve with semantic context labels; if unclear, request naming decision
 - **Conflicting choice lists**: Merge with warnings
 - **Type mismatches**: Flag for manual resolution
 
@@ -252,7 +252,7 @@ Question about:
 **Output:**
 ```yaml
 type: text
-name: question_1_auto
+name: manual_review_question
 label: [MANUAL REVIEW REQUIRED]
 constraint:
 relevance:

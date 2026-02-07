@@ -8,7 +8,10 @@ This document contains best practices from the official ODK documentation for cr
 - Always use lowercase letters
 - Separate words with underscores
 - Start with a letter (not a number)
+- Avoid ending names with numeric suffixes (e.g., avoid `age_3`, `fruits_1`)
 - Be descriptive but concise
+- Use semantic variants instead of numbers (`age_child`, `age_spouse`)
+- Reason: repeat exports and select_multiple exports commonly generate `_1`, `_2`, etc.
 
 **Good examples:**
 - `respondent_age`
@@ -19,6 +22,8 @@ This document contains best practices from the official ODK documentation for cr
 - `RespondentAge` (camelCase)
 - `respondent-age` (hyphens)
 - `1st_question` (starts with number)
+- `age_3` (looks like repeat/export-generated field)
+- `fruits_1` (collides with select_multiple export pattern)
 
 ### Field name length
 - Keep under 32 characters for Stata compatibility

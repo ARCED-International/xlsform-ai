@@ -32,7 +32,7 @@ logger = ActivityLogger()
 logger.log_action(
     action_type="add_questions",
     description="Added 3 questions",
-    details="Questions: q1_name, q2_age, q3_gender\nRows: 5, 10, 15"
+    details="Questions: respondent_name, respondent_age, respondent_gender\nRows: 5, 10, 15"
 )
 ```
 
@@ -83,7 +83,7 @@ logger = ActivityLogger()
 logger.log_action(
     action_type="add_questions",
     description="Added 5 questions about demographics",
-    details="Questions: q1_name, q2_age, q3_gender, q4_education, q5_occupation\nRows: 5, 10, 15, 20, 25"
+    details="Questions: respondent_name, respondent_age, respondent_gender, respondent_education, respondent_occupation\nRows: 5, 10, 15, 20, 25"
 )
 ```
 

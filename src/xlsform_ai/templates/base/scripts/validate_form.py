@@ -16,6 +16,7 @@ Usage:
 import argparse
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -70,6 +71,10 @@ def _build_header_map(sheet) -> Dict[str, int]:
             key = _normalize_header_name(str(cell.value).strip())
             headers[key] = idx
     return headers
+
+
+_LEADING_DIGIT_RE = re.compile(r"^\d")
+_TRAILING_DIGIT_RE = re.compile(r"\d$")
 
 
 def validate_choices_sheet(sheet) -> Tuple[List[str], List[str], set]:
@@ -147,6 +152,17 @@ def validate_survey_sheet(sheet, choice_lists: set) -> Tuple[List[str], List[str
                 errors.append(f"Duplicate question name '{name}' at rows {names[name]} and {row_idx}")
             else:
                 names[name] = row_idx
+
+            if _LEADING_DIGIT_RE.search(name):
+                warnings.append(
+                    f"Question name '{name}' at row {row_idx} starts with a number. "
+                    "Use a leading letter for compatibility and clarity."
+                )
+            if _TRAILING_DIGIT_RE.search(name):
+                warnings.append(
+                    f"Question name '{name}' at row {row_idx} ends with a number. "
+                    "Avoid numeric suffixes in base names to reduce repeat/export ambiguity."
+                )
 
         question_type = ""
         if len(row_values) > type_col and _cell_has_value(row_values[type_col]):

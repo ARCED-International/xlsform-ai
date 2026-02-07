@@ -358,6 +358,8 @@ Best practice improvements:
 INFO: SUGGESTION: Use snake_case for question names
   - Row 5: 'RespondentName' -> consider 'respondent_name'
   - Row 12: 'Household Size' -> consider 'household_size'
+  - Row 18: 'age_3' -> consider 'age_child' (avoid trailing numeric base names)
+  - Row 22: '1st_visit' -> consider 'first_visit' (avoid leading numeric names)
 
 Benefits: Consistent, easier to work with, follows conventions
 ```

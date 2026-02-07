@@ -19,35 +19,41 @@ Validation checks aligned with XLSForm rules and common converter behavior.
 - survey name values must be unique
 - choices name values must be unique within each list_name
 
-5. list_name matches
+5. Avoid ambiguous numeric name patterns (best practice)
+- avoid leading numeric names like 1st_age
+- avoid trailing numeric base names like age_3 or fruits_2
+- prefer semantic disambiguation like age_child or age_spouse
+- this prevents conflicts/confusion with repeat and select_multiple export suffixes
+
+6. list_name matches
 - select_one list_name and select_multiple list_name must exist in choices
 
-6. select_multiple choice names contain no spaces
+7. select_multiple choice names contain no spaces
 
-7. begin/end group and begin/end repeat are balanced and properly nested
+8. begin/end group and begin/end repeat are balanced and properly nested
 
-8. Avoid large blank blocks
+9. Avoid large blank blocks
 - data after 20 adjacent blank rows or columns may be ignored
 
 ## Formula Rules
 
-9. relevant, constraint, calculation use correct syntax
+10. relevant, constraint, calculation use correct syntax
 - use ${field_name} for other fields
 - use . for current field in constraints
 - selected(${field}, 'value') for select_multiple
 
-10. required and read_only are yes/no or valid formulas
+11. required and read_only are yes/no or valid formulas
 
-11. constraint_message and required_message provided when possible
+12. constraint_message and required_message provided when possible
 
 ## Settings Sheet Rules (If Present)
 
-12. Recommended fields exist
+13. Recommended fields exist
 - form_title
 - form_id
 - version (commonly yyyymmddrr)
 
-13. allow_choice_duplicates enabled if cascading selects require duplicate choice names
+14. allow_choice_duplicates enabled if cascading selects require duplicate choice names
 
 ## Output Categories
 

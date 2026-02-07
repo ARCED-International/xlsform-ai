@@ -75,8 +75,12 @@ Use this 3-part structure:
 
 1. Use only lowercase letters (a-z), digits (0-9), and underscores (_)
 2. Always start with a letter
-3. Maximum 32 characters (for Stata compatibility)
-4. Be descriptive but concise
+3. Avoid trailing numeric suffixes in base names (avoid `age_3`, `income_2`)
+4. Use semantic disambiguation (`age_child`, `income_primary`) instead of numbered variants
+5. Maximum 32 characters (for Stata compatibility)
+6. Be descriptive but concise
+
+Trailing numeric suffixes are discouraged because repeat groups and select_multiple exports often generate `_1`, `_2`, etc., which can cause collisions or confusion in analysis.
 
 ## User Interface
 

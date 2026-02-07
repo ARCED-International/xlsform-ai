@@ -1834,7 +1834,9 @@ validation-agent (validate all languages)
 - Use snake_case: `respondent_age`, not `Respondent Age`
 - Be descriptive but concise: `hh_head_age` for household head age
 - Always unique: No duplicate names
-- Use prefixes for related questions: `q1_name`, `q2_age`
+- Do not start or end names with numbers: avoid `1st_visit` and `age_3`
+- Use semantic disambiguation instead of numeric suffixes: `age_child`, `age_spouse`
+- This avoids confusion with repeat exports (`age_1`, `age_2`) and select_multiple exports (`fruits_1`, `fruits_2`)
 
 **Type Selection:**
 - Use `integer` for whole numbers (age, count)

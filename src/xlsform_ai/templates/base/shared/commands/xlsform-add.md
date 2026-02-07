@@ -216,12 +216,12 @@ Before making changes, verify:
 - [ ] Question name is unique (no duplicates in existing form)
 - [ ] If select question: list_name doesn't conflict or can reuse existing list
 - [ ] Question type is valid
-- [ ] Name follows conventions (snake_case, starts with letter)
+- [ ] Name follows conventions (snake_case, starts with letter, no trailing numeric suffix)
 - [ ] For select_multiple: choice names have no spaces
 
 If any validation fails:
 1. **Stop and explain the issue**
-2. **Suggest a fix** (e.g., "Should I use 'respondent_name_1' instead?")
+2. **Suggest a semantic fix** (e.g., "Should I use 'respondent_name_primary' instead?")
 3. **Wait for user confirmation** before proceeding
 
 ## Implementation
@@ -637,7 +637,8 @@ When user doesn't specify a name:
 
 1. Extract key words from question text
 2. Convert to snake_case
-3. Ensure uniqueness by adding number suffix if needed
+3. Ensure uniqueness with semantic disambiguation (avoid numeric suffixes)
+4. If semantic intent is unclear, ask user for preferred naming
 
 **Examples:**
 - "What is your name?" -> `respondent_name`
