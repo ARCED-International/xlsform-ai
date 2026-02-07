@@ -85,6 +85,11 @@ uv tool install xlsform-ai-cli --from git+https://github.com/ARCED-International
 pip install git+https://github.com/ARCED-International/xlsform-ai.git
 ```
 
+If `uv` is not installed, use the `pip` command above or install `uv` first:
+```bash
+pip install uv
+```
+
 ### Verify Installation
 
 ```bash
