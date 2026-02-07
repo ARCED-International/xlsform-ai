@@ -60,14 +60,14 @@ For machine-readable output:
 python scripts/validate_form.py survey.xlsx --json
 ```
 
-If you need programmatic usage in Python:
+If you need programmatic usage in Python, prefer the explicit local validator function:
 
 ```python
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path("scripts")))
 
-from validate_form import validate_form
+from validate_form import validate_xlsxform
 from log_activity import ActivityLogger
 ```
 

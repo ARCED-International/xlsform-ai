@@ -1584,13 +1584,13 @@ add_questions('survey.xlsx', questions)
 - Common engine statuses: `completed`, `jar_not_found`, `java_not_found`, `pyxform_not_found`, `xform_conversion_failed`
 
 **Programmatic Function:**
-- `validate_form()` returns `(errors, warnings, suggestions)` for compatibility
+- `validate_xlsxform()` returns `(errors, warnings, suggestions)` for local checks
 
 **Usage:**
 ```python
-from scripts.validate_form import validate_form
+from scripts.validate_form import validate_xlsxform
 
-errors, warnings, suggestions = validate_form('survey.xlsx')
+errors, warnings, suggestions = validate_xlsxform('survey.xlsx')
 ```
 
 #### log_activity.py

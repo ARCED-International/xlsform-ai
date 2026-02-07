@@ -8,7 +8,7 @@ arguments:
     description: Page range for PDF files (e.g., 1-10, 5-15)
     required: false
   - name: sheet
-    description: Sheet name for Excel files
+    description: Optional sheet name when source is an Excel file (.xlsx)
     required: false
   - name: file
     description: Override target XLSForm file name (default: use xlsform-ai.json config or survey.xlsx)

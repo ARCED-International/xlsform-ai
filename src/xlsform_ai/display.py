@@ -104,7 +104,7 @@ def print_init_success(location: str, relative_path: str = "."):
         f"  [cyan]1.[/cyan] cd {relative_path}\n"
         f"  [cyan]2.[/cyan] Open [yellow]survey.xlsx[/yellow] in Excel\n"
         f"  [cyan]3.[/cyan] Use Claude Code with [yellow]/xlsform-add[/yellow] commands\n"
-        f"  [cyan]4.[/cyan] Or use [yellow]/xlsform-import[/yellow] to import from PDF/Word\n\n"
+        f"  [cyan]4.[/cyan] Or use [yellow]/xlsform-import[/yellow] to import from PDF/Word/Excel\n\n"
         f"[dim]Your activity log will be preserved across re-installations.[/dim]",
         title="[green][OK] SUCCESS[/green]",
         border_style="green",

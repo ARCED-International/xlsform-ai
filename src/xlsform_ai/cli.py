@@ -281,7 +281,7 @@ def init_project(
                     f"[bold cyan]2.[/bold cyan] Open [yellow]survey.xlsx[/yellow] in Excel to start designing your form\n"
                     f"[bold cyan]3.[/bold cyan] Use Claude Code with slash commands:\n"
                     f"     [cyan]3.1[/cyan] [yellow]/xlsform-add[/yellow] - Add questions to your form\n"
-                    f"     [cyan]3.2[/cyan] [yellow]/xlsform-import[/yellow] - Import from PDF/Word\n"
+                    f"     [cyan]3.2[/cyan] [yellow]/xlsform-import[/yellow] - Import from PDF/Word/Excel\n"
                     f"     [cyan]3.3[/cyan] [yellow]/xlsform-validate[/yellow] - Validate your form\n"
                     f"     [cyan]3.4[/cyan] [yellow]/xlsform-update[/yellow] - Update existing questions\n"
                     f"     [cyan]3.5[/cyan] [yellow]/xlsform-translate[/yellow] - Add multilingual translations\n\n"
