@@ -64,6 +64,17 @@ python scripts/add_metadata.py
 
 3. **Use Helper Script - MANDATORY**: Always use `scripts/add_questions.py` - NO exceptions
 
+### XLSForm.org Rules Snapshot
+
+- Columns can be in any order; optional columns can be omitted.
+- Data after 20 adjacent blank rows or columns may be ignored.
+- Survey requires type/name/label; choices requires list_name/name/label.
+- Question names: start with letter/underscore; allowed letters, digits, hyphen, underscore, period.
+- select_multiple choice names must not contain spaces.
+- For cascading selects with duplicate choice names, set allow_choice_duplicates in settings.
+- or_other only works without translations and without choice_filter; it uses English "Specify other".
+- Settings sheet is optional but recommended; include form_title, form_id, version (yyyymmddrr).
+
 ## Understanding Your Request
 
 First, analyze what you're being asked to add:

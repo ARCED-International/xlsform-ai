@@ -58,6 +58,13 @@ try:
 except ImportError:
     DISPLAY_AVAILABLE = False
 
+# Try to import history manager, fail gracefully if not available
+try:
+    from history_manager import WorkbookHistoryManager
+    HISTORY_AVAILABLE = True
+except ImportError:
+    HISTORY_AVAILABLE = False
+
 
 # Try to import AI components, fail gracefully if not available
 try:
@@ -207,6 +214,10 @@ def add_questions(questions_data, survey_file=None):
     if CONFIG_AVAILABLE:
         config = ProjectConfig()
 
+    history_manager = None
+    lock_acquired = False
+    snapshot_revision = ""
+
     try:
         # Determine file to use
         if survey_file is None:
@@ -216,6 +227,29 @@ def add_questions(questions_data, survey_file=None):
                 survey_file = Path("survey.xlsx")
         else:
             survey_file = Path(survey_file)
+
+        # Create immutable pre-change snapshot and acquire edit lock
+        if HISTORY_AVAILABLE:
+            project_dir = survey_file.parent
+            if config:
+                try:
+                    if survey_file.resolve().is_relative_to(config.project_dir.resolve()):
+                        project_dir = config.project_dir
+                except Exception:
+                    project_dir = survey_file.parent
+            history_manager = WorkbookHistoryManager(
+                xlsform_path=survey_file,
+                project_dir=project_dir,
+            )
+            history_manager.acquire_lock()
+            lock_acquired = True
+            snapshot = history_manager.create_snapshot(
+                action_type="add_questions",
+                description=f"Pre-change snapshot before adding {len(questions_data)} question(s)",
+                details=f"Target file: {survey_file.name}",
+                command="/xlsform-add",
+            )
+            snapshot_revision = snapshot.get("revision_id", "")
 
         # Load workbook
         wb = openpyxl.load_workbook(survey_file)
@@ -386,10 +420,16 @@ def add_questions(questions_data, survey_file=None):
                     # and supports both relative and absolute paths
                     logger = ActivityLogger(project_dir=config.project_dir)
                     questions_summary = ", ".join([f"{q['name']} ({q['type']})" for q in added])
+                    detail_lines = [
+                        f"Questions: {questions_summary}",
+                        f"Rows: {', '.join([str(q['row']) for q in added])}",
+                    ]
+                    if snapshot_revision:
+                        detail_lines.append(f"Snapshot revision: {snapshot_revision}")
                     logger.log_action(
                         action_type="add_questions",
                         description=f"Added {len(added)} question(s)",
-                        details=f"Questions: {questions_summary}\nRows: {', '.join([str(q['row']) for q in added])}"
+                        details="\n".join(detail_lines),
                     )
                     log_file = logger.log_file
                     print(f"\n[OK] Activity logged to: {log_file.name}")
@@ -400,11 +440,15 @@ def add_questions(questions_data, survey_file=None):
         return {
             "success": True,
             "added": added,
-            "total": len(added)
+            "total": len(added),
+            "snapshot_revision": snapshot_revision,
         }
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+    finally:
+        if lock_acquired and history_manager is not None:
+            history_manager.release_lock()
 
 
 if __name__ == "__main__":

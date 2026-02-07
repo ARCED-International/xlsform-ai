@@ -41,6 +41,13 @@ METADATA_FIELDS = [
     {"type": "username", "name": "username", "label": "Username"},
 ]
 
+# Try to import history manager, fail gracefully if not available
+try:
+    from history_manager import WorkbookHistoryManager
+    HISTORY_AVAILABLE = True
+except ImportError:
+    HISTORY_AVAILABLE = False
+
 def _cell_has_value(value) -> bool:
     if value is None:
         return False
@@ -58,11 +65,27 @@ def add_metadata_fields(survey_file="survey.xlsx"):
     Returns:
         dict with success status and details
     """
+    history_manager = None
+    lock_acquired = False
+    snapshot_revision = ""
+
     try:
         survey_path = Path(survey_file)
 
         if not survey_path.exists():
             return {"success": False, "error": f"File not found: {survey_file}"}
+
+        if HISTORY_AVAILABLE:
+            history_manager = WorkbookHistoryManager(xlsform_path=survey_path, project_dir=survey_path.parent)
+            history_manager.acquire_lock()
+            lock_acquired = True
+            snapshot = history_manager.create_snapshot(
+                action_type="add_metadata",
+                description="Pre-change snapshot before adding metadata fields",
+                details=f"Target file: {survey_path.name}",
+                command="/xlsform-add metadata",
+            )
+            snapshot_revision = snapshot.get("revision_id", "")
 
         # Load workbook
         wb = openpyxl.load_workbook(survey_path)
@@ -161,11 +184,15 @@ def add_metadata_fields(survey_file="survey.xlsx"):
             "success": True,
             "added": added,
             "skipped": list(existing_metadata),
-            "total": len(added)
+            "total": len(added),
+            "snapshot_revision": snapshot_revision,
         }
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+    finally:
+        if lock_acquired and history_manager is not None:
+            history_manager.release_lock()
 
 
 if __name__ == "__main__":

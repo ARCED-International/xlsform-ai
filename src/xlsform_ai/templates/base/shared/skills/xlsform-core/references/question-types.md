@@ -1,348 +1,205 @@
 # XLSForm Question Types Reference
 
-Complete reference of all XLSForm question types with examples.
+Concise list of XLSForm question types with minimal examples.
 
-## Text Input Types
+## Text and Number
 
 ### text
-Free text response.
-
 | type | name | label |
 | --- | --- | --- |
-| text | name | What is your name? |
-
-**Optional appearance:** `multiline` for multi-line input
+| text | respondent_name | What is your name? |
 
 ### integer
-Whole number input.
-
 | type | name | label | constraint |
 | --- | --- | --- | --- |
-| integer | age | What is your age? | . >= 0 and . <= 120 |
+| integer | age | Age | . >= 0 and . <= 120 |
 
 ### decimal
-Decimal number input.
-
 | type | name | label |
 | --- | --- | --- |
-| decimal | weight | Weight in kg |
+| decimal | weight | Weight (kg) |
 
 ### range
-Restricted range input with start, end, and step.
-
 | type | name | label | parameters |
 | --- | --- | --- | --- |
 | range | rating | Rate 1-5 | start=1 end=5 step=1 |
 
-**Optional appearance:** `rating` for star rating widget
-
-## Multiple Choice Types
+## Select Questions
 
 ### select_one
-Select one option from a list.
-
-**Syntax:** `select_one listname`
+Syntax: select_one list_name
 
 | type | name | label |
 | --- | --- | --- |
-| select_one gender | gender | What is your gender? |
-
-**Choices sheet:**
-| list_name | name | label |
-| --- | --- | --- |
-| gender | male | Male |
-| gender | female | Female |
-| gender | other | Other |
+| select_one gender | gender | Gender |
 
 ### select_multiple
-Select multiple options from a list.
-
-**Syntax:** `select_multiple listname`
+Syntax: select_multiple list_name
 
 | type | name | label |
 | --- | --- | --- |
-| select_multiple fruits | favorite_fruits | Select your favorite fruits |
+| select_multiple fruits | favorite_fruits | Favorite fruits |
 
-**Choices sheet:**
-| list_name | name | label |
-| --- | --- | --- |
-| fruits | apple | Apple |
-| fruits | banana | Banana |
-| fruits | orange | Orange |
-
-**Note:** Choice names for select_multiple must NOT contain spaces (they're space-separated when saved).
+Note: select_multiple choice names must not contain spaces.
 
 ### select_one_from_file
-Select one option from an external CSV/XML/GeoJSON file.
-
 | type | name | label | parameters |
 | --- | --- | --- | --- |
-| select_one_from_file countries.csv | country | Select country | value=code label=name |
+| select_one_from_file countries.csv | country | Country | value=code label=name |
 
 ### select_multiple_from_file
-Select multiple options from an external file.
-
-| type | name | label | choice_filter |
-| --- | --- | --- | --- |
-| select_multiple_from_file items.csv | selected_items | Select items | category='A' |
-
-### or_other
-Add an "other" option to select questions (shortcut).
-
-| type | name | label |
-| --- | --- | --- |
-| select_one fruits or_other | favorite | Favorite fruit |
-
-Adds an "other" choice automatically. For more control, use relevance instead.
-
-## Geolocation Types
-
-### geopoint
-Collect GPS coordinates (latitude, longitude, altitude, accuracy).
-
 | type | name | label | parameters |
 | --- | --- | --- | --- |
-| geopoint | location | Record location | capture-accuracy=10 warning-accuracy=10 |
+| select_multiple_from_file items.csv | items | Select items | value=id label=label |
 
-### geotrace
-Record a line of GPS coordinates.
+### or_other (modifier)
+Adds an "other" option to select_one or select_multiple.
+Only supported without translations and without choice_filter.
 
+Example: select_one fruits or_other
+
+## Geo
+
+### geopoint
 | type | name | label |
 | --- | --- | --- |
-| geotrace | path | Walk the boundary |
+| geopoint | location | Record location |
+
+### geotrace
+| type | name | label |
+| --- | --- | --- |
+| geotrace | route | Walk the route |
 
 ### geoshape
-Record a polygon (closed shape).
-
 | type | name | label |
 | --- | --- | --- |
 | geoshape | area | Mark the area |
 
-## Media Types
+## Media
 
 ### image
-Capture or upload an image.
-
-| type | name | label | parameters |
-| --- | --- | --- | --- |
-| image | photo | Take a photo | max-pixels=1000 |
-
-**Optional appearance:** `signature` for signatures, `draw` for sketches
+| type | name | label |
+| --- | --- | --- |
+| image | photo | Take a photo |
 
 ### audio
-Record or upload audio.
-
-| type | name | parameters |
+| type | name | label |
 | --- | --- | --- |
-| audio | recording | quality=normal |
-
-**Quality options:** `voice-only`, `low`, `normal`, `external`
+| audio | recording | Record audio |
 
 ### video
-Record or upload video.
-
 | type | name | label |
 | --- | --- | --- |
 | video | footage | Record video |
 
 ### file
-Upload any file (txt, pdf, xls, docx, zip, etc.).
-
 | type | name | label |
 | --- | --- | --- |
 | file | document | Upload document |
 
-## Date and Time Types
+### background-audio
+| type | name | label |
+| --- | --- | --- |
+| background-audio | bg_audio | Play background audio |
+
+## Date and Time
 
 ### date
-Date input.
-
-| type | name | label | default |
-| --- | --- | --- | --- |
-| date | survey_date | Survey date | today() |
-
-**Optional appearance:** `no-calendar`, `month-year`, `year`
+| type | name | label |
+| --- | --- | --- |
+| date | survey_date | Survey date |
 
 ### time
-Time input.
-
 | type | name | label |
 | --- | --- | --- |
 | time | appointment_time | Appointment time |
 
 ### dateTime
-Combined date and time input.
-
 | type | name | label |
 | --- | --- | --- |
 | dateTime | timestamp | Record timestamp |
 
-## Note and Display Types
+## Display and Calculation
 
 ### note
-Display information only (no input). Shorthand for `text` with `readonly=true`.
-
 | type | name | label |
 | --- | --- | --- |
-| note | instructions | Please read the instructions carefully |
-
-Can embed variables in labels: `Total: ${total_amount}`
+| note | instructions | Read these instructions |
 
 ### calculate
-Perform calculations (hidden field, no label shown).
-
 | type | name | calculation |
 | --- | --- | --- |
-| calculate | total | ${item1} + ${item2} |
+| calculate | total | ${a} + ${b} |
 
-Use a non-text type (integer, decimal, date) if the calculation result type matters for analysis.
+### acknowledge
+| type | name | label |
+| --- | --- | --- |
+| acknowledge | consent | I agree |
 
 ### hidden
-Hidden field with no UI element, stores a constant.
-
 | type | name | calculation |
 | --- | --- | --- |
 | hidden | form_version | '1.0' |
 
-## Metadata Types
-
-These collect system information automatically (no user input):
-
-| type | name | Description |
-| --- | --- | --- |
-| start | start | Form start date/time |
-| end | end | Form end date/time |
-| today | today | Survey date |
-| deviceid | deviceid | Device identifier |
-| phonenumber | phonenumber | Phone number (if available) |
-| subscriberid | subscriberid | SIM subscriber ID |
-| simserial | simserial | SIM serial number |
-| username | username | Configured username |
-| email | email | Configured email |
-| audit | audit | Enumerator behavior log |
-
-**audit metadata** can track location:
-| type | name | parameters |
-| --- | --- | --- |
-| audit | audit | location-priority=high-accuracy location-min-interval=180 location-max-age=300 |
-
-## Special Types
+## Ranking and Barcode
 
 ### rank
-Order a list of options.
-
 | type | name | label |
 | --- | --- | --- |
-| rank toppings | rank_toppings | Order toppings from favorite to least |
-
-### acknowledge
-Acknowledgment prompt (sets value to "OK").
-
-| type | name | label |
-| --- | --- | --- |
-| acknowledge | consent | I consent to participate |
+| rank toppings | rank_toppings | Rank toppings |
 
 ### barcode
-Scan a barcode (requires barcode scanner app).
-
 | type | name | label |
 | --- | --- | --- |
-| barcode | product_id | Scan product barcode |
+| barcode | product_id | Scan barcode |
 
-### xml-external
-Reference external XML data file.
-
-| type | name | label |
-| --- | --- | --- |
-| xml-external | houses | External house data |
+## External Data
 
 ### csv-external
-Reference external CSV data file.
-
 | type | name | label |
 | --- | --- | --- |
 | csv-external | participants | Participant data |
 
+### xml-external
+| type | name | label |
+| --- | --- | --- |
+| xml-external | houses | External data |
+
+## Metadata (auto-collected)
+
+| type | name | Description |
+| --- | --- | --- |
+| start | start | Form start time |
+| end | end | Form end time |
+| today | today | Survey date |
+| deviceid | deviceid | Device identifier |
+| phonenumber | phonenumber | Phone number |
+| subscriberid | subscriberid | SIM subscriber ID |
+| simserial | simserial | SIM serial |
+| username | username | Username |
+| email | email | Email |
+| audit | audit | Audit log |
+
+## Structure
+
 ### begin group / end group
-Group related questions together.
-
-| type | name | label | appearance |
-| --- | --- | --- | --- |
-| begin group | demographics | Demographics | field-list |
-| text | name | Name | |
-| integer | age | Age | |
-| end group | | | |
-
-**field-list appearance** shows all questions in the group on one screen.
+| type | name | label |
+| --- | --- | --- |
+| begin group | demographics | Demographics |
+| text | name | Name |
+| end group | | |
 
 ### begin repeat / end repeat
-Repeatable set of questions.
-
 | type | name | label | repeat_count |
 | --- | --- | --- | --- |
-| begin repeat | child | Child | |
-| text | child_name | Child's name | |
-| integer | child_age | Child's age | |
+| begin repeat | child | Child | ${num_children} |
+| text | child_name | Child name | |
 | end repeat | | | |
 
-**repeat_count** can be:
-- Fixed number: `3` (exactly 3 repeats)
-- Dynamic: `${num_children}` (based on previous answer)
-- Omitted: user can add/remove repeats
+## Useful Columns
 
-## Appearance Attributes
-
-Common appearance attributes:
-
-| Appearance | Question Type | Description |
-| --- | --- | --- |
-| multiline | text | Multi-line text input |
-| minimal | select_one/select_multiple | Dropdown menu |
-| quick | select_one | Auto-advance after selection |
-| compact | select_one/select_multiple | Compact display |
-| horizontal | select_one/select_multiple | Horizontal options |
-| likert | select_one | Likert scale display |
-| newlines | text | Preserve line breaks |
-| calendar | date | Show calendar widget |
-| spinner | number | Show number spinner |
-| signature | image | Signature capture |
-| draw | image | Drawing sketch |
-| map | select_one_from_file | Show choices on map |
-
-## Parameters Column
-
-Used with specific question types:
-
-### Range parameters
-- `start=0` - Minimum value
-- `end=10` - Maximum value
-- `step=1` - Increment
-
-### Geopoint parameters
-- `capture-accuracy=5` - Auto-capture at this accuracy (meters)
-- `warning-accuracy=100` - Show warning above this accuracy
-
-### Audio parameters
-- `quality=normal` - Audio quality: voice-only, low, normal, external
-
-### Image parameters
-- `max-pixels=1000` - Downsize to max pixel dimension
-
-### Select from file parameters
-- `value=column_name` - Column for choice value
-- `label=column_name` - Column for choice label
-
-### Randomization
-- `randomize=true` - Randomize choice order
-- `randomize=true, seed=${sd}` - Reproducible randomization
-
-## Tips
-
-1. **Always** use `snake_case` for question names (e.g., `respondent_age`)
-2. **Never** use spaces in choice names for `select_multiple`
-3. **Always** match the list name exactly between survey type and choices sheet
-4. **Use** `calculate` type for computed values that don't need user input
-5. **Use** `note` type to display information or embedded calculations
-6. **Add** `constraint_message` to explain why a value was rejected
-7. **Use** `relevant` to conditionally show questions
-8. **Test** complex forms with real data before deployment
+- relevant for conditional display
+- constraint and constraint_message for validation
+- required and required_message for mandatory fields
+- choice_filter for cascading selects
+- appearance and parameters for UI and type options

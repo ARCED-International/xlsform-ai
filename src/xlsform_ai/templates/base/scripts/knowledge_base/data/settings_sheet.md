@@ -1,44 +1,37 @@
 # XLSForm Settings Sheet Guidance
 
-The `settings` sheet uses a single header row (row 1) and a single values row (row 2).
-Only row 2 should contain values. Do not insert extra rows.
+The settings sheet is optional but recommended. If present, include the core fields below.
 
-## Column Behavior and Best Practices
+## Core Fields (Recommended)
 
 ### form_title
-- Purpose: Human-readable form title displayed in tools.
-- Recommended: Clear, concise, unique per project.
-- Example: `Household Survey 2026`.
+- Human-readable form title displayed in clients.
+- Example: Household Survey 2026
 
 ### form_id
-- Purpose: Unique form identifier used by servers and analytics.
-- Rules: Must be unique, lowercase, start with a letter, no spaces.
-- Recommended: Use snake_case.
-- Example: `household_survey_2026`.
+- Unique identifier used by servers and exports.
+- Recommended: lowercase, snake_case, no spaces.
+- Example: household_survey_2026
 
 ### version
-- Purpose: Form version for deployment updates.
-- Rule: Must always be this formula (do not leave blank or replace with a literal):
-  `=TEXT(NOW(), "yyyymmddhhmmss")`
+- Version string used to track updates.
+- Common convention: yyyymmddrr (year, month, day, revision).
+- Example: 2026020701
 
-### instance_name
-- Purpose: Defines the default instance name shown for submissions.
-- Best practice: Use a short, meaningful name that references key identifiers.
-- Example: `concat('HH-', ${household_id})` or `concat(${respondent_name}, ' - ', ${today})`.
+If form_id is missing, many tools default to the XLSX filename. If form_title is missing, it may default to form_id.
 
-### default_language
-- Purpose: Default language for labels in multilingual forms.
-- Rules: Use ISO language codes (e.g., `en`, `fr`, `es`).
-- Example: `en`.
+## Other Common Settings
 
-### style
-- Purpose: Controls form appearance in some platforms.
-- Common values: `pages`, `theme-grid`, `theme-grid-compact`.
-- Best practice: Only set if you need a specific style.
+- default_language: Default language for multilingual forms (e.g., English (en)).
+- public_key: Public key for encryption.
+- submission_url: Alternate submission URL.
+- style: UI style (pages, theme-grid, theme-grid-compact, etc.).
+- name: XForms root node name.
+- allow_choice_duplicates: Allow duplicate choice names (useful for cascading selects).
+- clean_text_values: yes or no.
 
-## Write Rules
+## Write Rules (Project Standard)
 
-- Read column names from row 1.
-- Write values to row 2 only.
-- Do not create new rows for settings.
-- Ensure `version` is present and set to `=TEXT(NOW(), "yyyymmddhhmmss")`.
+- Row 1 contains column headers.
+- Row 2 contains values aligned to those headers.
+- Always read headers before writing values.

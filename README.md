@@ -49,6 +49,12 @@ XLSForm AI is a CLI tool that sets up projects with specialized skills and comma
 - Format preservation
 - Real-time preview support
 
+### Safe Rollback
+- Immutable pre-change snapshots for write operations
+- Revision history listing and manual checkpoints
+- Fast undo/restore workflows for agent edits
+- Designed for open workbook workflows where users observe changes live
+
 ### 📋 Slash Commands
 - `/xlsform-add` - Add questions
 - `/xlsform-import` - Import from files
@@ -56,6 +62,7 @@ XLSForm AI is a CLI tool that sets up projects with specialized skills and comma
 - `/xlsform-update` - Modify questions
 - `/xlsform-remove` - Delete questions
 - `/xlsform-move` - Reorder questions
+- `/xlsform-revert` - Restore from history safely
 
 ### Standardized Modules
 - Crop production, livestock, aquaculture DNA
@@ -221,6 +228,27 @@ Reorder questions in the form.
 ```bash
 /xlsform-move Move the name question to the beginning of the form
 /xlsform-move Move the age question after the name question
+```
+
+### `/xlsform-revert`
+
+Safely revert XLSForm changes from immutable snapshots.
+
+```bash
+# Show revision history
+/xlsform-revert history
+
+# Create a manual checkpoint
+/xlsform-revert checkpoint "Before roster update"
+
+# Undo latest change
+/xlsform-revert undo
+
+# Restore latest normal snapshot
+/xlsform-revert restore-last
+
+# Restore specific revision
+/xlsform-revert restore --revision 20260207121001-ab12cd34
 ```
 
 ## Examples
@@ -414,6 +442,24 @@ Every time you use XLSForm AI commands (add, update, validate, import), the acti
 - Persistent across sessions
 - Survives cleanup (keeps your work history)
 - Can be renamed - XLSForm AI will find it by tag
+
+## Rollback and History
+
+XLSForm write operations now create immutable pre-change snapshots for safe recovery.
+
+- History root: `.xlsform-ai/history/`
+- Snapshot files: `.xlsform-ai/history/snapshots/`
+- Manifest: `.xlsform-ai/history/history.jsonl`
+
+You can manage revisions using:
+
+```bash
+python scripts/form_history.py list
+python scripts/form_history.py checkpoint "Before major logic changes"
+python scripts/form_history.py restore --revision <revision_id>
+python scripts/form_history.py restore-last
+python scripts/form_history.py undo
+```
 
 ## CLI Reference
 

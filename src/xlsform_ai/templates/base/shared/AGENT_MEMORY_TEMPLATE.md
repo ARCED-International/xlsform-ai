@@ -118,6 +118,7 @@ XLSForm AI is an AI-powered toolkit for creating, modifying, and validating XLSF
 | `/xlsform-update` | Modify questions | `/xlsform-update Add constraint to age` |
 | `/xlsform-remove` | Delete questions | `/xlsform-remove Remove q1` |
 | `/xlsform-move` | Reorder questions | `/xlsform-move Move name to top` |
+| `/xlsform-revert` | Restore previous revisions | `/xlsform-revert restore-last` |
 
 ### Essential Skills
 
@@ -222,6 +223,7 @@ Skills are reusable knowledge packages that provide specialized information to A
 **Knowledge sources:**
 - `xlsform-core/references/question-types.md` - Complete type reference
 - `xlsform-core/references/syntax-guide.md` - XLSForm structure
+- `xlsform-core/references/settings-sheet.md` - Settings sheet rules
 - `xlsform-core/references/validation-rules.md` - Validation criteria
 - `xlsform-core/references/common-patterns.md` - Reusable patterns
 
@@ -566,11 +568,13 @@ Use `build_column_mapping()` from `form_structure` to locate columns like `const
 
 **Applies to ALL sheets** (`survey`, `choices`, `settings`). For `settings`, always locate the header in row 1, then write the value to row 2 in the same column.
 
-**Settings Sheet Rules (Strict):**
-- Row 1 headers, Row 2 values (no other rows for settings values).
-- `version` must be the formula `=TEXT(NOW(), "yyyymmddhhmmss")` (never blank).
-- Allowed headers only: `form_title`, `form_id`, `version`, `instance_name`, `default_language`,
-  `public_key`, `submission_url`, `style`, `name`, `clean_text_values`.
+**Settings Sheet Rules (Project Standard):**
+- Row 1 headers, Row 2 values (single values row).
+- Settings sheet is optional but recommended. If present, include `form_title`, `form_id`, `version`.
+- `version` is a string; common convention is `yyyymmddrr`.
+- Columns can appear in any order. Always map headers before writing.
+- Common headers: `instance_name`, `default_language`, `public_key`, `submission_url`, `style`,
+  `name`, `clean_text_values`, `allow_choice_duplicates`.
 - Instance name suggestions are allowed (e.g., include key IDs + `uuid()`), but still written in row 2.
 
 **Standard Metadata (Default Include Unless User Opts Out):**
@@ -2180,9 +2184,9 @@ npm run watch
 ```
 
 **Versioning:**
-- Ensure `version` exists in settings sheet and is set to `=TEXT(NOW(), "yyyymmddhhmmss")`
-- Version auto-updates on save; do not replace with a literal value
-- Track version in activity log
+- Ensure `version` exists in the settings sheet
+- Use the common convention `yyyymmddrr` (year, month, day, revision)
+- Track version updates in the activity log
 
 ### Multi-User Collaboration
 
@@ -2438,6 +2442,7 @@ ls -la survey.xlsx
 | `/xlsform-update` | Modify questions | `/xlsform-update Add constraint` | /xlsform-update | Use command xlsform-update | @xlsform-update |
 | `/xlsform-remove` | Delete questions | `/xlsform-remove Remove q1` | /xlsform-remove | Use command xlsform-remove | @xlsform-remove |
 | `/xlsform-move` | Reorder questions | `/xlsform-move Move name to top` | /xlsform-move | Use command xlsform-move | @xlsform-move |
+| `/xlsform-revert` | Revert safely | `/xlsform-revert restore --revision <id>` | /xlsform-revert | Use command xlsform-revert | @xlsform-revert |
 
 ### Skill Syntax
 
@@ -2459,8 +2464,7 @@ ls -la survey.xlsx
 | `dime_style_guide.md` | Question design guide | Question phrasing, form structure |
 | `constraint_rules.md` | Constraint patterns | Constraints by field type, examples |
 | `question_type_patterns.md` | Type selection guide | Decision trees for type selection |
-| `question_type_flows.md` | Advanced type decisions | Complex type selection scenarios |
-| `settings_sheet.md` | Settings rules | Row 1 headers, row 2 values, version protection |
+| `settings_sheet.md` | Settings rules | form_title, form_id, version convention, layout |
 | `random_sampling.md` | Randomization patterns | random(), randomize(), indexed-repeat() |
 | `nested_repeats.md` | Nested repeat guidance | Hierarchy design, pitfalls |
 | `use_cases.md` | Common survey modules | Sector patterns and examples |
@@ -2491,7 +2495,7 @@ All 17 agents have full feature parity. Every agent can:
 - [OK] Add, update, remove, move questions
 - [OK] Import from PDF, Word, Excel
 - [OK] Validate forms
-- [OK] Use all 6 slash commands
+- [OK] Use all 7 slash commands
 - [OK] Access xlsform-core skill
 - [OK] Access activity-logging skill
 - [OK] Log activities automatically

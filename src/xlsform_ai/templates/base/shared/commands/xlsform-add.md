@@ -40,6 +40,17 @@ Consult these files for patterns and best practices before writing changes:
 - `scripts/knowledge_base/data/nested_repeats.md`
 - `scripts/knowledge_base/data/settings_sheet.md`
 
+### XLSForm.org Rules Snapshot
+
+- Columns can be in any order; optional columns can be omitted.
+- Data after 20 adjacent blank rows or columns may be ignored.
+- Survey requires type/name/label; choices requires list_name/name/label.
+- Question names: start with letter/underscore; allowed letters, digits, hyphen, underscore, period.
+- select_multiple choice names must not contain spaces.
+- For cascading selects with duplicate choice names, set allow_choice_duplicates in settings.
+- or_other only works without translations and without choice_filter; it uses English "Specify other".
+- Settings sheet is optional but recommended; include form_title, form_id, version (yyyymmddrr).
+
 ### 2. Import from Scripts Directory
 
 **CRITICAL: Always import from the `scripts/` directory:**

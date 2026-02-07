@@ -33,6 +33,17 @@ If you write inline Python code for file operations, you have failed this comman
 3. **Clean up**: Remove orphaned choice lists
 4. **Log activity**: All removals are logged to activity log
 
+### XLSForm.org Rules Snapshot
+
+- Columns can be in any order; optional columns can be omitted.
+- Data after 20 adjacent blank rows or columns may be ignored.
+- Survey requires type/name/label; choices requires list_name/name/label.
+- Question names: start with letter/underscore; allowed letters, digits, hyphen, underscore, period.
+- select_multiple choice names must not contain spaces.
+- For cascading selects with duplicate choice names, set allow_choice_duplicates in settings.
+- or_other only works without translations and without choice_filter; it uses English "Specify other".
+- Settings sheet is optional but recommended; include form_title, form_id, version (yyyymmddrr).
+
 ## Understanding Your Request
 
 Identify what's being removed:

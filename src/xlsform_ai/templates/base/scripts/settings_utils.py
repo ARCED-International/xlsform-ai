@@ -9,6 +9,12 @@ try:
 except ImportError as exc:
     raise ImportError("openpyxl is required for settings utilities") from exc
 
+try:
+    from history_manager import WorkbookHistoryManager
+    HISTORY_AVAILABLE = True
+except Exception:
+    HISTORY_AVAILABLE = False
+
 
 SETTINGS_SHEET_NAME = "settings"
 REQUIRED_SETTINGS_COLUMNS = ["form_title", "form_id"]
@@ -263,31 +269,48 @@ def set_form_settings(xlsx_path: Path, form_title: Optional[str] = None, form_id
     if not xlsx_path.exists():
         return False
 
-    wb = openpyxl.load_workbook(xlsx_path)
-    sheet = _get_settings_sheet(wb)
-    if sheet is None:
-        sheet = wb.create_sheet(SETTINGS_SHEET_NAME)
+    history_manager = None
+    lock_acquired = False
+    try:
+        if HISTORY_AVAILABLE:
+            history_manager = WorkbookHistoryManager(xlsform_path=xlsx_path, project_dir=xlsx_path.parent)
+            history_manager.acquire_lock()
+            lock_acquired = True
+            history_manager.create_snapshot(
+                action_type="update_settings",
+                description="Pre-change snapshot before updating settings sheet",
+                details=f"Target file: {xlsx_path.name}",
+                command="python scripts/update_settings.py",
+            )
 
-    header_map = ensure_settings_columns(sheet)
-    _ensure_version_formula(sheet, header_map)
-    header_map_lower = {k.lower(): v for k, v in header_map.items()}
-    row = 2
-    if form_title is not None:
-        col = header_map.get("form_title") or header_map_lower.get("form_title")
-        if col:
-            sheet.cell(row=row, column=col, value=form_title)
-    if form_id is not None:
-        col = header_map.get("form_id") or header_map_lower.get("form_id")
-        if col:
-            sheet.cell(row=row, column=col, value=form_id)
+        wb = openpyxl.load_workbook(xlsx_path)
+        sheet = _get_settings_sheet(wb)
+        if sheet is None:
+            sheet = wb.create_sheet(SETTINGS_SHEET_NAME)
 
-    # Never overwrite protected columns like version (often formula-driven)
-    for protected in PROTECTED_SETTINGS_COLUMNS:
-        if protected in header_map:
-            pass
+        header_map = ensure_settings_columns(sheet)
+        _ensure_version_formula(sheet, header_map)
+        header_map_lower = {k.lower(): v for k, v in header_map.items()}
+        row = 2
+        if form_title is not None:
+            col = header_map.get("form_title") or header_map_lower.get("form_title")
+            if col:
+                sheet.cell(row=row, column=col, value=form_title)
+        if form_id is not None:
+            col = header_map.get("form_id") or header_map_lower.get("form_id")
+            if col:
+                sheet.cell(row=row, column=col, value=form_id)
 
-    wb.save(xlsx_path)
-    return True
+        # Never overwrite protected columns like version (often formula-driven)
+        for protected in PROTECTED_SETTINGS_COLUMNS:
+            if protected in header_map:
+                pass
+
+        wb.save(xlsx_path)
+        return True
+    finally:
+        if lock_acquired and history_manager is not None:
+            history_manager.release_lock()
 
 
 def missing_required_settings(xlsx_path: Path) -> List[str]:
