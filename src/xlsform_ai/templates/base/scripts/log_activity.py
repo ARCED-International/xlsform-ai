@@ -214,11 +214,14 @@ class ActivityLogger:
             try:
                 from rich.console import Console
                 console = Console()
-                console.print(f"\n[bold yellow]WARNING:[/bold yellow] Missing required settings: {missing_list}")
-                console.print("[yellow]Please provide the form title and/or form ID, and I can update them for you.[/yellow]")
+                console.print("")
+                console.print(f"[bold white on red] ACTION REQUIRED [/bold white on red] Missing required settings: {missing_list}")
+                console.print("[bold yellow]Set them in the settings sheet (row 2) or run:[/bold yellow] `xlsform-ai update-settings --title \"...\" --id \"...\"`")
+                console.print("")
             except Exception:
-                print(f"\n[WARNING] Missing required settings: {missing_list}")
-                print("         Please provide the form title and/or form ID, and I can update them for you.")
+                print(f"\n[ACTION REQUIRED] Missing required settings: {missing_list}")
+                print("Set them in the settings sheet (row 2) or run: xlsform-ai update-settings --title \"...\" --id \"...\"")
+                print("")
 
     def _update_form_settings_metadata(self, data: dict) -> None:
         """Update log metadata with current form title and ID."""

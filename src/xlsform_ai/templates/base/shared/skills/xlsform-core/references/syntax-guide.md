@@ -84,6 +84,9 @@ An XLSForm workbook has three main sheets:
 | **submission_url** | Alternate submission URL | https://example.com/submit |
 | **style** | Form style | pages, theme-grid |
 
+**Strict settings layout:** Row 1 contains headers, Row 2 contains values in the same columns. Never assume column positions; always map headers before writing.
+**Version requirement:** `version` must be the formula `=TEXT(NOW(), "yyyymmddhhmmss")`.
+
 ## Naming Conventions
 
 ### Question Names (survey sheet `name` column)

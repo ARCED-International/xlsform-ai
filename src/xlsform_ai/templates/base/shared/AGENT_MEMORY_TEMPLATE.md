@@ -564,6 +564,15 @@ add_questions(xlsx_path, questions)
 **Never assume fixed column positions.** Always read headers from row 1 and build a column map before writing.
 Use `build_column_mapping()` from `form_structure` to locate columns like `constraint`, `relevant`, etc.
 
+**Applies to ALL sheets** (`survey`, `choices`, `settings`). For `settings`, always locate the header in row 1, then write the value to row 2 in the same column.
+
+**Settings Sheet Rules (Strict):**
+- Row 1 headers, Row 2 values (no other rows for settings values).
+- `version` must be the formula `=TEXT(NOW(), "yyyymmddhhmmss")` (never blank).
+- Allowed headers only: `form_title`, `form_id`, `version`, `instance_name`, `default_language`,
+  `public_key`, `submission_url`, `style`, `name`, `clean_text_values`.
+- Instance name suggestions are allowed (e.g., include key IDs + `uuid()`), but still written in row 2.
+
 **Step 6: Apply Changes with Error Handling**
 
 ```python
@@ -578,6 +587,10 @@ except Exception as e:
 ```
 
 **Why:** Graceful error handling prevents data corruption and provides helpful feedback.
+
+**CRITICAL: Missing Settings Reminder (Agent Output, Not Console)**
+
+If `form_title` or `form_id` are missing after any XLSForm operation, the agent MUST explicitly remind the user in a highly noticeable format (e.g., bold banner or "ACTION REQUIRED" line). This reminder is part of the agent's response text, not a console print. It must appear every time until both are set, and should include how to set them (settings sheet row 2 or `xlsform-ai update-settings --title ... --id ...`).
 
 ### Phase 3: Finalization
 
@@ -1977,10 +1990,8 @@ select_one     gender    What is your gender? ¿Cuál es tu género? Quel est vo
 
 **Settings sheet:**
 ```xlsform
-column_name     value
-language        English
-language        español
-language        français
+form_title        form_id            default_language
+Household Survey  household_survey   English (en)
 ```
 
 **Translation workflow:**

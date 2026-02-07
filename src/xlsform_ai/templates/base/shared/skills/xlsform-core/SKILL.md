@@ -53,6 +53,11 @@ For select_one or select_multiple, you need both sheets:
 - Column names must be exact: `type`, `name`, `label`, `list_name`, `constraint`, `relevant`, etc.
 - `Choices` or `choice` will NOT work - must be `choices`
 
+### 4. Column Mapping Is Mandatory (All Sheets)
+- Never assume fixed column positions in `survey`, `choices`, or `settings`
+- Always read headers from row 1 and map columns before writing
+- For `settings`, write values only in row 2, aligned to the header column
+
 ### 4. Question Types
 - Text types: `text`, `integer`, `decimal`, `note`
 - Select: `select_one listname`, `select_multiple listname`

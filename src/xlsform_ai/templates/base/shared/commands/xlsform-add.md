@@ -60,6 +60,7 @@ from log_activity import ActivityLogger
 **CRITICAL: Column Mapping Rule**
 
 Never assume fixed column positions. Always read headers from row 1 and use `build_column_mapping()`.
+This rule applies to survey, choices, and settings; always map headers before writing row 2 values in settings.
 
 ### 3. Log the Action
 
