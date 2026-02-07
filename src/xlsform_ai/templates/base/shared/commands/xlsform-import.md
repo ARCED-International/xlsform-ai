@@ -1,5 +1,5 @@
 ---
-description: Import questions from questionnaire files into an XLSForm (PDF/Word primary, Excel also supported).
+description: Import questions from questionnaire files into an XLSForm (PDF/Word primary, Excel also supported)
 ---
 
 # Import Questions from File
@@ -98,6 +98,11 @@ The user wants to import questions from an external file into their XLSForm.
 - Word (.docx)
 - Excel (.xlsx)
 
+**Layout types supported:**
+- Text-only questionnaires
+- Table-based questionnaires
+- Mixed text + table documents
+
 ## Load and Parse File
 
 ### 1. Identify File Type
@@ -109,7 +114,7 @@ Check the file extension and use the appropriate parser:
 python scripts/parse_pdf.py <source> --pages <range>
 
 # Word
-python scripts/parse_docx.py <source>
+python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix>
 
 # Excel
 python scripts/parse_xlsx.py <source> --sheet <sheet_name>
@@ -119,6 +124,20 @@ python scripts/parse_xlsx.py <source> --sheet <sheet_name>
 
 Run the appropriate script and capture its output.
 
+### 2.1 Media Extraction Options (Ask in REPL)
+
+When importing from Word documents with images, ask where to save extracted images:
+
+1. `./media/<source_stem>` (recommended)
+2. Same folder as source document
+3. Custom folder path provided by user
+4. Skip image extraction
+
+Then pass the selected option to parser flags:
+- `--media-dir <path>` to control output folder
+- `--media-prefix <prefix>` for XLSForm media references
+- `--no-images` to disable extraction
+
 ### Safe Execution (Use script entrypoints)
 
 - **Do NOT** create temporary scripts (e.g., `temp_import.py`)
@@ -127,7 +146,7 @@ Run the appropriate script and capture its output.
 
 ```bash
 python scripts/parse_pdf.py <source> --pages <range>
-python scripts/parse_docx.py <source>
+python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix>
 python scripts/parse_xlsx.py <source> --sheet <sheet_name>
 ```
 
@@ -173,12 +192,21 @@ When creating Python code for file parsing that runs on bash/PowerShell/Linux:
 
 ```json
 {
+  "source": "questionnaire.docx",
+  "media": {
+    "enabled": true,
+    "directory": "media/questionnaire",
+    "prefix": "questionnaire",
+    "saved_count": 3,
+    "files": ["media/questionnaire/img_0001_ab12cd34.png"]
+  },
   "questions": [
     {
       "number": "1",
       "text": "What is your name?",
       "type": "text",
       "choices": null,
+      "media::image": "questionnaire/img_0001_ab12cd34.png",
       "constraint": null,
       "required": true
     },
@@ -188,7 +216,7 @@ When creating Python code for file parsing that runs on bash/PowerShell/Linux:
       "type": "select_one",
       "choices": [
         {"value": "male", "label": "Male"},
-        {"value": "female", "label": "Female"},
+        {"value": "female", "label": "Female", "media::image": "questionnaire/img_0002_ef56aa11.png"},
         {"value": "other", "label": "Other"}
       ],
       "constraint": null,
@@ -306,6 +334,17 @@ Import options:
 Choose option (1-4):
 ```
 
+If source includes embedded images, prompt media destination:
+```
+Image extraction options:
+1. Save to ./media/<source_stem> (recommended)
+2. Save beside source file
+3. Enter custom folder path
+4. Skip image extraction
+
+Choose option (1-4):
+```
+
 ### Option 2: Select Questions
 
 ```
@@ -377,6 +416,13 @@ Row N: integer age "How old are you?" constraint=". >= 0 and . <= 120" constrain
 Row N: text respondent_name "What is your name?" required="yes"
 ```
 
+**With question image:**
+```
+Row N: text product_photo "Upload/confirm product" media::image="questionnaire/img_0001_ab12cd34.png"
+```
+
+Before writing media values, ensure `media::image` header exists in survey row 1.
+
 ### 4. Add to Choices Sheet
 
 For each select question:
@@ -391,6 +437,13 @@ Row N: list_name=gender name=male label="Male"
 Row N+1: list_name=gender name=female label="Female"
 Row N+2: list_name=gender name=other label="Other"
 ```
+
+**Add choice images when present:**
+```
+Row N: list_name=animals name=cat label="Cat" media::image="questionnaire/img_0003_44bb5511.png"
+```
+
+Before writing choice media values, ensure `media::image` header exists in choices row 1.
 
 ### 5. Validate
 
@@ -491,9 +544,11 @@ This could be because:
 - File format is not supported
 - Questions are in an unusual format
 - File is scanned images (needs OCR)
+- Table headers are non-standard (review manually)
 
 Try:
 - Converting to a different format
+- Re-running parser with media/table settings
 - Using /xlsform-add to manually create questions
 ```
 

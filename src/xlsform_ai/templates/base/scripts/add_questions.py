@@ -293,6 +293,45 @@ def add_questions(questions_data, survey_file=None):
         if missing_columns:
             return {"success": False, "error": f"Missing required columns in header row: {', '.join(missing_columns)}"}
 
+        def canonical_header_key(raw_key):
+            key = str(raw_key or "").strip().lower()
+            if not key:
+                return ""
+            media_aliases = {
+                "image": "media::image",
+                "media:image": "media::image",
+                "media:_image": "media::image",
+                "audio": "media::audio",
+                "media:audio": "media::audio",
+                "media:_audio": "media::audio",
+                "video": "media::video",
+                "media:video": "media::video",
+                "media:_video": "media::video",
+            }
+            return media_aliases.get(key, key)
+
+        # Add optional headers when incoming payload contains columns not yet present.
+        # This is especially important for imported media fields (media::image/audio/video).
+        skip_dynamic_fields = {
+            "type", "name", "label", "constraint", "constraint_message",
+            "required", "required_message", "choices", "number", "page",
+        }
+        dynamic_headers = []
+        for q in questions_data:
+            for key in q.keys():
+                canonical_key = canonical_header_key(key)
+                if not canonical_key or canonical_key in skip_dynamic_fields:
+                    continue
+                if canonical_key not in column_map and canonical_key not in dynamic_headers:
+                    dynamic_headers.append(canonical_key)
+
+        if dynamic_headers:
+            next_col = max(column_map.values()) + 1 if column_map else 1
+            for header_name in dynamic_headers:
+                ws.cell(header_row, next_col, header_name)
+                column_map[header_name] = next_col
+                next_col += 1
+
         # Check for duplicate question names (prevent adding existing questions)
         name_col = column_map.get("name", 2)
         existing_names = set()
@@ -381,12 +420,14 @@ def add_questions(questions_data, survey_file=None):
             # Handle additional fields dynamically from question data
             # This supports: hint, calculation, relevant, appearance, default, media::image, media::audio, media::video, etc.
             for key, value in q.items():
-                if key not in ["type", "name", "label", "constraint", "constraint_message", "required", "required_message"]:
-                    # Normalize key to lowercase for case-insensitive matching
-                    key_lower = key.lower()
-                    # Check if we have a column mapping for this key
-                    if key_lower in column_map:
-                        ws.cell(current_row, column_map[key_lower], value)
+                if key in ["type", "name", "label", "constraint", "constraint_message", "required", "required_message"]:
+                    continue
+                if key in ["choices", "number", "page"]:
+                    continue
+
+                key_lower = canonical_header_key(key)
+                if key_lower in column_map:
+                    ws.cell(current_row, column_map[key_lower], value)
 
             added.append({
                 "row": current_row,

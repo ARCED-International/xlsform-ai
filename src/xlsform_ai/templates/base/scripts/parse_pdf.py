@@ -1,9 +1,12 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
 PDF Question Parser for XLSForm AI.
 
 Extracts questions from PDF files and converts them to structured JSON.
-Usage: python parse_pdf.py <file.pdf> --pages 1-10
+Supports text blocks, tables, and mixed layouts.
+
+Usage:
+  python parse_pdf.py <file.pdf> --pages 1-10
 """
 
 from __future__ import annotations
@@ -26,14 +29,84 @@ except ImportError:
     _pdfplumber = None
 
 
-QUESTION_RE = re.compile(r"^\s*(\d+)[\.\)]\s+(.+)$")
-CHOICE_RE = re.compile(r"^\s*(?:[a-zA-Z][\)\.]|[-*•])\s+(.+)$")
+QUESTION_RE = re.compile(r"^\s*(?:Q(?:uestion)?\s*)?(\d+[A-Za-z]?)\s*[\.\):\-]\s*(.+)$")
+CHOICE_RE = re.compile(r"^\s*(?:\(?[A-Za-z]\)|[A-Za-z][\.\)]|\(?\d+\)|\d+[\.\)]|[-*+])\s+(.+)$")
+QUESTION_WORD_RE = re.compile(
+    r"^(who|what|when|where|why|how|which|do|does|did|is|are|was|were|can|could|will|would)\b"
+)
+HEADER_QUESTION_TOKENS = ("question", "item", "prompt", "label")
+HEADER_RESPONSE_TOKENS = ("response", "option", "choice", "answer")
+HEADER_VARIABLE_TOKENS = ("variable", "var", "name", "code")
+
+
+def _clean_text(value: str) -> str:
+    return re.sub(r"\s+", " ", value or "").strip()
 
 
 def _choice_value(label: str) -> str:
     value = re.sub(r"\s+", "_", label.strip().lower())
     value = re.sub(r"[^a-z0-9_]", "", value)
     return value[:48] or "option"
+
+
+def _strip_choice_prefix(text: str) -> str:
+    return _clean_text(re.sub(r"^\s*(?:\(?[A-Za-z]\)|[A-Za-z][\.\)]|\(?\d+\)|\d+[\.\)]|[-*+])\s+", "", text))
+
+
+def _looks_like_question(text: str) -> bool:
+    normalized = _clean_text(text)
+    if not normalized:
+        return False
+    if QUESTION_RE.match(normalized):
+        return True
+    if normalized.endswith("?"):
+        return True
+    return bool(QUESTION_WORD_RE.match(normalized.lower()))
+
+
+def _parse_option_blob(raw_text: str) -> List[str]:
+    text = _clean_text(raw_text)
+    if not text:
+        return []
+
+    lowered = text.lower()
+    if "yes/no" in lowered or "yes / no" in lowered:
+        return ["Yes", "No"]
+
+    if "\n" in raw_text:
+        candidates = [_strip_choice_prefix(item) for item in raw_text.splitlines() if _clean_text(item)]
+    elif ";" in text:
+        candidates = [_strip_choice_prefix(item) for item in raw_text.split(";") if _clean_text(item)]
+    elif "|" in text:
+        candidates = [_strip_choice_prefix(item) for item in raw_text.split("|") if _clean_text(item)]
+    elif text.count(",") >= 2:
+        candidates = [_strip_choice_prefix(item) for item in raw_text.split(",") if _clean_text(item)]
+    elif CHOICE_RE.match(text):
+        candidates = [_strip_choice_prefix(text)]
+    else:
+        candidates = []
+
+    return [item for item in (_clean_text(x) for x in candidates) if item]
+
+
+def _infer_non_select_type(question_text: str, response_hint: str = "") -> str:
+    text = f"{question_text} {response_hint}".lower()
+    if any(token in text for token in ["how old", "age", "how many", "count", "number of", "integer"]):
+        return "integer"
+    if any(token in text for token in ["decimal", "percentage", "percent", "amount", "price", "rate"]):
+        return "decimal"
+    if any(token in text for token in ["date", "when", "dd/mm", "mm/dd", "yyyy"]):
+        return "date"
+    if any(token in text for token in ["location", "gps", "coordinate"]):
+        return "geopoint"
+    return "text"
+
+
+def _infer_select_mode(question_text: str, response_hint: str = "") -> str:
+    text = f"{question_text} {response_hint}".lower()
+    if any(token in text for token in ["select all", "all that apply", "multiple", "check all"]):
+        return "select_multiple"
+    return "select_one"
 
 
 def _parse_page_range(page_arg: Optional[str]) -> Optional[Tuple[int, int]]:
@@ -54,69 +127,183 @@ def _parse_page_range(page_arg: Optional[str]) -> Optional[Tuple[int, int]]:
     return start, end
 
 
-def parse_questions_from_text(text: str, page_num: int) -> List[Dict[str, object]]:
+def parse_questions_from_lines(lines: List[str], page_num: int) -> List[Dict[str, object]]:
     questions: List[Dict[str, object]] = []
     current_question: Optional[Dict[str, object]] = None
     current_choices: List[Dict[str, str]] = []
+    auto_question_number = 0
 
-    for raw_line in text.splitlines():
-        line = raw_line.strip()
+    def finalize_current() -> None:
+        nonlocal current_question, current_choices
+        if current_question is None:
+            return
+
+        question_text = str(current_question.get("text", ""))
+        if current_choices:
+            current_question["choices"] = current_choices
+            current_question["type"] = _infer_select_mode(question_text)
+        else:
+            current_question["choices"] = None
+            current_question["type"] = _infer_non_select_type(question_text)
+
+        questions.append(current_question)
+        current_question = None
+        current_choices = []
+
+    def start_question(text: str, number: Optional[str] = None) -> None:
+        nonlocal current_question, current_choices, auto_question_number
+        finalize_current()
+        auto_question_number += 1
+        current_question = {
+            "number": str(number or auto_question_number),
+            "text": _clean_text(text),
+            "type": "text",
+            "choices": None,
+            "page": page_num,
+        }
+        current_choices = []
+
+    def add_choice(label: str) -> None:
+        if current_question is None:
+            return
+        cleaned = _clean_text(label)
+        if not cleaned:
+            return
+        current_choices.append({"value": _choice_value(cleaned), "label": cleaned})
+
+    for raw_line in lines:
+        line = _clean_text(raw_line)
         if not line:
             continue
 
         qmatch = QUESTION_RE.match(line)
         if qmatch:
-            if current_question is not None:
-                if current_choices:
-                    current_question["choices"] = current_choices
-                    current_question["type"] = (
-                        "select_multiple" if len(current_choices) > 1 else "select_one"
-                    )
-                questions.append(current_question)
-
-            current_question = {
-                "number": qmatch.group(1),
-                "text": qmatch.group(2).strip(),
-                "type": "text",
-                "choices": None,
-                "page": page_num,
-            }
-            current_choices = []
+            start_question(qmatch.group(2), number=qmatch.group(1))
             continue
 
-        cmatch = CHOICE_RE.match(line)
-        if cmatch and current_question is not None:
-            choice_text = cmatch.group(1).strip()
-            current_choices.append({"value": _choice_value(choice_text), "label": choice_text})
+        if current_question is not None:
+            cmatch = CHOICE_RE.match(line)
+            if cmatch:
+                add_choice(_strip_choice_prefix(line))
+                continue
 
-    if current_question is not None:
-        if current_choices:
-            current_question["choices"] = current_choices
-            current_question["type"] = "select_multiple" if len(current_choices) > 1 else "select_one"
-        questions.append(current_question)
+            options = _parse_option_blob(line)
+            if len(options) >= 2:
+                for option in options:
+                    add_choice(option)
+                continue
 
+            if not current_choices and not _looks_like_question(line):
+                current_question["text"] = _clean_text(f"{current_question['text']} {line}")
+                continue
+
+        if _looks_like_question(line):
+            start_question(line)
+
+    finalize_current()
     return questions
 
 
-def detect_question_types(questions: List[Dict[str, object]]) -> None:
-    """Refine question types for non-choice questions using simple keyword rules."""
-    type_keywords = {
-        "integer": ["age", "how many", "how old", "number of", "count"],
-        "decimal": ["weight", "height", "price", "rate", "percentage"],
-        "date": ["date of birth", "when", "date"],
-        "geopoint": ["location", "gps", "coordinates", "where"],
-        "select_one": ["which", "select one", "choose"],
-        "select_multiple": ["select all", "check all", "multiple"],
-    }
+def _detect_header_index(row: List[str], tokens: Tuple[str, ...]) -> Optional[int]:
+    for idx, value in enumerate(row):
+        lowered = value.lower()
+        if any(token in lowered for token in tokens):
+            return idx
+    return None
 
-    for question in questions:
-        if question.get("choices"):
+
+def parse_questions_from_table(table_rows: List[List[str]], page_num: int) -> List[Dict[str, object]]:
+    rows = [[_clean_text(str(cell)) for cell in row] for row in table_rows]
+    rows = [row for row in rows if any(cell for cell in row)]
+    if not rows:
+        return []
+
+    header_row_index = None
+    question_col = None
+    response_col = None
+    variable_col = None
+
+    for idx, row in enumerate(rows[:3]):
+        maybe_question_col = _detect_header_index(row, HEADER_QUESTION_TOKENS)
+        if maybe_question_col is None:
             continue
-        text = str(question.get("text", "")).lower()
-        for q_type, keywords in type_keywords.items():
-            if any(keyword in text for keyword in keywords):
-                question["type"] = q_type
-                break
+        question_col = maybe_question_col
+        response_col = _detect_header_index(row, HEADER_RESPONSE_TOKENS)
+        variable_col = _detect_header_index(row, HEADER_VARIABLE_TOKENS)
+        header_row_index = idx
+        break
+
+    if header_row_index is None or question_col is None:
+        flattened_lines: List[str] = []
+        for row in rows:
+            for cell in row:
+                if cell:
+                    flattened_lines.append(cell)
+        return parse_questions_from_lines(flattened_lines, page_num)
+
+    questions: List[Dict[str, object]] = []
+    active_question: Optional[Dict[str, object]] = None
+
+    def finalize_active() -> None:
+        nonlocal active_question
+        if active_question is None:
+            return
+        choices = active_question.get("choices") or []
+        if choices:
+            active_question["type"] = _infer_select_mode(str(active_question.get("text", "")))
+        else:
+            active_question["type"] = _infer_non_select_type(str(active_question.get("text", "")))
+            active_question["choices"] = None
+        questions.append(active_question)
+        active_question = None
+
+    for row in rows[header_row_index + 1 :]:
+        q_text = row[question_col] if question_col < len(row) else ""
+        response_text = row[response_col] if response_col is not None and response_col < len(row) else ""
+        variable_value = row[variable_col] if variable_col is not None and variable_col < len(row) else ""
+
+        if q_text:
+            finalize_active()
+            parsed = QUESTION_RE.match(q_text)
+            q_number = parsed.group(1) if parsed else None
+            q_body = parsed.group(2) if parsed else q_text
+            active_question = {
+                "number": str(q_number or len(questions) + 1),
+                "text": _clean_text(q_body),
+                "type": "text",
+                "choices": [],
+                "page": page_num,
+            }
+            if variable_value:
+                active_question["name"] = variable_value
+
+            options = _parse_option_blob(response_text)
+            if options:
+                for item in options:
+                    active_question["choices"].append({"value": _choice_value(item), "label": item})
+            continue
+
+        # Continuation rows for options in response column
+        if active_question is not None and response_text:
+            options = _parse_option_blob(response_text)
+            if options:
+                for item in options:
+                    active_question["choices"].append({"value": _choice_value(item), "label": item})
+
+    finalize_active()
+    return questions
+
+
+def _dedupe_questions(questions: List[Dict[str, object]]) -> List[Dict[str, object]]:
+    seen = set()
+    deduped: List[Dict[str, object]] = []
+    for question in questions:
+        key = (_clean_text(str(question.get("text", ""))).lower(), str(question.get("page", "")))
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(question)
+    return deduped
 
 
 def extract_text_from_pdf(
@@ -137,13 +324,24 @@ def extract_text_from_pdf(
 
         for page_idx in range(start_idx, min(end_idx, len(pdf.pages))):
             page_num = page_idx + 1
-            text = pdf.pages[page_idx].extract_text() or ""
-            if not text.strip():
-                continue
-            questions.extend(parse_questions_from_text(text, page_num))
+            page = pdf.pages[page_idx]
 
-    detect_question_types(questions)
-    return questions
+            # 1) Parse text blocks
+            text = page.extract_text() or ""
+            if text.strip():
+                questions.extend(parse_questions_from_lines(text.splitlines(), page_num))
+
+            # 2) Parse table blocks
+            try:
+                tables = page.extract_tables() or []
+            except Exception:
+                tables = []
+
+            for table in tables:
+                if table:
+                    questions.extend(parse_questions_from_table(table, page_num))
+
+    return _dedupe_questions(questions)
 
 
 def extract_questions(pdf_path: str | Path, pages: Optional[str] = None) -> List[Dict[str, object]]:

@@ -790,11 +790,15 @@ logger.log_action(
    - PDF: `from scripts.parse_pdf import extract_questions`
    - Word: `from scripts.parse_docx import extract_questions`
    - Excel: `from scripts.parse_xlsx import extract_questions`
-3. Parse file: `questions = extract_questions(source_path, pages)`
-4. Detect large file: If 10+ pages or 1MB+, auto-activate import-agent (parallel)
-5. Add to form: `add_questions(questions)`
-6. Log action: `logger.log_action(action_type="import_pdf", ...)`
-7. Validate: `/xlsform-validate`
+3. For Word with images, ask user media destination in REPL (recommended: `./media/<source_stem>`)
+4. Parse file:
+   - PDF: `questions = extract_questions(source_path, pages)`
+   - DOCX with media: `extract_questions(source_path, media_dir=..., media_prefix=...)`
+5. Detect large file: If 10+ pages or 1MB+, auto-activate import-agent (parallel)
+6. Add survey rows via `add_questions(questions)` (ensure media headers are present)
+7. Add choices rows, including `media::image` for choice images when available
+8. Log action: `logger.log_action(action_type=\"import_pdf\"|\"import_docx\"|\"import_xlsx\", ...)`
+9. Validate: `/xlsform-validate`
 
 **Example:**
 
@@ -822,6 +826,17 @@ logger.log_action(
 )
 ```
 
+DOCX with images example:
+```python
+from parse_docx import extract_questions
+
+questions = extract_questions(
+    'questionnaire.docx',
+    media_dir='media/questionnaire',
+    media_prefix='questionnaire',
+)
+```
+
 **Parallel threshold:** 10+ pages or 1MB+ file size
 
 **Sub-agents used:**
@@ -830,8 +845,8 @@ logger.log_action(
 - validation-agent (validate all)
 
 **File type considerations:**
-- **PDF:** Best for scanned questionnaires, requires OCR for images
-- **Word:** Best for digital forms, preserves structure
+- **PDF:** Supports text and table extraction; scanned-image PDFs still require OCR
+- **Word:** Supports text, tables, mixed layouts, and embedded image extraction to media files
 - **Excel:** Best for structured data, requires column mapping
 
 ### /xlsform-validate Protocol
@@ -1685,7 +1700,8 @@ set_cell_value(wb.sheets['survey'], row, col, value)
 
 **Key Functions:**
 - `extract_questions()` - Parse PDF and extract questions
-- `parse_questions_from_text()` - Parse text into questions
+- `parse_questions_from_lines()` - Parse text lines into questions
+- `parse_questions_from_table()` - Parse table rows into questions
 
 **Usage:**
 ```python
@@ -1699,14 +1715,19 @@ questions = extract_questions('questionnaire.pdf', pages='1-10')
 **Purpose:** Extract questions from Word documents
 
 **Key Functions:**
-- `extract_questions_from_docx()` - Parse Word doc
-- `extract_tables()` - Get table data
+- `extract_questions_from_docx()` - Parse text, tables, and mixed layouts
+- `extract_questions()` - Compatibility wrapper with media options
+- `--media-dir/--media-prefix` - Control exported image path and XLSForm media reference prefix
 
 **Usage:**
 ```python
 from scripts.parse_docx import extract_questions_from_docx
 
-questions = extract_questions_from_docx('questionnaire.docx')
+questions = extract_questions_from_docx(
+    'questionnaire.docx',
+    media_dir='media/questionnaire',
+    media_prefix='questionnaire',
+)
 ```
 
 #### parse_xlsx.py
