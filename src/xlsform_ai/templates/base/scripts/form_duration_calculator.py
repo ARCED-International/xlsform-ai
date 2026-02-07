@@ -52,7 +52,7 @@ class FormDurationCalculator:
             'simserial', 'phonenumber', 'username', 'audit'
         }
 
-    def has_start_end_metadata(self, ws) -> bool:
+    def has_start_end_metadata(self, ws, header_row: Optional[int] = None, columns: Optional[Dict[str, int]] = None) -> bool:
         """Check if form has start and end metadata fields.
 
         Args:
@@ -68,10 +68,16 @@ class FormDurationCalculator:
         has_start = False
         has_end = False
 
+        columns = self._get_columns(ws, header_row, columns)
+        type_col = columns["type"]
+        name_col = columns["name"]
+
+        start_row = (header_row + 1) if header_row else 2
+
         # Scan through rows looking for start/end
-        for row_idx in range(2, min(ws.max_row + 1, 100)):  # Check first 100 rows
-            cell_type = ws.cell(row_idx, 1).value  # Type column
-            cell_name = ws.cell(row_idx, 2).value  # Name column
+        for row_idx in range(start_row, min(ws.max_row + 1, start_row + 100)):  # Check next 100 rows
+            cell_type = ws.cell(row_idx, type_col).value
+            cell_name = ws.cell(row_idx, name_col).value
 
             if _cell_has_value(cell_type) or _cell_has_value(cell_name):
                 cell_type_lower = str(cell_type).strip().lower() if _cell_has_value(cell_type) else ""
@@ -129,17 +135,12 @@ class FormDurationCalculator:
             >>> row = calculator.add_duration_to_form(ws, 1)
             >>> print(f"Added duration field at row {row}")
         """
-        if not self.has_start_end_metadata(ws):
+        if not self.has_start_end_metadata(ws, header_row=header_row, columns=columns):
             return None  # Don't add if no start/end
 
         # Default column mapping
         if columns is None:
-            columns = {
-                "type": 1,
-                "name": 2,
-                "label": 3,
-                "calculation": 6
-            }
+            columns = self._get_columns(ws, header_row)
 
         # Find end of metadata section
         metadata_end_row = self._find_metadata_end(ws, header_row)
@@ -170,9 +171,13 @@ class FormDurationCalculator:
         """
         last_metadata_row = header_row
 
+        columns = self._get_columns(ws, header_row)
+        type_col = columns["type"]
+        name_col = columns["name"]
+
         for row_idx in range(header_row + 1, ws.max_row + 1):
-            cell_type = ws.cell(row_idx, 1).value
-            cell_name = ws.cell(row_idx, 2).value
+            cell_type = ws.cell(row_idx, type_col).value
+            cell_name = ws.cell(row_idx, name_col).value
 
             if not _cell_has_value(cell_type) and not _cell_has_value(cell_name):
                 # Empty row - end of section
@@ -206,11 +211,7 @@ class FormDurationCalculator:
             True if updated, False if not found
         """
         if columns is None:
-            columns = {
-                "type": 1,
-                "name": 2,
-                "calculation": 6
-            }
+            columns = self._get_columns(ws, header_row)
 
         # Search for existing duration field
         for row_idx in range(header_row + 1, ws.max_row + 1):
@@ -223,6 +224,25 @@ class FormDurationCalculator:
                 return True
 
         return False
+
+    def _get_columns(self, ws, header_row: Optional[int] = None, columns: Optional[Dict[str, int]] = None) -> Dict[str, int]:
+        if columns:
+            return columns
+        try:
+            from form_structure import find_header_row, build_column_mapping
+            header_row = header_row or find_header_row(ws)
+            if header_row:
+                column_map = build_column_mapping(ws, header_row)
+                return {
+                    "type": column_map.get("type", 1),
+                    "name": column_map.get("name", 2),
+                    "label": column_map.get("label", 3),
+                    "calculation": column_map.get("calculation", 6),
+                }
+        except Exception:
+            pass
+
+        return {"type": 1, "name": 2, "label": 3, "calculation": 6}
 
 
 if __name__ == "__main__":

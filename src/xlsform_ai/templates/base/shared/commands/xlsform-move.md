@@ -42,6 +42,10 @@ Identify the move operation:
 3. Locate the target position
 4. Check for structural issues (groups, repeats)
 
+**CRITICAL: Column Mapping Rule**
+
+Never assume fixed column positions. Always read headers from row 1 and use `build_column_mapping()` before writing.
+
 ### Safe Execution (No temp files, no python -c)
 
 - **Do NOT** create temporary scripts (e.g., `temp_read_structure.py`)

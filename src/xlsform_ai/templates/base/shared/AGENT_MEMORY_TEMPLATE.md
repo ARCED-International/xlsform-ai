@@ -559,6 +559,11 @@ add_questions(xlsx_path, questions)
 
 **Why:** Helper functions handle smart insertion, validation, and formatting.
 
+**CRITICAL: Column Mapping Rule**
+
+**Never assume fixed column positions.** Always read headers from row 1 and build a column map before writing.
+Use `build_column_mapping()` from `form_structure` to locate columns like `constraint`, `relevant`, etc.
+
 **Step 6: Apply Changes with Error Handling**
 
 ```python

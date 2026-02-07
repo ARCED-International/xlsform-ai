@@ -44,7 +44,6 @@ class ActivityLogger:
         self._effective_author = self._get_effective_author()
         self._effective_location = self._get_effective_location()
         self._xlsform_path = self._get_xlsform_path()
-        self._warned_missing_settings = False
 
     def _get_xlsform_path(self) -> Optional[Path]:
         """Get XLSForm file path for reading settings metadata."""
@@ -201,8 +200,6 @@ class ActivityLogger:
 
     def _warn_if_missing_settings(self) -> None:
         """Warn once per session if required settings are missing."""
-        if self._warned_missing_settings:
-            return
         try:
             from settings_utils import missing_required_settings
         except Exception:
@@ -222,7 +219,6 @@ class ActivityLogger:
             except Exception:
                 print(f"\n[WARNING] Missing required settings: {missing_list}")
                 print("         Please provide the form title and/or form ID, and I can update them for you.")
-            self._warned_missing_settings = True
 
     def _update_form_settings_metadata(self, data: dict) -> None:
         """Update log metadata with current form title and ID."""

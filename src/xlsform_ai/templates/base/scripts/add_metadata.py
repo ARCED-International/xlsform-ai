@@ -72,23 +72,29 @@ def add_metadata_fields(survey_file="survey.xlsx"):
 
         ws = wb["survey"]
 
-        # Find header row
-        header_row = None
-        for row_idx in range(1, min(10, ws.max_row + 1)):
-            cell_value = ws.cell(row_idx, 1).value
-            if cell_value and str(cell_value).strip().lower() == "type":
-                header_row = row_idx
-                break
+        try:
+            from form_structure import find_header_row, build_column_mapping
+            header_row = find_header_row(ws)
+        except Exception:
+            header_row = None
+            for row_idx in range(1, min(10, ws.max_row + 1)):
+                cell_value = ws.cell(row_idx, 1).value
+                if cell_value and str(cell_value).strip().lower() == "type":
+                    header_row = row_idx
+                    break
 
         if header_row is None:
             return {"success": False, "error": "Could not find header row"}
 
         # Build column mapping
-        column_map = {}
-        for col_idx in range(1, min(30, ws.max_column + 1)):
-            header_val = ws.cell(header_row, col_idx).value
-            if header_val:
-                column_map[str(header_val).lower()] = col_idx
+        try:
+            column_map = build_column_mapping(ws, header_row)
+        except Exception:
+            column_map = {}
+            for col_idx in range(1, min(30, ws.max_column + 1)):
+                header_val = ws.cell(header_row, col_idx).value
+                if header_val:
+                    column_map[str(header_val).strip().lower()] = col_idx
 
         required_columns = ["type", "name", "label"]
         missing_columns = [col for col in required_columns if col not in column_map]

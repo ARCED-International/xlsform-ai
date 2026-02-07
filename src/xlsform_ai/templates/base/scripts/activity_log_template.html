@@ -300,6 +300,16 @@
             transition: var(--transition);
         }
 
+        .icon-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
         .icon-btn:hover {
             color: var(--color-gray-900);
             border-color: var(--color-gray-400);
@@ -1027,8 +1037,19 @@
             <button class="btn" id="btn-clear">Clear</button>
 
             <div class="filter-actions">
-                <button class="icon-btn" id="btn-columns" title="Show/Hide Columns">&#x1F441;&#xFE0F;</button>
-                <button class="icon-btn" id="btn-export" title="Export">&#x1F4E4;</button>
+                <button class="icon-btn" id="btn-columns" title="Show/Hide Columns">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M1.5 12s3.8-7 10.5-7 10.5 7 10.5 7-3.8 7-10.5 7S1.5 12 1.5 12z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+                <button class="icon-btn" id="btn-export" title="Export">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3v12"></path>
+                        <path d="M7 10l5 5 5-5"></path>
+                        <path d="M5 21h14"></path>
+                    </svg>
+                </button>
             </div>
         </div>
 

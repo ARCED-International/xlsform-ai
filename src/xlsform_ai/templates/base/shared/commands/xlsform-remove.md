@@ -47,6 +47,10 @@ from log_activity import ActivityLogger
 
 **NEVER import from other locations.**
 
+**CRITICAL: Column Mapping Rule**
+
+Never assume fixed column positions. Always read headers from row 1 and use `build_column_mapping()` before writing.
+
 ### 3. Log the Action
 
 After successfully removing questions or choice lists:

@@ -50,11 +50,16 @@ from pathlib import Path
 sys.path.insert(0, str(Path('scripts')))
 
 from form_structure import FormStructure
+from form_structure import build_column_mapping
 from add_questions import add_questions
 from log_activity import ActivityLogger
 ```
 
 **NEVER import from other locations.**
+
+**CRITICAL: Column Mapping Rule**
+
+Never assume fixed column positions. Always read headers from row 1 and use `build_column_mapping()`.
 
 ### 3. Log the Action
 

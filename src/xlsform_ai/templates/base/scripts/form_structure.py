@@ -22,6 +22,34 @@ METADATA_TYPES = {
     'simserial', 'phonenumber', 'username', 'email', 'audit'
 }
 
+_HEADER_ALIASES = {
+    "constraint message": "constraint_message",
+    "required message": "required_message",
+    "choice filter": "choice_filter",
+    "list name": "list_name",
+    "default language": "default_language",
+    "instance name": "instance_name",
+}
+
+
+def normalize_header_name(header: str) -> str:
+    """Normalize header names for robust column mapping."""
+    if not header:
+        return ""
+    name = str(header).strip().lower()
+    if not name:
+        return ""
+    if name in _HEADER_ALIASES:
+        return _HEADER_ALIASES[name]
+    name = name.replace("-", "_")
+    name = " ".join(name.split())
+    name = name.replace(" ", "_")
+    name = name.replace("media:_", "media::")
+    while "__" in name:
+        name = name.replace("__", "_")
+    return name
+
+
 def _cell_has_value(value) -> bool:
     """Return True if the cell value is meaningful (not just whitespace)."""
     if value is None:
@@ -172,7 +200,7 @@ def find_header_row(ws) -> Optional[int]:
         max_col = min(ws.max_column, 20)
         for col_idx in range(1, max_col + 1):
             cell_value = ws.cell(row_idx, col_idx).value
-            if cell_value and str(cell_value).strip().lower() == "type":
+            if cell_value and normalize_header_name(cell_value) == "type":
                 return row_idx
     return None
 
@@ -207,9 +235,7 @@ def build_column_mapping(ws, header_row: int) -> Dict[str, int]:
     for col_idx in range(1, max_col + 1):
         cell_value = ws.cell(header_row, col_idx).value
         if cell_value:
-            # Convert to string, strip whitespace, and convert to lowercase
-            # for consistent, case-insensitive lookups
-            col_name = str(cell_value).strip().lower()
+            col_name = normalize_header_name(cell_value)
             if col_name:
                 column_map[col_name] = col_idx
 

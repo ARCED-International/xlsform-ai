@@ -89,10 +89,17 @@ def validate_survey_sheet(sheet):
 
     # Get headers
     headers = {}
+    try:
+        from form_structure import normalize_header_name
+    except Exception:
+        normalize_header_name = None
+
     for idx, cell in enumerate(sheet[1]):
         value = cell.value
         if _cell_has_value(value):
-            headers[str(value).strip().lower()] = idx
+            header_name = str(value).strip()
+            header_key = normalize_header_name(header_name) if normalize_header_name else header_name.lower()
+            headers[header_key] = idx
 
     # Check required columns
     required = ['type', 'name', 'label']
@@ -121,10 +128,17 @@ def validate_choices_sheet(sheet):
 
     # Get headers
     headers = {}
+    try:
+        from form_structure import normalize_header_name
+    except Exception:
+        normalize_header_name = None
+
     for idx, cell in enumerate(sheet[1]):
         value = cell.value
         if _cell_has_value(value):
-            headers[str(value).strip().lower()] = idx
+            header_name = str(value).strip()
+            header_key = normalize_header_name(header_name) if normalize_header_name else header_name.lower()
+            headers[header_key] = idx
 
     # Check required columns
     required = ['list_name', 'name', 'label']
