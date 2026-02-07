@@ -1,18 +1,5 @@
 ---
-description: Import questions from external files (PDF, Word, Excel) into an XLSForm. Use this command to parse questionnaires, surveys, or forms and convert them to XLSForm format with intelligent question type detection.
-arguments:
-  - name: source
-    description: Path to file containing questions (PDF, .docx, or .xlsx)
-    required: true
-  - name: pages
-    description: Page range for PDF files (e.g., 1-10, 5-15)
-    required: false
-  - name: sheet
-    description: Optional sheet name when source is an Excel file (.xlsx)
-    required: false
-  - name: file
-    description: Override target XLSForm file name (default: use xlsform-ai.json config or survey.xlsx)
-    required: false
+description: Import questions from questionnaire files into an XLSForm (PDF/Word primary, Excel also supported).
 ---
 
 # Import Questions from File

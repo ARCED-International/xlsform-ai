@@ -216,11 +216,21 @@ class ActivityLogger:
                 console = Console()
                 console.print("")
                 console.print(f"[bold white on red] ACTION REQUIRED [/bold white on red] Missing required settings: {missing_list}")
-                console.print("[bold yellow]Set them in the settings sheet (row 2) or run:[/bold yellow] `xlsform-ai update-settings --title \"...\" --id \"...\"`")
+                console.print(
+                    "[bold yellow]Set them in the settings sheet (row 2) or run:[/bold yellow] "
+                    "`xlsform-ai update-settings --title \"...\" --id \"...\"` "
+                    "(version defaults to formula unless `--version` is set) "
+                    "or `python scripts/update_settings.py --title \"...\" --id \"...\"`"
+                )
                 console.print("")
             except Exception:
                 print(f"\n[ACTION REQUIRED] Missing required settings: {missing_list}")
-                print("Set them in the settings sheet (row 2) or run: xlsform-ai update-settings --title \"...\" --id \"...\"")
+                print(
+                    "Set them in the settings sheet (row 2) or run: "
+                    "xlsform-ai update-settings --title \"...\" --id \"...\" "
+                    "(version defaults to formula unless --version is set) "
+                    "or python scripts/update_settings.py --title \"...\" --id \"...\""
+                )
                 print("")
 
     def _update_form_settings_metadata(self, data: dict) -> None:

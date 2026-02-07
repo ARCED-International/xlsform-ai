@@ -379,6 +379,47 @@ def cleanup_project(dry_run: bool = False):
         sys.exit(1)
 
 
+def update_project_settings(
+    title: str = None,
+    form_id: str = None,
+    version: str = None,
+    file_path: str = None,
+):
+    """Update settings.form_title/form_id/version in the current project workbook."""
+    import sys
+    import subprocess
+    from pathlib import Path
+
+    if title is None and form_id is None and version is None:
+        print_error("Provide --title and/or --id and/or --version")
+        sys.exit(1)
+
+    project_path = Path.cwd()
+    update_script = project_path / "scripts" / "update_settings.py"
+    if not update_script.exists():
+        print_error("update_settings.py not found. Are you in an XLSForm AI project?")
+        sys.exit(1)
+
+    cmd = [sys.executable, str(update_script)]
+    if title:
+        cmd.extend(["--title", title])
+    if form_id:
+        cmd.extend(["--id", form_id])
+    if version is not None:
+        cmd.extend(["--version", version])
+    if file_path:
+        cmd.extend(["--file", file_path])
+
+    try:
+        subprocess.run(cmd, capture_output=False, text=True, check=True)
+    except subprocess.CalledProcessError as e:
+        print_error(f"Failed to update settings: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print_error(f"Error running update settings command: {e}")
+        sys.exit(1)
+
+
 # Note: We're using a stub function here since we can't import typer in plan mode
 # In actual implementation, this would be the Typer app
 def app():
@@ -439,6 +480,22 @@ Examples:
         help="Show what would be removed without actually removing"
     )
 
+    # Update settings command
+    update_settings_parser = subparsers.add_parser(
+        "update-settings",
+        help="Set settings.form_title/form_id/version in survey.xlsx",
+    )
+    update_settings_parser.add_argument("--title", help="Value for settings.form_title")
+    update_settings_parser.add_argument("--id", dest="form_id", help="Value for settings.form_id")
+    update_settings_parser.add_argument(
+        "--version",
+        help="Value for settings.version. If omitted, default formula is enforced.",
+    )
+    update_settings_parser.add_argument(
+        "--file",
+        help="Override target XLSForm file (default: use project config or survey.xlsx)",
+    )
+
     # Version
     parser.add_argument("--version", action="version", version=f"%(prog)s v{__version__}")
 
@@ -465,6 +522,13 @@ Examples:
         show_info()
     elif args.command == "cleanup":
         cleanup_project(dry_run=args.dry_run)
+    elif args.command == "update-settings":
+        update_project_settings(
+            title=args.title,
+            form_id=args.form_id,
+            version=args.version,
+            file_path=args.file,
+        )
     else:
         parser.print_help()
 

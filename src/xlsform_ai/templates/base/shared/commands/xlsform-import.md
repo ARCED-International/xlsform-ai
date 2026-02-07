@@ -1,15 +1,5 @@
 ---
-description: Import questions from external files (PDF, Word, Excel) into an XLSForm. Use this command to parse questionnaires, surveys, or forms and convert them to XLSForm format with intelligent question type detection.
-arguments:
-  - name: source
-    description: Path to file containing questions (PDF, .docx, or .xlsx)
-    required: true
-  - name: pages
-    description: Page range for PDF files (e.g., 1-10, 5-15)
-    required: false
-  - name: sheet
-    description: Optional sheet name when source is an Excel file (.xlsx)
-    required: false
+description: Import questions from questionnaire files into an XLSForm (PDF/Word primary, Excel also supported).
 ---
 
 # Import Questions from File
@@ -129,35 +119,19 @@ python scripts/parse_xlsx.py <source> --sheet <sheet_name>
 
 Run the appropriate script and capture its output.
 
-### Safe Execution (No temp files, no python -c)
+### Safe Execution (Use script entrypoints)
 
 - **Do NOT** create temporary scripts (e.g., `temp_import.py`)
-- **Do NOT** use `python -c` (quote escaping is brittle)
-- **Do** use heredocs / here-strings
+- **Do NOT** use inline Python snippets for parser execution
+- **Do** call parser scripts directly:
 
-**PowerShell:**
-```powershell
-@'
-import openpyxl
-
-wb = openpyxl.load_workbook("survey.xlsx")
-ws = wb["survey"]
-print(f"Total rows: {ws.max_row}")
-wb.close()
-'@ | python -
-```
-
-**bash/zsh:**
 ```bash
-python - <<'PY'
-import openpyxl
-
-wb = openpyxl.load_workbook("survey.xlsx")
-ws = wb["survey"]
-print(f"Total rows: {ws.max_row}")
-wb.close()
-PY
+python scripts/parse_pdf.py <source> --pages <range>
+python scripts/parse_docx.py <source>
+python scripts/parse_xlsx.py <source> --sheet <sheet_name>
 ```
+
+If debugging is needed, prefer a saved script file over heredoc-style one-liners in tool wrappers.
 
 ### Cross-Platform Compatibility
 

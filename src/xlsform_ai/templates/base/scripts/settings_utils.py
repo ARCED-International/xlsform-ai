@@ -242,8 +242,13 @@ def ensure_settings_columns(sheet) -> Dict[str, int]:
     return header_map
 
 
-def _ensure_version_formula(sheet, header_map: Dict[str, int]) -> None:
-    """Ensure version column exists and contains the required formula."""
+def _ensure_version_formula(sheet, header_map: Dict[str, int], explicit_version: Optional[str] = None) -> None:
+    """
+    Ensure version column exists.
+
+    Default behavior enforces the standard formula. If explicit_version is provided,
+    that value is used instead (user-intent override).
+    """
     header_map_lower = {k.lower(): v for k, v in header_map.items()}
     version_col = header_map.get("version") or header_map_lower.get("version")
     if not version_col:
@@ -252,13 +257,19 @@ def _ensure_version_formula(sheet, header_map: Dict[str, int]) -> None:
         header_map["version"] = version_col
 
     cell = sheet.cell(row=2, column=version_col)
+    target_value = explicit_version if explicit_version is not None else VERSION_FORMULA
     current = cell.value
-    if current != VERSION_FORMULA:
-        cell.value = VERSION_FORMULA
+    if current != target_value:
+        cell.value = target_value
 
 
-def set_form_settings(xlsx_path: Path, form_title: Optional[str] = None, form_id: Optional[str] = None) -> bool:
-    """Create/update settings sheet and set form_title/form_id.
+def set_form_settings(
+    xlsx_path: Path,
+    form_title: Optional[str] = None,
+    form_id: Optional[str] = None,
+    version: Optional[str] = None,
+) -> bool:
+    """Create/update settings sheet and set form_title/form_id/version.
 
     Values are written to row 2, aligned with headers in row 1.
     """
@@ -289,7 +300,7 @@ def set_form_settings(xlsx_path: Path, form_title: Optional[str] = None, form_id
             sheet = wb.create_sheet(SETTINGS_SHEET_NAME)
 
         header_map = ensure_settings_columns(sheet)
-        _ensure_version_formula(sheet, header_map)
+        _ensure_version_formula(sheet, header_map, explicit_version=version)
         header_map_lower = {k.lower(): v for k, v in header_map.items()}
         row = 2
         if form_title is not None:

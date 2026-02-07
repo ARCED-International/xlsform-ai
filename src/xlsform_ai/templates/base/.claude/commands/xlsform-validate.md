@@ -121,35 +121,18 @@ The user wants to validate their XLSForm to ensure:
    - Use openpyxl for closed files
    - Use xlwings if file is open and changes need to be made
 
-### Safe Execution (No temp files, no python -c)
+### Safe Execution (Use script entrypoints)
 
 - **Do NOT** create temporary scripts (e.g., `temp_validate.py`)
-- **Do NOT** use `python -c` (quote escaping is brittle)
-- **Do** use heredocs / here-strings
+- **Do NOT** use inline Python snippets for normal validation flow
+- **Do** run validator script directly:
 
-**PowerShell:**
-```powershell
-@'
-import openpyxl
-
-wb = openpyxl.load_workbook("survey.xlsx")
-ws = wb["survey"]
-print(f"Total rows: {ws.max_row}")
-wb.close()
-'@ | python -
-```
-
-**bash/zsh:**
 ```bash
-python - <<'PY'
-import openpyxl
-
-wb = openpyxl.load_workbook("survey.xlsx")
-ws = wb["survey"]
-print(f"Total rows: {ws.max_row}")
-wb.close()
-PY
+python scripts/validate_form.py survey.xlsx
+python scripts/validate_form.py survey.xlsx --json
 ```
+
+If debugging is needed, prefer a saved script file over heredoc-style one-liners in tool wrappers.
 
 ### Cross-Platform Compatibility
 

@@ -1,4 +1,4 @@
-"""Update XLSForm settings sheet (form_title, form_id)."""
+"""Update XLSForm settings sheet (form_title, form_id, version)."""
 
 import sys
 from pathlib import Path
@@ -35,12 +35,19 @@ def main():
     parser = argparse.ArgumentParser(description="Update XLSForm settings sheet.")
     parser.add_argument("--title", help="Form title to set (settings.form_title)")
     parser.add_argument("--id", dest="form_id", help="Form ID to set (settings.form_id)")
+    parser.add_argument(
+        "--version",
+        help=(
+            "Version value to set (settings.version). "
+            "If omitted, the default formula is enforced."
+        ),
+    )
     parser.add_argument("--file", "-f", help="Path to XLSForm file (defaults to config or survey.xlsx)")
 
     args = parser.parse_args()
 
-    if not args.title and not args.form_id:
-        print("Error: Provide --title and/or --id.")
+    if args.title is None and args.form_id is None and args.version is None:
+        print("Error: Provide --title and/or --id and/or --version.")
         sys.exit(1)
 
     xlsform_path = resolve_xlsform_path(args.file)
@@ -48,7 +55,12 @@ def main():
         print(f"Error: XLSForm file not found: {xlsform_path}")
         sys.exit(1)
 
-    ok = set_form_settings(xlsform_path, form_title=args.title, form_id=args.form_id)
+    ok = set_form_settings(
+        xlsform_path,
+        form_title=args.title,
+        form_id=args.form_id,
+        version=args.version,
+    )
     if ok:
         print(f"[OK] Updated settings in {xlsform_path.name}")
     else:
