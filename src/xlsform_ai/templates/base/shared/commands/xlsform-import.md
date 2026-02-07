@@ -29,6 +29,12 @@ arguments:
 - `xlsform-core` provides XLSForm syntax, question types, and best practices
 - `activity-logging` ensures proper activity logging protocols
 
+### Knowledge Base Reference
+
+Consult these files for patterns and best practices before writing changes:
+- `scripts/knowledge_base/data/use_cases.md`
+- `scripts/knowledge_base/data/nested_repeats.md`
+
 ### 2. Import from Scripts Directory
 
 **CRITICAL: Always import from the `scripts/` directory:**
@@ -156,6 +162,21 @@ When creating Python code for file parsing that runs on bash/PowerShell/Linux:
 3. **Use proper file paths** for cross-platform compatibility
    - Use `pathlib.Path` instead of string paths
    - Use forward slashes or `os.path.join()`
+
+4. **Always add the scripts path before importing helpers**
+   ```python
+   import sys
+   from pathlib import Path
+
+   scripts_dir = Path("scripts").resolve()
+   if str(scripts_dir) not in sys.path:
+       sys.path.insert(0, str(scripts_dir))
+   ```
+
+### Stop on Errors, Verify Before Logging
+
+- If any exception occurs, stop immediately and fix the script.
+- After saving, re-open the workbook and verify rows were written before logging.
 
 ## Question Type Detection
 

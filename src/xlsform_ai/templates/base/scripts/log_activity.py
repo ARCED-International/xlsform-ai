@@ -214,8 +214,14 @@ class ActivityLogger:
         missing = missing_required_settings(self._xlsform_path)
         if missing:
             missing_list = ", ".join(missing)
-            print(f"\n[WARNING] Missing required settings: {missing_list}")
-            print("         Please provide the form title and/or form ID, and I can update them for you.")
+            try:
+                from rich.console import Console
+                console = Console()
+                console.print(f"\n[bold yellow]WARNING:[/bold yellow] Missing required settings: {missing_list}")
+                console.print("[yellow]Please provide the form title and/or form ID, and I can update them for you.[/yellow]")
+            except Exception:
+                print(f"\n[WARNING] Missing required settings: {missing_list}")
+                print("         Please provide the form title and/or form ID, and I can update them for you.")
             self._warned_missing_settings = True
 
     def _update_form_settings_metadata(self, data: dict) -> None:

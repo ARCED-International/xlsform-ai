@@ -2437,6 +2437,10 @@ ls -la survey.xlsx
 | `constraint_rules.md` | Constraint patterns | Constraints by field type, examples |
 | `question_type_patterns.md` | Type selection guide | Decision trees for type selection |
 | `question_type_flows.md` | Advanced type decisions | Complex type selection scenarios |
+| `settings_sheet.md` | Settings rules | Row 1 headers, row 2 values, version protection |
+| `random_sampling.md` | Randomization patterns | random(), randomize(), indexed-repeat() |
+| `nested_repeats.md` | Nested repeat guidance | Hierarchy design, pitfalls |
+| `use_cases.md` | Common survey modules | Sector patterns and examples |
 
 ### How to Access
 

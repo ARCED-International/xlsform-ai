@@ -32,6 +32,14 @@ Provides XLSForm syntax, question types, and best practices.
 ```
 Ensures proper activity logging protocols.
 
+### Knowledge Base Reference
+
+Consult these files for patterns and best practices before writing changes:
+- `scripts/knowledge_base/data/use_cases.md`
+- `scripts/knowledge_base/data/random_sampling.md`
+- `scripts/knowledge_base/data/nested_repeats.md`
+- `scripts/knowledge_base/data/settings_sheet.md`
+
 ### 2. Import from Scripts Directory
 
 **CRITICAL: Always import from the `scripts/` directory:**
@@ -222,6 +230,12 @@ For **questions with constraints, regex, or special characters**, use openpyxl d
 
 ```python
 import openpyxl
+import sys
+from pathlib import Path
+
+scripts_dir = Path("scripts").resolve()
+if str(scripts_dir) not in sys.path:
+    sys.path.insert(0, str(scripts_dir))
 
 # Load workbook
 wb = openpyxl.load_workbook('survey.xlsx')
@@ -279,6 +293,19 @@ for i, (name, label) in enumerate([('-96', 'Other'), ('-99', "Don't know")], 1):
 # Save
 wb.save('survey.xlsx')
 print(f'Added questions. Survey now has {ws.max_row} rows.')
+```
+
+### Stop on Errors, Verify Before Logging
+
+- If any exception occurs, stop immediately and fix the script.
+- After saving, re-open the workbook and verify expected rows were written before logging.
+- Do not claim success or log activity until verification passes.
+
+### Regex Tip
+
+Use raw strings to avoid invalid escape warnings:
+```python
+constraint = r"regex(., '^[a-zA-Z\\s\\-\\.']+$')"
 ```
 
 This approach:
@@ -389,7 +416,17 @@ When creating Python code that runs in bash/PowerShell/Linux:
    - Or use raw strings: `r"..."`
    - Prefer heredocs / here-strings to avoid quoting errors
 
-4. **Test on multiple platforms**
+4. **Always add the scripts path before importing helpers**
+   ```python
+   import sys
+   from pathlib import Path
+
+   scripts_dir = Path("scripts").resolve()
+   if str(scripts_dir) not in sys.path:
+       sys.path.insert(0, str(scripts_dir))
+   ```
+
+5. **Test on multiple platforms**
    - Windows (Git Bash / PowerShell)
    - Linux (bash)
    - macOS (zsh/bash)

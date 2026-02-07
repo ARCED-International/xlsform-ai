@@ -18,6 +18,13 @@ arguments:
 3. **Update references**: Maintain row relationships
 4. **Log activity**: All moves are logged to activity log
 
+## Knowledge Base Reference
+
+Consult these files for patterns and best practices before moving questions:
+- `scripts/knowledge_base/data/nested_repeats.md`
+- `scripts/knowledge_base/data/random_sampling.md`
+- `scripts/knowledge_base/data/use_cases.md`
+
 ## Understanding Your Request
 
 Identify the move operation:
@@ -85,6 +92,20 @@ When creating Python code for moving questions that runs on bash/PowerShell/Linu
    - Escape inner quotes: `'...\'...'`
    - Or use raw strings: `r"..."`
 
+4. **Always add the scripts path before importing helpers**
+   ```python
+   import sys
+   from pathlib import Path
+
+   scripts_dir = Path("scripts").resolve()
+   if str(scripts_dir) not in sys.path:
+       sys.path.insert(0, str(scripts_dir))
+   ```
+
+### Stop on Errors, Verify Before Logging
+
+- If any exception occurs, stop immediately and fix the script.
+- After saving, re-open the workbook and verify the move before logging.
 ## Proposed Changes
 
 Show the move operation:

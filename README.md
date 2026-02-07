@@ -5,6 +5,7 @@
 [![GitHub](https://img.shields.io/badge/github-ARCED--International-blue.svg)](https://github.com/ARCED-International/xlsform-ai)
 
 **AI-powered XLSForm creation tool with multi-agent coding support.**
+**Includes standardized survey modules and knowledge base patterns.**
 
 <img src="https://www.arced-international.com/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Farced-int_logo.5040257d.png&w=3840&q=75" alt="ARCED International Logo" width="200">
 
@@ -21,6 +22,7 @@ XLSForm AI is a CLI tool that sets up projects with specialized skills and comma
 - **Intelligent question type detection** from natural language
 - **xlwings integration** for live Excel editing with format preservation
 - **Validation** to catch errors before deployment
+- **Standardized survey modules** and best-practice patterns from the built-in knowledge base
 
 ## Features
 
@@ -54,6 +56,15 @@ XLSForm AI is a CLI tool that sets up projects with specialized skills and comma
 - `/xlsform-update` - Modify questions
 - `/xlsform-remove` - Delete questions
 - `/xlsform-move` - Reorder questions
+
+### Standardized Modules
+- Crop production, livestock, aquaculture DNA
+- Household roster, child education, education access
+- Food security (FCS, rCSI), nutrition (MUAC)
+- WASH, housing, energy access
+- Health (basic, biomarkers, immunization, ANC)
+- Migration, market access, shocks and coping
+- Labor rights, workplace violence, protection/GBV (safety-first templates)
 
 ## Installation
 
@@ -468,6 +479,15 @@ xlsform-ai cleanup --dry-run    # Preview what would be removed
 - [ODK Form Question Types](https://docs.getodk.org/form-question-types/)
 - [ODK Form Logic](https://docs.getodk.org/form-logic/)
 - [ODK Operators and Functions](https://docs.getodk.org/form-operators-functions/)
+
+### Knowledge Base
+
+The template ships with a curated knowledge base for common patterns and best practices:
+
+- `src/xlsform_ai/templates/base/scripts/knowledge_base/data/settings_sheet.md`
+- `src/xlsform_ai/templates/base/scripts/knowledge_base/data/random_sampling.md`
+- `src/xlsform_ai/templates/base/scripts/knowledge_base/data/nested_repeats.md`
+- `src/xlsform_ai/templates/base/scripts/knowledge_base/data/use_cases.md`
 
 ### Project-Specific Docs
 

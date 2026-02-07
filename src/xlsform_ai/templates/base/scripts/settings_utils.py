@@ -12,6 +12,7 @@ except ImportError as exc:
 
 SETTINGS_SHEET_NAME = "settings"
 REQUIRED_SETTINGS_COLUMNS = ["form_title", "form_id"]
+PROTECTED_SETTINGS_COLUMNS = {"version"}
 
 
 def _get_settings_sheet(wb):
@@ -52,7 +53,10 @@ def read_form_settings(xlsx_path: Path) -> Dict[str, str]:
 
 
 def ensure_settings_columns(sheet) -> Dict[str, int]:
-    """Ensure required settings columns exist; return header map."""
+    """Ensure required settings columns exist; return header map.
+
+    Values are always written to row 2, aligned with row 1 headers.
+    """
     header_map = _get_header_map(sheet)
     if not header_map:
         # Create header row if missing
@@ -71,7 +75,10 @@ def ensure_settings_columns(sheet) -> Dict[str, int]:
 
 
 def set_form_settings(xlsx_path: Path, form_title: Optional[str] = None, form_id: Optional[str] = None) -> bool:
-    """Create/update settings sheet and set form_title/form_id."""
+    """Create/update settings sheet and set form_title/form_id.
+
+    Values are written to row 2, aligned with headers in row 1.
+    """
     if not xlsx_path:
         return False
 
@@ -86,10 +93,15 @@ def set_form_settings(xlsx_path: Path, form_title: Optional[str] = None, form_id
 
     header_map = ensure_settings_columns(sheet)
     row = 2
-    if form_title is not None:
+    if "form_title" in header_map and form_title is not None:
         sheet.cell(row=row, column=header_map["form_title"], value=form_title)
-    if form_id is not None:
+    if "form_id" in header_map and form_id is not None:
         sheet.cell(row=row, column=header_map["form_id"], value=form_id)
+
+    # Never overwrite protected columns like version (often formula-driven)
+    for protected in PROTECTED_SETTINGS_COLUMNS:
+        if protected in header_map:
+            pass
 
     wb.save(xlsx_path)
     return True

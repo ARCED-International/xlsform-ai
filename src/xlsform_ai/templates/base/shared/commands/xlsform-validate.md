@@ -23,6 +23,13 @@ arguments:
 - `xlsform-core` provides XLSForm syntax, question types, and best practices
 - `activity-logging` ensures proper activity logging protocols
 
+### Knowledge Base Reference
+
+Consult these files for patterns and best practices before validation:
+- `scripts/knowledge_base/data/settings_sheet.md`
+- `scripts/knowledge_base/data/nested_repeats.md`
+- `scripts/knowledge_base/data/use_cases.md`
+
 ### 2. Import from Scripts Directory
 
 **CRITICAL: Always import from the `scripts/` directory:**
@@ -134,6 +141,20 @@ When creating Python code for validation that runs on bash/PowerShell/Linux:
    - Use double quotes outside: `"..."`
    - Escape inner quotes: `'...\'...'`
    - Or use raw strings: `r"..."`
+
+4. **Always add the scripts path before importing helpers**
+   ```python
+   import sys
+   from pathlib import Path
+
+   scripts_dir = Path("scripts").resolve()
+   if str(scripts_dir) not in sys.path:
+       sys.path.insert(0, str(scripts_dir))
+   ```
+
+### Stop on Errors
+
+- If any exception occurs, stop immediately and report the error.
 
 ## Validation Checks
 
