@@ -1,4 +1,4 @@
-﻿---
+---
 description: Add questions to an XLSForm survey. Use this command to add new questions, specify question types (text, select_one, select_multiple, geopoint, integer, decimal, date, etc.), create choice lists, add multiple questions at once, or add questions with constraints and relevance.
 arguments:
   - name: questions

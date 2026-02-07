@@ -1,4 +1,4 @@
-﻿---
+---
 description: Remove questions or choice lists from XLSForm. Use this to delete questions from the survey sheet, remove choice lists from the choices sheet, or clean up unused items.
 arguments:
   - name: target

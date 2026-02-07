@@ -1,4 +1,4 @@
-﻿---
+---
 description: Safely revert XLSForm changes using immutable snapshots. Use this command to view history, create checkpoints, undo the last change, or restore a specific revision.
 arguments:
   - name: action

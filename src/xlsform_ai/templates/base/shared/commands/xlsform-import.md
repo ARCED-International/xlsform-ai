@@ -1,4 +1,4 @@
-﻿---
+---
 description: Import questions from questionnaire files into an XLSForm (PDF/Word primary, Excel also supported)
 ---
 

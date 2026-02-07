@@ -1,4 +1,4 @@
-﻿---
+---
 description: Validate an XLSForm for errors, warnings, and best practices. Use this command to check for duplicate names, missing choice lists, invalid types, syntax errors, structural issues, and get suggestions for improvements.
 arguments:
   - name: fix

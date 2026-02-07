@@ -1,4 +1,4 @@
-﻿---
+---
 description: Update existing XLSForm questions. Use this to modify question types, labels, constraints, relevance, required status, or other properties of questions that already exist in your form.
 arguments:
   - name: question

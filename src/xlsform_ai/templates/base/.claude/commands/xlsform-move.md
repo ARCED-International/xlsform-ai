@@ -1,4 +1,4 @@
-﻿---
+---
 description: Move or reorder XLSForm questions. Use this to move questions to different positions, move questions into/out of groups or repeats, or reorder questions within a form.
 arguments:
   - name: question

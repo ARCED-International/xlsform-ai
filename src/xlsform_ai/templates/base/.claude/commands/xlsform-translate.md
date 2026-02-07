@@ -1,4 +1,4 @@
-﻿---
+---
 description: Translate XLSForm content into additional languages using natural language commands. Adds missing language columns, normalizes row-1 translation headers safely, updates settings.default_language, and fills full or remaining translations in survey/choices.
 arguments:
   - name: instruction
