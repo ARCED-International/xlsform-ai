@@ -39,7 +39,14 @@ except ImportError:
 
 # Try to import form structure, fail gracefully if not available
 try:
-    from form_structure import find_insertion_point, freeze_top_row, find_header_row, build_column_mapping
+    from form_structure import (
+        find_insertion_point,
+        freeze_top_row,
+        find_header_row,
+        build_column_mapping,
+        ensure_blank_row_gap,
+        is_metadata_field,
+    )
     FORM_STRUCTURE_AVAILABLE = True
 except ImportError:
     FORM_STRUCTURE_AVAILABLE = False
@@ -51,12 +58,6 @@ try:
 except ImportError:
     DISPLAY_AVAILABLE = False
 
-# Try to import settings utilities, fail gracefully if not available
-try:
-    from settings_utils import missing_required_settings
-    SETTINGS_AVAILABLE = True
-except ImportError:
-    SETTINGS_AVAILABLE = False
 
 # Try to import AI components, fail gracefully if not available
 try:
@@ -182,6 +183,14 @@ def get_best_practices(question_type, question_name, question_label=""):
     return result
 
 
+def _cell_has_value(value) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True
+
+
 def add_questions(questions_data, survey_file=None):
     """Add questions to XLSForm with best practices.
 
@@ -255,14 +264,14 @@ def add_questions(questions_data, survey_file=None):
         existing_names = set()
         for row_idx in range(header_row + 1, ws.max_row + 1):
             name_val = ws.cell(row_idx, name_col).value
-            if name_val:
+            if _cell_has_value(name_val):
                 existing_names.add(str(name_val).strip())
 
         # Filter out questions that already exist
         duplicates = []
         filtered_questions = []
         for q in questions_data:
-            q_name = q.get("name", "")
+            q_name = str(q.get("name", "")).strip()
             if q_name in existing_names:
                 duplicates.append(q_name)
             else:
@@ -286,15 +295,18 @@ def add_questions(questions_data, survey_file=None):
         # Find insertion point using smart logic (or fallback to simple logic)
         if FORM_STRUCTURE_AVAILABLE:
             insertion_row = find_insertion_point(ws, header_row, questions_data, column_map)
+            has_metadata = any(is_metadata_field(q.get("type", "")) for q in questions_data)
+            if not has_metadata:
+                check_columns = [column_map.get("type", 1), column_map.get("name", 2)]
+                insertion_row = ensure_blank_row_gap(ws, insertion_row, header_row, check_columns, min_blank_rows=1)
         else:
             # Fallback: find last data row
-            insertion_row = ws.max_row
             name_col = column_map.get("name", 2)  # Use dynamic mapping or fallback to column 2
-            for row_idx in range(ws.max_row, header_row, -1):
-                if ws.cell(row_idx, name_col).value:  # Check if 'name' column has value
-                    insertion_row = row_idx
-                    break
-            insertion_row += 1
+            insertion_row = header_row + 1
+            for row_idx in range(header_row + 1, ws.max_row + 1):
+                name_val = ws.cell(row_idx, name_col).value
+                if name_val is not None and str(name_val).strip():
+                    insertion_row = row_idx + 1
 
         # Add questions
         added = []
@@ -363,17 +375,6 @@ def add_questions(questions_data, survey_file=None):
 
         # Save workbook
         wb.save(survey_file)
-
-        if SETTINGS_AVAILABLE:
-            try:
-                missing = missing_required_settings(survey_file)
-                if missing:
-                    missing_list = ", ".join(missing)
-                    print(f"\n[WARNING] Missing required settings: {missing_list}")
-                    print("         Please fill the settings sheet (form_title, form_id) or run:")
-                    print('         python scripts/update_settings.py --title "Form Title" --id "form_id"')
-            except Exception:
-                pass
 
         # Log activity
         if LOGGING_AVAILABLE and config:

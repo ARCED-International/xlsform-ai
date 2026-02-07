@@ -41,6 +41,13 @@ METADATA_FIELDS = [
     {"type": "username", "name": "username", "label": "Username"},
 ]
 
+def _cell_has_value(value) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True
+
 
 def add_metadata_fields(survey_file="survey.xlsx"):
     """Add standard XLSForm metadata fields to the survey sheet.
@@ -93,8 +100,10 @@ def add_metadata_fields(survey_file="survey.xlsx"):
         existing_metadata = set()
         for row_idx in range(header_row + 1, ws.max_row + 1):
             name_val = ws.cell(row_idx, name_col).value
-            if name_val and str(name_val).strip().lower() in [f["name"] for f in METADATA_FIELDS]:
-                existing_metadata.add(str(name_val).strip().lower())
+            if _cell_has_value(name_val):
+                cleaned_name = str(name_val).strip().lower()
+                if cleaned_name in [f["name"] for f in METADATA_FIELDS]:
+                    existing_metadata.add(cleaned_name)
 
         # Filter out metadata fields that already exist
         to_add = [f for f in METADATA_FIELDS if f["name"] not in existing_metadata]
@@ -118,7 +127,7 @@ def add_metadata_fields(survey_file="survey.xlsx"):
         for row_idx in range(first_data_row, first_data_row + rows_to_insert):
             if row_idx <= ws.max_row:
                 name_val = ws.cell(row_idx, name_col).value
-                if name_val:
+                if _cell_has_value(name_val):
                     has_existing_data = True
                     break
 

@@ -88,6 +88,36 @@ Identify what's being updated:
 3. Show current properties
 4. Confirm the change
 
+### Safe Execution (No temp files, no python -c)
+
+- **Do NOT** create temporary scripts (e.g., `temp_update.py`)
+- **Do NOT** use `python -c` (quote escaping is brittle)
+- **Do** use heredocs / here-strings
+
+**PowerShell:**
+```powershell
+@'
+import openpyxl
+
+wb = openpyxl.load_workbook("survey.xlsx")
+ws = wb["survey"]
+print(f"Total rows: {ws.max_row}")
+wb.close()
+'@ | python -
+```
+
+**bash/zsh:**
+```bash
+python - <<'PY'
+import openpyxl
+
+wb = openpyxl.load_workbook("survey.xlsx")
+ws = wb["survey"]
+print(f"Total rows: {ws.max_row}")
+wb.close()
+PY
+```
+
 ### Cross-Platform Compatibility
 
 When creating Python code for updates that runs on bash/PowerShell/Linux:

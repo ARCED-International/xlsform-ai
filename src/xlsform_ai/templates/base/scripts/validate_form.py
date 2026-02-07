@@ -40,6 +40,14 @@ except ImportError:
     DISPLAY_AVAILABLE = False
 
 
+def _cell_has_value(value) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True
+
+
 def validate_xlsxform(xlsx_path):
     """Validate XLSForm Excel file."""
     errors = []
@@ -80,8 +88,11 @@ def validate_survey_sheet(sheet):
     warnings = []
 
     # Get headers
-    headers = [cell.value for cell in sheet[1]]
-    headers = [h for h in headers if h]
+    headers = {}
+    for idx, cell in enumerate(sheet[1]):
+        value = cell.value
+        if _cell_has_value(value):
+            headers[str(value).strip().lower()] = idx
 
     # Check required columns
     required = ['type', 'name', 'label']
@@ -91,11 +102,11 @@ def validate_survey_sheet(sheet):
 
     # Check for duplicate names
     if 'name' in headers:
-        name_col = headers.index('name')
+        name_col = headers['name']
         names = {}
         for row_idx, row in enumerate(sheet.iter_rows(min_row=2, values_only=True), start=2):
-            if row[name_col]:
-                name = row[name_col]
+            if len(row) > name_col and _cell_has_value(row[name_col]):
+                name = str(row[name_col]).strip()
                 if name in names:
                     errors.append(f"Duplicate question name '{name}' at rows {names[name]} and {row_idx}")
                 else:
@@ -109,8 +120,11 @@ def validate_choices_sheet(sheet):
     errors = []
 
     # Get headers
-    headers = [cell.value for cell in sheet[1]]
-    headers = [h for h in headers if h]
+    headers = {}
+    for idx, cell in enumerate(sheet[1]):
+        value = cell.value
+        if _cell_has_value(value):
+            headers[str(value).strip().lower()] = idx
 
     # Check required columns
     required = ['list_name', 'name', 'label']
@@ -120,14 +134,18 @@ def validate_choices_sheet(sheet):
 
     # Check for duplicate names within same list
     if 'list_name' in headers and 'name' in headers:
-        list_name_col = headers.index('list_name')
-        name_col = headers.index('name')
+        list_name_col = headers['list_name']
+        name_col = headers['name']
 
         choice_names = {}
         for row in sheet.iter_rows(min_row=2, values_only=True):
-            if row[list_name_col] and row[name_col]:
-                list_name = row[list_name_col]
-                name = row[name_col]
+            if len(row) > max(list_name_col, name_col):
+                list_name_val = row[list_name_col]
+                name_val = row[name_col]
+                if not (_cell_has_value(list_name_val) and _cell_has_value(name_val)):
+                    continue
+                list_name = str(list_name_val).strip()
+                name = str(name_val).strip()
 
                 if list_name not in choice_names:
                     choice_names[list_name] = set()

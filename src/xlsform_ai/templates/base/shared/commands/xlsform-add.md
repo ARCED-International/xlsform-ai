@@ -105,6 +105,49 @@ Before adding, read the current XLSForm file:
 
 **Use xlwings if the file is open, otherwise use openpyxl.**
 
+### Safe Row Inspection (Avoid python -c)
+
+One-line `python -c` commands often break due to quote escaping (especially with f-strings).
+Use a heredoc (bash) or here-string (PowerShell) instead.
+
+**PowerShell:**
+```powershell
+@'
+import openpyxl
+
+wb = openpyxl.load_workbook("survey.xlsx")
+ws = wb["survey"]
+
+print("Rows 10-14:")
+for i in range(10, 15):
+    name_val = ws.cell(i, 2).value
+    if name_val is not None and str(name_val).strip():
+        print(f"Row {i}: {ws.cell(i, 1).value} | {ws.cell(i, 2).value} | {ws.cell(i, 3).value}")
+
+print(f"Total rows: {ws.max_row}")
+wb.close()
+'@ | python -
+```
+
+**bash/zsh:**
+```bash
+python - <<'PY'
+import openpyxl
+
+wb = openpyxl.load_workbook("survey.xlsx")
+ws = wb["survey"]
+
+print("Rows 10-14:")
+for i in range(10, 15):
+    name_val = ws.cell(i, 2).value
+    if name_val is not None and str(name_val).strip():
+        print(f"Row {i}: {ws.cell(i, 1).value} | {ws.cell(i, 2).value} | {ws.cell(i, 3).value}")
+
+print(f"Total rows: {ws.max_row}")
+wb.close()
+PY
+```
+
 ## Proposed Changes
 
 Present a clear summary of what will be added, **including best practices that will be applied**:
@@ -344,6 +387,7 @@ When creating Python code that runs in bash/PowerShell/Linux:
    - Use double quotes outside: `"..."`
    - Escape inner quotes: `'...\'...'`
    - Or use raw strings: `r"..."`
+   - Prefer heredocs / here-strings to avoid quoting errors
 
 4. **Test on multiple platforms**
    - Windows (Git Bash / PowerShell)

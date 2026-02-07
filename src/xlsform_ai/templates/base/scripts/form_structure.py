@@ -22,6 +22,23 @@ METADATA_TYPES = {
     'simserial', 'phonenumber', 'username', 'email', 'audit'
 }
 
+def _cell_has_value(value) -> bool:
+    """Return True if the cell value is meaningful (not just whitespace)."""
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True
+
+
+def _row_has_data(ws, row_idx: int, check_columns: List[int]) -> bool:
+    """Check if a row has meaningful data in any of the specified columns."""
+    for col_idx in check_columns:
+        cell_value = ws.cell(row_idx, col_idx).value
+        if _cell_has_value(cell_value):
+            return True
+    return False
+
 
 def is_metadata_field(question_type: str) -> bool:
     """Check if a question type is a metadata field.
@@ -64,24 +81,10 @@ def find_last_data_row(ws, header_row: int = 1, check_columns: List[int] = None)
         check_columns = [1, 2, 3]  # Check first 3 columns by default
 
     last_data_row = header_row
-    consecutive_empty_rows = 0
-    max_empty_scan = 10  # Stop after 10 consecutive empty rows
 
     for row_idx in range(header_row + 1, ws.max_row + 1):
-        has_data = False
-        for col_idx in check_columns:
-            cell_value = ws.cell(row_idx, col_idx).value
-            if cell_value is not None and str(cell_value).strip():
-                has_data = True
-                break
-
-        if has_data:
+        if _row_has_data(ws, row_idx, check_columns):
             last_data_row = row_idx
-            consecutive_empty_rows = 0
-        else:
-            consecutive_empty_rows += 1
-            if consecutive_empty_rows >= max_empty_scan:
-                break
 
     return last_data_row
 
@@ -111,6 +114,7 @@ def find_insertion_point(ws, header_row: int, questions_data: List[dict], column
     # Get column positions (with fallbacks)
     type_col = column_map.get("type", 1)
     name_col = column_map.get("name", 2)
+    check_columns = [type_col, name_col]
 
     # Check if we're adding metadata fields
     has_metadata = any(is_metadata_field(q.get('type', '')) for q in questions_data)
@@ -118,42 +122,21 @@ def find_insertion_point(ws, header_row: int, questions_data: List[dict], column
     if has_metadata:
         # Find end of existing metadata section
         # Insert before first non-metadata question
-        for row_idx in range(header_row + 1, ws.max_row + 1):
+        last_data_row = find_last_data_row(ws, header_row, check_columns)
+        for row_idx in range(header_row + 1, last_data_row + 1):
             cell_type = ws.cell(row_idx, type_col).value
+            cell_type = str(cell_type).strip() if cell_type is not None else ""
             # Stop at first empty row - this is where we should insert
             if not cell_type:
                 return row_idx
             # If we find a non-metadata field, insert here
             if not is_metadata_field(str(cell_type)):
                 return row_idx
-        # No empty rows or non-metadata questions found, append at end
-        return ws.max_row + 1
+        # No empty rows or non-metadata questions found, append at end of data
+        return last_data_row + 1
     else:
-        # Find last question (after any metadata)
-        # Strategy: Scan until we find N consecutive empty rows (prevents infinite scan on formatted templates)
-        consecutive_empty_rows = 0
-        last_data_row = header_row
-        max_empty_scan = 10  # Stop after 10 consecutive empty rows
-
-        for row_idx in range(header_row + 1, ws.max_row + 1):
-            cell_type = ws.cell(row_idx, type_col).value
-            cell_name = ws.cell(row_idx, name_col).value
-
-            # Check if row has actual data (not just formatting)
-            has_data = bool(cell_type or cell_name)
-
-            if has_data:
-                last_data_row = row_idx
-                consecutive_empty_rows = 0
-            else:
-                consecutive_empty_rows += 1
-
-                # If we found enough consecutive empty rows, this is the insertion point
-                if consecutive_empty_rows >= max_empty_scan:
-                    return last_data_row + 1
-
-        # If we scanned all rows and didn't find 10 consecutive empties,
-        # append after the last data row
+        # Find last question (after any metadata) based on actual data
+        last_data_row = find_last_data_row(ws, header_row, check_columns)
         return last_data_row + 1
 
 
@@ -368,6 +351,32 @@ def add_visual_separation(ws, insert_row: int, is_new_context: bool = False) -> 
         ws.insert_rows(insert_row, 2)
         return insert_row + 2
     return insert_row
+
+
+def ensure_blank_row_gap(ws, insert_row: int, header_row: int, check_columns: List[int], min_blank_rows: int = 1) -> int:
+    """
+    Ensure a minimum number of blank rows before the insertion point.
+
+    This supports readability by keeping at least one blank row between
+    sections/blocks of questions.
+    """
+    if min_blank_rows <= 0 or insert_row <= header_row + 1:
+        return insert_row
+
+    blank_rows = 0
+    row_idx = insert_row - 1
+    while row_idx > header_row and blank_rows < min_blank_rows:
+        if _row_has_data(ws, row_idx, check_columns):
+            break
+        blank_rows += 1
+        row_idx -= 1
+
+    if blank_rows >= min_blank_rows:
+        return insert_row
+
+    rows_to_insert = min_blank_rows - blank_rows
+    ws.insert_rows(insert_row, rows_to_insert)
+    return insert_row + rows_to_insert
 
 
 if __name__ == "__main__":

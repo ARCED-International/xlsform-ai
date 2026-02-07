@@ -86,6 +86,36 @@ Identify what's being removed:
 3. Check for dependencies
 4. Show what will be affected
 
+### Safe Execution (No temp files, no python -c)
+
+- **Do NOT** create temporary scripts (e.g., `temp_remove.py`)
+- **Do NOT** use `python -c` (quote escaping is brittle)
+- **Do** use heredocs / here-strings
+
+**PowerShell:**
+```powershell
+@'
+import openpyxl
+
+wb = openpyxl.load_workbook("survey.xlsx")
+ws = wb["survey"]
+print(f"Total rows: {ws.max_row}")
+wb.close()
+'@ | python -
+```
+
+**bash/zsh:**
+```bash
+python - <<'PY'
+import openpyxl
+
+wb = openpyxl.load_workbook("survey.xlsx")
+ws = wb["survey"]
+print(f"Total rows: {ws.max_row}")
+wb.close()
+PY
+```
+
 ### Cross-Platform Compatibility
 
 When creating Python code for removal that runs on bash/PowerShell/Linux:

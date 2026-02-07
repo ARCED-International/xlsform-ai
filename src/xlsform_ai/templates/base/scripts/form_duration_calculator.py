@@ -8,6 +8,14 @@ from typing import Optional, Dict, Any
 from dataclasses import dataclass
 
 
+def _cell_has_value(value) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    return True
+
+
 @dataclass
 class DurationField:
     """Form duration calculation field definition."""
@@ -65,9 +73,9 @@ class FormDurationCalculator:
             cell_type = ws.cell(row_idx, 1).value  # Type column
             cell_name = ws.cell(row_idx, 2).value  # Name column
 
-            if cell_type:
-                cell_type_lower = str(cell_type).lower()
-                cell_name_lower = str(cell_name).lower() if cell_name else ""
+            if _cell_has_value(cell_type) or _cell_has_value(cell_name):
+                cell_type_lower = str(cell_type).strip().lower() if _cell_has_value(cell_type) else ""
+                cell_name_lower = str(cell_name).strip().lower() if _cell_has_value(cell_name) else ""
 
                 if cell_type_lower == "start" or "start" in cell_name_lower:
                     has_start = True
@@ -166,11 +174,11 @@ class FormDurationCalculator:
             cell_type = ws.cell(row_idx, 1).value
             cell_name = ws.cell(row_idx, 2).value
 
-            if not cell_type and not cell_name:
+            if not _cell_has_value(cell_type) and not _cell_has_value(cell_name):
                 # Empty row - end of section
                 break
 
-            cell_type_str = str(cell_type).lower() if cell_type else ""
+            cell_type_str = str(cell_type).strip().lower() if _cell_has_value(cell_type) else ""
 
             # Check if this is a metadata type
             if cell_type_str in self.metadata_types:
@@ -208,7 +216,7 @@ class FormDurationCalculator:
         for row_idx in range(header_row + 1, ws.max_row + 1):
             cell_name = ws.cell(row_idx, columns["name"]).value
 
-            if cell_name and str(cell_name) == self.duration_field_name:
+            if _cell_has_value(cell_name) and str(cell_name).strip() == self.duration_field_name:
                 # Found it - update calculation
                 duration_field = self.create_duration_field()
                 ws.cell(row_idx, columns["calculation"], duration_field.calculation)
