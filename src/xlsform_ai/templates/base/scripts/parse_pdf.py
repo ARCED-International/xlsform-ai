@@ -81,6 +81,8 @@ def _parse_option_blob(raw_text: str) -> List[str]:
         candidates = [_strip_choice_prefix(item) for item in raw_text.split("|") if _clean_text(item)]
     elif text.count(",") >= 2:
         candidates = [_strip_choice_prefix(item) for item in raw_text.split(",") if _clean_text(item)]
+    elif re.search(r"\b\d{1,2}\b", text):
+        candidates = _extract_numbered_inline_options(raw_text)
     elif CHOICE_RE.match(text):
         candidates = [_strip_choice_prefix(text)]
     else:
@@ -109,6 +111,39 @@ def _infer_select_mode(question_text: str, response_hint: str = "") -> str:
     return "select_one"
 
 
+def _extract_numbered_inline_options(raw_text: str) -> List[str]:
+    # Handles patterns like: "1 Always 2 Often 3 Sometimes 4 Rarely 5 Never"
+    matches = re.findall(
+        r"(?:^|\s)\(?\d{1,2}\)?[\.\:\-]?\s*([A-Za-z][A-Za-z/&\-\s]{1,60}?)(?=(?:\s+\(?\d{1,2}\)?[\.\:\-]?\s+)|$)",
+        raw_text,
+    )
+    cleaned = [_clean_text(m) for m in matches if _clean_text(m)]
+    return cleaned if len(cleaned) >= 2 else []
+
+
+def _infer_standard_scale_options(question_text: str) -> List[str]:
+    text = _clean_text(question_text).lower()
+    if not text:
+        return []
+
+    if any(token in text for token in ["how often", "frequency", "frequently", "often do you"]):
+        return ["Always", "Often", "Sometimes", "Rarely", "Never"]
+
+    if "agree" in text and "disagree" in text:
+        return ["Strongly agree", "Agree", "Neutral", "Disagree", "Strongly disagree"]
+
+    if any(token in text for token in ["satisfied", "satisfaction"]):
+        return [
+            "Very satisfied",
+            "Satisfied",
+            "Neither satisfied nor dissatisfied",
+            "Dissatisfied",
+            "Very dissatisfied",
+        ]
+
+    return []
+
+
 def _parse_page_range(page_arg: Optional[str]) -> Optional[Tuple[int, int]]:
     if not page_arg:
         return None
@@ -127,7 +162,7 @@ def _parse_page_range(page_arg: Optional[str]) -> Optional[Tuple[int, int]]:
     return start, end
 
 
-def parse_questions_from_lines(lines: List[str], page_num: int) -> List[Dict[str, object]]:
+def parse_questions_from_lines(lines: List[str], page_num: int, auto_scale: bool = False) -> List[Dict[str, object]]:
     questions: List[Dict[str, object]] = []
     current_question: Optional[Dict[str, object]] = None
     current_choices: List[Dict[str, str]] = []
@@ -143,8 +178,19 @@ def parse_questions_from_lines(lines: List[str], page_num: int) -> List[Dict[str
             current_question["choices"] = current_choices
             current_question["type"] = _infer_select_mode(question_text)
         else:
-            current_question["choices"] = None
-            current_question["type"] = _infer_non_select_type(question_text)
+            if auto_scale:
+                inferred_scale = _infer_standard_scale_options(question_text)
+                if inferred_scale:
+                    current_question["type"] = "select_one"
+                    current_question["choices"] = [
+                        {"value": _choice_value(label), "label": label} for label in inferred_scale
+                    ]
+                else:
+                    current_question["choices"] = None
+                    current_question["type"] = _infer_non_select_type(question_text)
+            else:
+                current_question["choices"] = None
+                current_question["type"] = _infer_non_select_type(question_text)
 
         questions.append(current_question)
         current_question = None
@@ -212,7 +258,7 @@ def _detect_header_index(row: List[str], tokens: Tuple[str, ...]) -> Optional[in
     return None
 
 
-def parse_questions_from_table(table_rows: List[List[str]], page_num: int) -> List[Dict[str, object]]:
+def parse_questions_from_table(table_rows: List[List[str]], page_num: int, auto_scale: bool = False) -> List[Dict[str, object]]:
     rows = [[_clean_text(str(cell)) for cell in row] for row in table_rows]
     rows = [row for row in rows if any(cell for cell in row)]
     if not rows:
@@ -239,7 +285,7 @@ def parse_questions_from_table(table_rows: List[List[str]], page_num: int) -> Li
             for cell in row:
                 if cell:
                     flattened_lines.append(cell)
-        return parse_questions_from_lines(flattened_lines, page_num)
+        return parse_questions_from_lines(flattened_lines, page_num, auto_scale=auto_scale)
 
     questions: List[Dict[str, object]] = []
     active_question: Optional[Dict[str, object]] = None
@@ -252,8 +298,20 @@ def parse_questions_from_table(table_rows: List[List[str]], page_num: int) -> Li
         if choices:
             active_question["type"] = _infer_select_mode(str(active_question.get("text", "")))
         else:
-            active_question["type"] = _infer_non_select_type(str(active_question.get("text", "")))
-            active_question["choices"] = None
+            question_text = str(active_question.get("text", ""))
+            if auto_scale:
+                inferred_scale = _infer_standard_scale_options(question_text)
+                if inferred_scale:
+                    active_question["type"] = "select_one"
+                    active_question["choices"] = [
+                        {"value": _choice_value(label), "label": label} for label in inferred_scale
+                    ]
+                else:
+                    active_question["type"] = _infer_non_select_type(question_text)
+                    active_question["choices"] = None
+            else:
+                active_question["type"] = _infer_non_select_type(question_text)
+                active_question["choices"] = None
         questions.append(active_question)
         active_question = None
 
@@ -309,6 +367,7 @@ def _dedupe_questions(questions: List[Dict[str, object]]) -> List[Dict[str, obje
 def extract_text_from_pdf(
     pdf_path: str | Path,
     page_range: Optional[Tuple[int, int]] = None,
+    auto_scale: bool = False,
 ) -> List[Dict[str, object]]:
     questions: List[Dict[str, object]] = []
     source = Path(pdf_path).resolve()
@@ -329,7 +388,7 @@ def extract_text_from_pdf(
             # 1) Parse text blocks
             text = page.extract_text() or ""
             if text.strip():
-                questions.extend(parse_questions_from_lines(text.splitlines(), page_num))
+                questions.extend(parse_questions_from_lines(text.splitlines(), page_num, auto_scale=auto_scale))
 
             # 2) Parse table blocks
             try:
@@ -339,21 +398,26 @@ def extract_text_from_pdf(
 
             for table in tables:
                 if table:
-                    questions.extend(parse_questions_from_table(table, page_num))
+                    questions.extend(parse_questions_from_table(table, page_num, auto_scale=auto_scale))
 
     return _dedupe_questions(questions)
 
 
-def extract_questions(pdf_path: str | Path, pages: Optional[str] = None) -> List[Dict[str, object]]:
+def extract_questions(pdf_path: str | Path, pages: Optional[str] = None, auto_scale: bool = False) -> List[Dict[str, object]]:
     """Compatibility alias used in older command protocols."""
     page_range = _parse_page_range(pages)
-    return extract_text_from_pdf(pdf_path, page_range=page_range)
+    return extract_text_from_pdf(pdf_path, page_range=page_range, auto_scale=auto_scale)
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Extract questions from PDF file for XLSForm import")
     parser.add_argument("pdf_file", help="Path to PDF file")
     parser.add_argument("--pages", help="Page range (e.g., 1-10)", default=None)
+    parser.add_argument(
+        "--auto-scale",
+        action="store_true",
+        help="Auto-convert frequency/Likert text questions to select_one with standard choices",
+    )
     parser.add_argument("--output", help="Output JSON file", default=None)
     args = parser.parse_args()
 
@@ -372,7 +436,7 @@ def main() -> None:
         sys.exit(1)
 
     print(f"Parsing {source_path}...")
-    questions = extract_text_from_pdf(source_path, page_range=page_range)
+    questions = extract_text_from_pdf(source_path, page_range=page_range, auto_scale=args.auto_scale)
 
     try:
         from log_activity import ActivityLogger
@@ -395,6 +459,7 @@ def main() -> None:
     output = {
         "source": str(source_path),
         "pages": args.pages,
+        "auto_scale": bool(args.auto_scale),
         "count": len(questions),
         "questions": questions,
     }

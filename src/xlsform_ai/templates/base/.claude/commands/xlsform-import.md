@@ -26,6 +26,15 @@ description: Import questions from questionnaire files into an XLSForm (PDF/Word
 
 If you write inline Python code for file operations, you have failed this command.
 
+### Strict Script Policy
+
+- `[FORBIDDEN]` Do not create ad-hoc `.py` scripts in the project workspace for import.
+- `[REQUIRED]` Use existing entrypoints first: `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/add_questions.py`.
+- Fallback script creation is allowed only if:
+  1. existing entrypoints fail after retry,
+  2. user explicitly approves fallback in REPL,
+  3. fallback is created in temp directory and removed after run.
+
 ### XLSForm.org Rules Snapshot
 
 - Columns can be in any order; optional columns can be omitted.
@@ -58,13 +67,13 @@ The user wants to import questions from an external file into their XLSForm.
 Check the file extension and use the appropriate parser:
 
 ```bash
-# PDF
+# PDF
 
-python scripts/parse_pdf.py <source> --pages <range>
+python scripts/parse_pdf.py <source> --pages <range> [--auto-scale]
 
 # Word
 
-python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix>
+python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix> [--auto-scale]
 
 # Excel
 
@@ -79,6 +88,7 @@ For Word with images, include:
 - `--media-dir <path>` to control where images are saved
 - `--media-prefix <prefix>` for XLSForm media::image values
 - `--no-images` to disable image extraction
+- `--auto-scale` when user selects auto-convert for frequency/Likert text questions
 
 **Expected output format:** JSON with extracted question structure:
 
@@ -161,6 +171,18 @@ Look for constraint indicators:
 - "age between 18-65" â†’ constraint: `. >= 18 and . <= 65`
 - "must be positive" â†’ constraint: `. > 0`
 - "0-100" â†’ constraint: `. >= 0 and . <= 100`
+
+### Decision-to-Action Guarantee
+
+If user selects `Auto-convert to select_one` for frequency/Likert text questions:
+1. Re-run parser with auto-scale conversion enabled:
+   - `python scripts/parse_docx.py <source> --auto-scale ...`
+   - `python scripts/parse_pdf.py <source> --auto-scale ...`
+2. Apply converted output to XLSForm (survey + choices).
+3. Verify conversion by counting imported rows with `type=select_one` that were previously `text`.
+4. Report exact counts and sample field names in final response.
+
+Never acknowledge conversion unless step 3 confirms it happened.
 
 ## Present Findings
 

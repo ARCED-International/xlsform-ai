@@ -8,6 +8,8 @@
 - Wait for explicit user selection before applying changes.
 - Only auto-decide when the user explicitly asked for automatic decisions.
 - Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+- Do not create ad-hoc project scripts for decisions; use existing scripts first, fallback script only with user approval and temp cleanup.
+- If user picks an option, execute that exact option and verify result before reporting completion.
 
 
 This is an XLSForm project with AI-assisted development capabilities using multi-agent architecture.
@@ -808,19 +810,22 @@ logger.log_action(
 **Protocol:**
 
 1. Load skills: `/skill:xlsform-core`, `/skill:activity-logging`
-2. Import parser:
+2. Do not create ad-hoc import scripts in project workspace. Use existing scripts first.
+3. Import parser:
    - PDF: `from scripts.parse_pdf import extract_questions`
    - Word: `from scripts.parse_docx import extract_questions`
    - Excel: `from scripts.parse_xlsx import extract_questions`
-3. For Word with images, ask user media destination in REPL (recommended: `./media/<source_stem>`)
-4. Parse file:
-   - PDF: `questions = extract_questions(source_path, pages)`
-   - DOCX with media: `extract_questions(source_path, media_dir=..., media_prefix=...)`
-5. Detect large file: If 10+ pages or 1MB+, auto-activate import-agent (parallel)
-6. Add survey rows via `add_questions(questions)` (ensure media headers are present)
-7. Add choices rows, including `media::image` for choice images when available
-8. Log action: `logger.log_action(action_type=\"import_pdf\"|\"import_docx\"|\"import_xlsx\", ...)`
-9. Validate: `/xlsform-validate`
+4. For Word with images, ask user media destination in REPL (recommended: `./media/<source_stem>`)
+5. If user chooses auto-convert for frequency/Likert, parse with `auto_scale=True`.
+6. Parse file:
+   - PDF: `questions = extract_questions(source_path, pages, auto_scale=...)`
+   - DOCX with media: `extract_questions(source_path, media_dir=..., media_prefix=..., auto_scale=...)`
+7. Detect large file: If 10+ pages or 1MB+, auto-activate import-agent (parallel)
+8. Add survey rows via `add_questions(questions)` (ensure media headers are present)
+9. Add choices rows, including `media::image` for choice images when available
+10. Verify user-selected transforms were applied (for auto-convert, report converted count + sample names)
+11. Log action: `logger.log_action(action_type=\"import_pdf\"|\"import_docx\"|\"import_xlsx\", ...)`
+12. Validate: `/xlsform-validate`
 
 **Example:**
 
@@ -859,6 +864,7 @@ questions = extract_questions(
     'questionnaire.docx',
     media_dir='media/questionnaire',
     media_prefix='questionnaire',
+    auto_scale=True,
 )
 ```
 

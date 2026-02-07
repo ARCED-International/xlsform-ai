@@ -114,6 +114,40 @@ def _infer_select_mode(question_text: str, response_hint: str = "") -> str:
     return "select_one"
 
 
+def _extract_numbered_inline_options(raw_text: str) -> List[str]:
+    # Handles patterns like: "1 Always 2 Often 3 Sometimes 4 Rarely 5 Never"
+    matches = re.findall(
+        r"(?:^|\s)\(?\d{1,2}\)?[\.\:\-]?\s*([A-Za-z][A-Za-z/&\-\s]{1,60}?)(?=(?:\s+\(?\d{1,2}\)?[\.\:\-]?\s+)|$)",
+        raw_text,
+    )
+    cleaned = [_clean_text(m) for m in matches if _clean_text(m)]
+    # Require at least two options to avoid false positives.
+    return cleaned if len(cleaned) >= 2 else []
+
+
+def _infer_standard_scale_options(question_text: str) -> List[str]:
+    text = _clean_text(question_text).lower()
+    if not text:
+        return []
+
+    if any(token in text for token in ["how often", "frequency", "frequently", "often do you"]):
+        return ["Always", "Often", "Sometimes", "Rarely", "Never"]
+
+    if "agree" in text and "disagree" in text:
+        return ["Strongly agree", "Agree", "Neutral", "Disagree", "Strongly disagree"]
+
+    if any(token in text for token in ["satisfied", "satisfaction"]):
+        return [
+            "Very satisfied",
+            "Satisfied",
+            "Neither satisfied nor dissatisfied",
+            "Dissatisfied",
+            "Very dissatisfied",
+        ]
+
+    return []
+
+
 def _parse_option_blob(raw_text: str) -> List[str]:
     text = _clean_text(raw_text)
     if not text:
@@ -130,6 +164,8 @@ def _parse_option_blob(raw_text: str) -> List[str]:
         tokens = [_strip_choice_prefix(piece) for piece in SPLIT_OPTIONS_RE.split(raw_text) if _clean_text(piece)]
     elif text.count(",") >= 2:
         tokens = [_strip_choice_prefix(piece) for piece in raw_text.split(",") if _clean_text(piece)]
+    elif re.search(r"\b\d{1,2}\b", text):
+        tokens = _extract_numbered_inline_options(raw_text)
     elif CHOICE_RE.match(text):
         tokens = [_strip_choice_prefix(text)]
 
@@ -300,6 +336,7 @@ def extract_questions_from_docx(
     media_prefix: Optional[str] = None,
     extract_images: bool = True,
     _media_context: Optional[MediaContext] = None,
+    auto_scale: bool = False,
 ) -> List[Dict[str, object]]:
     """Extract a list of question objects from a Word document."""
     if _Document is None:
@@ -608,6 +645,15 @@ def extract_questions_from_docx(
             if not str(question.get("type", "")).startswith("select_"):
                 question["type"] = _infer_select_mode(text)
         else:
+            if auto_scale:
+                inferred_scale = _infer_standard_scale_options(text)
+                if inferred_scale:
+                    question["type"] = "select_one"
+                    question["choices"] = [
+                        {"value": _choice_value(label), "label": label} for label in inferred_scale
+                    ]
+                    continue
+
             question["choices"] = None
             if str(question.get("type", "")).startswith("select_"):
                 question["type"] = _infer_non_select_type(text)
@@ -621,6 +667,7 @@ def extract_questions(
     media_dir: Optional[str | Path] = None,
     media_prefix: Optional[str] = None,
     extract_images: bool = True,
+    auto_scale: bool = False,
 ) -> List[Dict[str, object]]:
     """
     Compatibility alias used in older command protocols.
@@ -632,6 +679,7 @@ def extract_questions(
         media_dir=media_dir,
         media_prefix=media_prefix,
         extract_images=extract_images,
+        auto_scale=auto_scale,
     )
 
 
@@ -653,6 +701,11 @@ def main() -> None:
         "--no-images",
         action="store_true",
         help="Disable image extraction",
+    )
+    parser.add_argument(
+        "--auto-scale",
+        action="store_true",
+        help="Auto-convert frequency/Likert text questions to select_one with standard choices",
     )
 
     args = parser.parse_args()
@@ -680,6 +733,7 @@ def main() -> None:
         media_prefix=media_context.media_prefix,
         extract_images=extract_images,
         _media_context=media_context,
+        auto_scale=args.auto_scale,
     )
 
     saved_files: List[str] = []
@@ -711,6 +765,7 @@ def main() -> None:
 
     output = {
         "source": str(source_path),
+        "auto_scale": bool(args.auto_scale),
         "count": len(questions),
         "questions": questions,
         "media": {

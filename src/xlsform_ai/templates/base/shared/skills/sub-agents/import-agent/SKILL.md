@@ -65,6 +65,12 @@ Identify form structure:
 
 ## Import Process
 
+### Strict Script Policy
+
+- `[FORBIDDEN]` Do not create ad-hoc `.py` scripts in project workspace during import.
+- `[REQUIRED]` Use existing entrypoints: `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/add_questions.py`.
+- Fallback scripts are allowed only after retry failure, explicit user approval, and temp-file cleanup.
+
 ### Phase 1: Document Analysis
 ```python
 1. Read document
@@ -86,6 +92,16 @@ Then pass the selection to parser flags:
 - `--media-dir <path>`
 - `--media-prefix <prefix>`
 - `--no-images` (if skipping)
+
+### Frequency/Likert Auto-Convert (User-Selected)
+
+If user chooses auto-convert for frequency/Likert questions:
+1. Re-run parser with `--auto-scale`.
+2. Apply converted output to survey/choices.
+3. Verify converted count (text -> select_one).
+4. Report converted count + sample variable names.
+
+Never claim conversion completed without verification.
 
 ### Phase 2: Extraction (Parallel Capable)
 ```python
