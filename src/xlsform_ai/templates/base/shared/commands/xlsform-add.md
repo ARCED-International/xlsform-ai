@@ -1,4 +1,4 @@
----
+﻿---
 description: Add questions to an XLSForm survey. Use this command to add new questions, specify question types (text, select_one, select_multiple, geopoint, integer, decimal, date, etc.), create choice lists, add multiple questions at once, or add questions with constraints and relevance.
 arguments:
   - name: questions
@@ -12,7 +12,17 @@ arguments:
     required: false
 ---
 
-# Add XLSForm Questions
+# Add XLSForm Questions
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## Implementation Protocol
 
@@ -237,10 +247,12 @@ If any validation fails:
 For **simple questions without complex escaping**, use the helper script:
 
 ```bash
-# Single question
+# Single question
+
 python scripts/add_questions.py '[{"type":"text","name":"first_name","label":"First Name"}]'
 
-# Multiple simple questions
+# Multiple simple questions
+
 python scripts/add_questions.py '[{"type":"text","name":"first_name","label":"First Name"},{"type":"text","name":"last_name","label":"Last Name"}]'
 ```
 
@@ -257,15 +269,18 @@ scripts_dir = Path("scripts").resolve()
 if str(scripts_dir) not in sys.path:
     sys.path.insert(0, str(scripts_dir))
 
-# Load workbook
+# Load workbook
+
 wb = openpyxl.load_workbook('survey.xlsx')
 ws = wb['survey']
 ws_choices = wb['choices']
 
-# Find insertion point (after header)
+# Find insertion point (after header)
+
 insert_row = 2  # or use ws.max_row + 1 to append
 
-# Add metadata fields
+# Add metadata fields
+
 ws.cell(insert_row, 1, 'start')
 ws.cell(insert_row, 2, 'start')
 ws.cell(insert_row, 3, 'Start Time')
@@ -276,7 +291,8 @@ ws.cell(insert_row, 2, 'end')
 ws.cell(insert_row, 3, 'End Time')
 insert_row += 1
 
-# Add text question with constraint
+# Add text question with constraint
+
 ws.cell(insert_row, 1, 'text')
 ws.cell(insert_row, 2, 'respondent_name')
 ws.cell(insert_row, 3, 'What is your name?')
@@ -285,7 +301,8 @@ ws.cell(insert_row, 8, "regex(., '^[a-zA-Z\\s\\-\\.']+$')")
 ws.cell(insert_row, 9, 'Please enter a valid name (letters only)')
 insert_row += 1
 
-# Add integer question with constraint
+# Add integer question with constraint
+
 ws.cell(insert_row, 1, 'integer')
 ws.cell(insert_row, 2, 'age')
 ws.cell(insert_row, 3, 'How old are you?')
@@ -294,15 +311,18 @@ ws.cell(insert_row, 8, '. >= 0 and . <= 130')
 ws.cell(insert_row, 9, 'Age must be between 0 and 130')
 insert_row += 1
 
-# Add select_one question
+# Add select_one question
+
 ws.cell(insert_row, 1, 'select_one gender')
 ws.cell(insert_row, 2, 'gender')
 ws.cell(insert_row, 3, 'What is your gender?')
 ws.cell(insert_row, 5, 'yes')
 insert_row += 1
 
-# Add choices to choices sheet
-# Find last data row in choices sheet (handles pre-formatted templates)
+# Add choices to choices sheet
+
+# Find last data row in choices sheet (handles pre-formatted templates)
+
 from form_structure import find_last_data_row
 choice_start_row = find_last_data_row(ws_choices, 1, [1,2,3]) + 1
 for i, (name, label) in enumerate([('-96', 'Other'), ('-99', "Don't know")], 1):
@@ -310,7 +330,8 @@ for i, (name, label) in enumerate([('-96', 'Other'), ('-99', "Don't know")], 1):
     ws_choices.cell(choice_start_row + i, 2, name)
     ws_choices.cell(choice_start_row + i, 3, label)
 
-# Save
+# Save
+
 wb.save('survey.xlsx')
 print(f'Added questions. Survey now has {ws.max_row} rows.')
 ```
@@ -347,20 +368,23 @@ ws_choices = wb['choices']
 
 row = 2
 
-# Metadata
+# Metadata
+
 for field in ['start', 'end', 'today', 'deviceid']:
     ws.cell(row, 1, field)
     ws.cell(row, 2, field)
     ws.cell(row, 3, field.title())
     row += 1
 
-# Begin group
+# Begin group
+
 ws.cell(row, 1, 'begin group')
 ws.cell(row, 2, 'demographics')
 ws.cell(row, 3, 'Demographics')
 row += 1
 
-# Questions
+# Questions
+
 questions = [
     ('text', 'name', 'What is your name?', "regex(., '^[a-zA-Z\\s]+$')", 'Letters only'),
     ('integer', 'age', 'How old are you?', '. >= 0 and . <= 130', 'Age 0-130'),
@@ -377,12 +401,14 @@ for q_type, q_name, q_label, constraint, constraint_msg in questions:
         ws.cell(row, 9, constraint_msg)
     row += 1
 
-# End group
+# End group
+
 ws.cell(row, 1, 'end group')
 ws.cell(row, 2, 'demographics')
 row += 1
 
-# Add choices
+# Add choices
+
 choices = {'gender': [('1', 'Male'), ('2', 'Female'), ('-96', 'Other')]}
 for list_name, options in choices.items():
     # Find last data row and start after it (handles pre-formatted templates)
@@ -401,7 +427,8 @@ print(f'Added {len(questions)} questions')
 
 ERROR: **DO NOT create temporary Python files:**
 ```python
-# DON'T DO THIS:
+# DON'T DO THIS:
+
 Write(add_temp.py)
 ...
 Bash(python add_temp.py)
@@ -411,7 +438,8 @@ Bash(rm add_temp.py)
 
 ERROR: **DO NOT use complex JSON strings with regex in bash:**
 ```bash
-# DON'T DO THIS (fails due to escaping):
+# DON'T DO THIS (fails due to escaping):
+
 python scripts/add_questions.py '[{"type":"text","constraint":"regex(., '\''^[a-zA-Z]+$\'')"}]'
 ```
 
@@ -491,16 +519,19 @@ ws.cell(row, COLUMNS['required'], 'yes')
 
 **For select_one/select_multiple with choices:**
 ```python
-# Add the question
+# Add the question
+
 ws.cell(row, 1, 'select_one gender')
 ws.cell(row, 2, 'q_gender')
 ws.cell(row, 3, 'What is your gender?')
 ws.cell(row, 5, 'yes')
 row += 1
 
-# Add choices separately
+# Add choices separately
+
 choices = [('1', 'Male'), ('2', 'Female'), ('-96', 'Other')]
-# Find last data row in choices sheet (handles pre-formatted templates)
+# Find last data row in choices sheet (handles pre-formatted templates)
+
 from form_structure import find_last_data_row
 choice_row = find_last_data_row(ws_choices, 1, [1,2,3]) + 1
 for name, label in choices:
@@ -515,13 +546,15 @@ for name, label in choices:
 If adding a select question with a new list_name:
 
 ```python
-# Check if list exists
+# Check if list exists
+
 existing_lists = set()
 for row in ws_choices.iter_rows(min_row=2, max_row=ws_choices.max_row, values_only=True):
     if row[0]:  # list_name column
         existing_lists.add(row[0])
 
-# Add choices if list doesn't exist
+# Add choices if list doesn't exist
+
 if 'gender' not in existing_lists:
     choices = [
         ('1', 'Male'),
@@ -854,3 +887,6 @@ Did you mean:
 
 Please confirm the correction.
 ```
+
+
+

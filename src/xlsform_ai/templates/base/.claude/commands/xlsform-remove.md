@@ -1,4 +1,4 @@
----
+﻿---
 description: Remove questions or choice lists from XLSForm. Use this to delete questions from the survey sheet, remove choice lists from the choices sheet, or clean up unused items.
 arguments:
   - name: target
@@ -12,7 +12,17 @@ arguments:
     required: false
 ---
 
-# Remove XLSForm Questions or Choice Lists
+# Remove XLSForm Questions or Choice Lists
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
@@ -120,7 +130,8 @@ Before removing, verify:
 **IMPORTANT:** Use xlwings helper when file is open in Excel:
 
 ```bash
-# For files open in Excel (recommended - preserves formatting)
+# For files open in Excel (recommended - preserves formatting)
+
 python scripts/xlwings_helper.py remove --target <name>
 ```
 
@@ -338,3 +349,6 @@ Removing from bottom up (to preserve row numbers)...
   Total rows removed: 3
   Choice lists removed: options (5 choices)
 ```
+
+
+

@@ -1,4 +1,4 @@
----
+﻿---
 description: Translate XLSForm content into additional languages using natural language commands. Adds missing language columns, normalizes row-1 translation headers safely, updates settings.default_language, and fills full or remaining translations in survey/choices.
 arguments:
   - name: instruction
@@ -6,7 +6,17 @@ arguments:
     required: true
 ---
 
-# Translate XLSForm
+# Translate XLSForm
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## Implementation Protocol
 
@@ -33,9 +43,11 @@ python scripts/translate_form.py "add Bangla language"
 python scripts/translate_form.py "do the bangla translations for the remaining questions"
 
 # AI-driven contextual translations (recommended)
+
 python scripts/translate_form.py "add Bangla language" --translation-map-file .xlsform-ai/translation/bn.json
 
 # Optional runtime fallback (uses deep-translator if installed)
+
 python scripts/translate_form.py "add Bangla language" --translator auto
 ```
 
@@ -104,6 +116,7 @@ The script must produce:
 
 ```text
 # XLSFORM_TRANSLATION_RESULT
+
 status: ...
 intent: ...
 mode: ...
@@ -137,3 +150,5 @@ or
 ```bash
 /xlsform-revert restore-last
 ```
+
+

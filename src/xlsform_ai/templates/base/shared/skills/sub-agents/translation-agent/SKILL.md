@@ -1,9 +1,19 @@
----
+﻿---
 name: translation-agent
 description: Multilingual XLSForm specialist for language columns, contextual translations, and translation validation in survey/choices/settings.
 ---
 
-# Translation Agent
+# Translation Agent
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 You handle multilingual XLSForms with strict safety and structure rules.
 
@@ -113,6 +123,7 @@ Translation execution must return:
 
 ```text
 # XLSFORM_TRANSLATION_RESULT
+
 status: completed|completed_with_warnings|dry_run|failed
 intent: add_language|translate_remaining|...
 mode: add-missing|update-all|header-sync|validate-only
@@ -136,3 +147,5 @@ Before completion, verify:
 4. Missing translation count is acceptable for the requested mode.
 5. No translated output changed `choices.name` codes.
 6. Placeholder parity is preserved in all translated cells.
+
+

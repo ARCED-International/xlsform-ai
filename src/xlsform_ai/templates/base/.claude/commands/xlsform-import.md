@@ -1,8 +1,18 @@
----
+﻿---
 description: Import questions from questionnaire files into an XLSForm (PDF/Word primary, Excel also supported)
 ---
 
-# Import Questions from File
+# Import Questions from File
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
@@ -48,13 +58,16 @@ The user wants to import questions from an external file into their XLSForm.
 Check the file extension and use the appropriate parser:
 
 ```bash
-# PDF
+# PDF
+
 python scripts/parse_pdf.py <source> --pages <range>
 
 # Word
+
 python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix>
 
-# Excel
+# Excel
+
 python scripts/parse_xlsx.py <source> --sheet <sheet_name>
 ```
 
@@ -137,24 +150,25 @@ Or:
 
 Or:
 
-☐ Option 1
-☐ Option 2
-☐ Option 3
+â˜ Option 1
+â˜ Option 2
+â˜ Option 3
 ```
 
 ### Constraint Extraction
 
 Look for constraint indicators:
-- "age between 18-65" → constraint: `. >= 18 and . <= 65`
-- "must be positive" → constraint: `. > 0`
-- "0-100" → constraint: `. >= 0 and . <= 100`
+- "age between 18-65" â†’ constraint: `. >= 18 and . <= 65`
+- "must be positive" â†’ constraint: `. > 0`
+- "0-100" â†’ constraint: `. >= 0 and . <= 100`
 
 ## Present Findings
 
 Show the user what was found before adding:
 
 ```
-# Import Results from questions.pdf
+# Import Results from questions.pdf
+
 
 I found 15 questions on pages 1-5:
 
@@ -221,7 +235,7 @@ Choose option (1-4):
 Available questions:
 [[OK]] 1. What is your name? (text)
 [[OK]] 2. What is your gender? (select_one)
-[ ] 3. How old are you? (integer) ← Skip
+[ ] 3. How old are you? (integer) â† Skip
 [[OK]] 4. Select your favorite fruits (select_multiple)
 ...
 
@@ -249,9 +263,9 @@ Once confirmed:
 ### 1. Generate Question Names
 
 Create unique, descriptive names:
-- "What is your name?" → `respondent_name`
-- "How old are you?" → `age`
-- "What is your gender?" → `gender`
+- "What is your name?" â†’ `respondent_name`
+- "How old are you?" â†’ `age`
+- "What is your gender?" â†’ `gender`
 
 Check for duplicates and resolve with semantic names (avoid numeric suffixes).
 
@@ -440,7 +454,8 @@ Troubleshooting:
 Show summary:
 
 ```
-# Import Complete!
+# Import Complete!
+
 
 Successfully imported 15 questions to survey.xlsx
 
@@ -483,3 +498,6 @@ Run /xlsform-validate now to check the form.
 3. **Reuse choice lists** when possible (yes_no, gender, etc.)
 4. **Validate after import** to catch any issues
 5. **Preserve original file** for reference
+
+
+

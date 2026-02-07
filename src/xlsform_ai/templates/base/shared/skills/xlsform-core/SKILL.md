@@ -1,9 +1,19 @@
----
+﻿---
 name: xlsform-core
 description: Comprehensive XLSForm creation and editing skill. Use this skill when: (1) Creating XLSForm survey questions or adding new questions to a form, (2) Working with question types (text, select_one, select_multiple, geopoint, integer, decimal, date, etc.), (3) Implementing form logic including relevance, constraints, calculations, and triggers, (4) Validating XLSForm syntax and structure, (5) Converting paper forms, PDFs, or Word documents to XLSForm, (6) Working with advanced features like repeats, groups, cascading selects, choice filters, or external data, (7) Managing choice lists and ensuring list_name consistency between survey and choices sheets
 ---
 
-# XLSForm Core Skill
+# XLSForm Core Skill
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## Quick Start
 
@@ -113,3 +123,6 @@ This skill is automatically used by these commands:
 - /xlsform-translate - Add and complete multilingual translations
 
 These commands will automatically invoke this skill's knowledge when working with XLSForms.
+
+
+

@@ -1,4 +1,4 @@
----
+﻿---
 description: Update existing XLSForm questions. Use this to modify question types, labels, constraints, relevance, required status, or other properties of questions that already exist in your form.
 arguments:
   - name: question
@@ -9,7 +9,17 @@ arguments:
     required: true
 ---
 
-# Update XLSForm Question
+# Update XLSForm Question
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## Implementation Protocol
 
@@ -212,19 +222,29 @@ Before updating, verify:
 **Find the question row:**
 ```python
 # Search for question by name in column 2 (name column)
+
 # Get the row number
+
 ```
 
 **Update the cells:**
 ```python
 # Update specific columns based on what's changing
+
 # type: column 1
+
 # name: column 2
+
 # label: column 3
+
 # required: column 5
+
 # constraint: column 9
+
 # constraint_message: column 10
+
 # relevant: column 6
+
 ```
 
 ### Update Patterns
@@ -362,3 +382,6 @@ Warning: Relevance "${occupation} = 'Engineer'" may create circular dependency.
 Question 'occupation' comes after this question. This could cause issues.
 Consider reordering or using a different field.
 ```
+
+
+

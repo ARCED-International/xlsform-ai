@@ -1,8 +1,18 @@
----
+﻿---
 description: Import questions from questionnaire files into an XLSForm (PDF/Word primary, Excel also supported)
 ---
 
-# Import Questions from File
+# Import Questions from File
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## Implementation Protocol
 
@@ -66,6 +76,7 @@ from scripts.log_activity import ActivityLogger
 logger = ActivityLogger()
 
 # Determine action type based on file type
+
 if file_ext == '.pdf':
     action_type = "import_pdf"
 elif file_ext == '.docx':
@@ -111,12 +122,15 @@ Check the file extension and use the appropriate parser:
 
 ```bash
 # PDF
+
 python scripts/parse_pdf.py <source> --pages <range>
 
 # Word
+
 python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix>
 
 # Excel
+
 python scripts/parse_xlsx.py <source> --sheet <sheet_name>
 ```
 
@@ -267,9 +281,9 @@ Or:
 
 Or:
 
-☐ Option 1
-☐ Option 2
-☐ Option 3
+â˜ Option 1
+â˜ Option 2
+â˜ Option 3
 ```
 
 ### Constraint Extraction
@@ -285,6 +299,7 @@ Show the user what was found before adding:
 
 ```
 # Import Results from questions.pdf
+
 
 I found 15 questions on pages 1-5:
 
@@ -351,7 +366,7 @@ Choose option (1-4):
 Available questions:
 [SUCCESS:] 1. What is your name? (text)
 [SUCCESS:] 2. What is your gender? (select_one)
-[ ] 3. How old are you? (integer) ← Skip
+[ ] 3. How old are you? (integer) â† Skip
 [SUCCESS:] 4. Select your favorite fruits (select_multiple)
 ...
 
@@ -572,6 +587,7 @@ Show summary:
 ```
 # Import Complete!
 
+
 Successfully imported 15 questions to survey.xlsx
 
 Survey sheet:
@@ -613,3 +629,6 @@ Run /xlsform-validate now to check the form.
 3. **Reuse choice lists** when possible (yes_no, gender, etc.)
 4. **Validate after import** to catch any issues
 5. **Preserve original file** for reference
+
+
+

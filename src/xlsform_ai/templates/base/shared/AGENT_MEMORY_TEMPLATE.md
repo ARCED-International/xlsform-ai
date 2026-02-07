@@ -1,4 +1,14 @@
-# XLSForm AI Project
+﻿# XLSForm AI Project
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 This is an XLSForm project with AI-assisted development capabilities using multi-agent architecture.
 
@@ -6,7 +16,8 @@ This is an XLSForm project with AI-assisted development capabilities using multi
 
 ---
 
-# [WARNING] CRITICAL: MANDATORY LOGGING REQUIREMENT [WARNING]
+# [WARNING] CRITICAL: MANDATORY LOGGING REQUIREMENT [WARNING]
+
 
 ## **EVERY XLSForm Modification MUST Be Logged - NO EXCEPTIONS**
 
@@ -16,12 +27,12 @@ This is an XLSForm project with AI-assisted development capabilities using multi
 
 **You MUST log activity AFTER EVERY modification to `survey.xlsx`:**
 
-[OK] **AFTER adding questions** - Use `add_questions()` → **MUST LOG**
-[OK] **AFTER updating questions** - Modify any field → **MUST LOG**
-[OK] **AFTER removing questions** - Delete any row → **MUST LOG**
-[OK] **AFTER moving questions** - Reorder anything → **MUST LOG**
-[OK] **AFTER importing** - From PDF/Word/Excel → **MUST LOG**
-[OK] **AFTER validating** - Even validation → **MUST LOG**
+[OK] **AFTER adding questions** - Use `add_questions()` â†’ **MUST LOG**
+[OK] **AFTER updating questions** - Modify any field â†’ **MUST LOG**
+[OK] **AFTER removing questions** - Delete any row â†’ **MUST LOG**
+[OK] **AFTER moving questions** - Reorder anything â†’ **MUST LOG**
+[OK] **AFTER importing** - From PDF/Word/Excel â†’ **MUST LOG**
+[OK] **AFTER validating** - Even validation â†’ **MUST LOG**
 
 ### How to Log (REQUIRED)
 
@@ -58,12 +69,13 @@ logger.log_action(
 **No excuses. No exceptions. No skipping.**
 
 **Before marking task complete, ask yourself: "Did I log this activity?"**
-- If YES → Task complete [OK]
-- If NO → LOG FIRST, then complete [OK]
+- If YES â†’ Task complete [OK]
+- If NO â†’ LOG FIRST, then complete [OK]
 
 ---
 
-# Table of Contents
+# Table of Contents
+
 
 1. [Executive Summary](#executive-summary) - Quick start guide
 2. [Core Architecture](#core-architecture) - Multi-agent system, skills, sub-agents
@@ -74,7 +86,8 @@ logger.log_action(
 
 ---
 
-# Executive Summary
+# Executive Summary
+
 
 ## What is XLSForm AI?
 
@@ -132,18 +145,19 @@ XLSForm AI is an AI-powered toolkit for creating, modifying, and validating XLSF
 
 ```
 Project Root/
-├── survey.xlsx              # Main XLSForm file
-├── xlsform-ai.json          # Configuration
-├── activity_log.html        # Activity audit trail
-├── scripts/                 # Python utility modules
-└── {agent}/                 # Agent-specific config
-    ├── commands/            # Slash commands
-    └── skills/              # Knowledge packages
+â”œâ”€â”€ survey.xlsx              # Main XLSForm file
+â”œâ”€â”€ xlsform-ai.json          # Configuration
+â”œâ”€â”€ activity_log.html        # Activity audit trail
+â”œâ”€â”€ scripts/                 # Python utility modules
+â””â”€â”€ {agent}/                 # Agent-specific config
+    â”œâ”€â”€ commands/            # Slash commands
+    â””â”€â”€ skills/              # Knowledge packages
 ```
 
 ---
 
-# Core Architecture
+# Core Architecture
+
 
 ## Multi-Agent System
 
@@ -180,10 +194,10 @@ When you run `xlsform-ai init`, each agent receives:
 2. **Shared skills** - `xlsform-core`, `activity-logging` (same for all agents)
 3. **Shared commands** - All 8 slash commands (same for all agents)
 4. **Agent-specific memory file** - Copied from shared template:
-   - Claude → `.claude/CLAUDE.md`
-   - Copilot → `.copilot/MEMORY.md`
-   - Gemini → `.gemini/GEMINI.md`
-   - Cursor → `.cursor/MEMORY.md`
+   - Claude â†’ `.claude/CLAUDE.md`
+   - Copilot â†’ `.copilot/MEMORY.md`
+   - Gemini â†’ `.gemini/GEMINI.md`
+   - Cursor â†’ `.cursor/MEMORY.md`
    - And so on...
 5. **Full sub-agent access** - All agents can use validation-agent, import-agent, etc.
 
@@ -365,23 +379,23 @@ Sub-agents work together in workflows:
 **Import Workflow:**
 ```
 import-agent (parallel chunks)
-    ↓
+    â†“
 schema-agent (analyze structure)
-    ↓
+    â†“
 validation-agent (validate all)
 ```
 
 **Export Workflow:**
 ```
 schema-agent (analyze)
-    ↓
+    â†“
 export-agent (convert)
 ```
 
 **Translation Workflow:**
 ```
 translation-agent (translate)
-    ↓
+    â†“
 validation-agent (validate)
 ```
 
@@ -406,19 +420,19 @@ For large tasks, XLSForm AI automatically uses parallel processing with sub-agen
 ```
 Task: Import 100 questions from PDF
 
-[Analysis] 100 questions, 25 pages → High complexity
+[Analysis] 100 questions, 25 pages â†’ High complexity
 [Decision] Using parallel import (5 chunks)
 
 [PARALLEL PHASE]
-  ├─ [Chunk 1] import-agent: Pages 1-5 → 20 questions
-  ├─ [Chunk 2] import-agent: Pages 6-10 → 18 questions
-  ├─ [Chunk 3] import-agent: Pages 11-15 → 22 questions
-  ├─ [Chunk 4] import-agent: Pages 16-20 → 19 questions
-  └─ [Chunk 5] import-agent: Pages 21-25 → 21 questions
+  â”œâ”€ [Chunk 1] import-agent: Pages 1-5 â†’ 20 questions
+  â”œâ”€ [Chunk 2] import-agent: Pages 6-10 â†’ 18 questions
+  â”œâ”€ [Chunk 3] import-agent: Pages 11-15 â†’ 22 questions
+  â”œâ”€ [Chunk 4] import-agent: Pages 16-20 â†’ 19 questions
+  â””â”€ [Chunk 5] import-agent: Pages 21-25 â†’ 21 questions
 
 [SEQUENTIAL PHASE]
-  ├─ schema-agent: Analyze form structure
-  └─ validation-agent: Validate all questions
+  â”œâ”€ schema-agent: Analyze form structure
+  â””â”€ validation-agent: Validate all questions
 
 [FINAL] Apply to survey.xlsx
 ```
@@ -427,13 +441,15 @@ Task: Import 100 questions from PDF
 
 Force parallel processing:
 ```python
-# In scripts, use parallel parameter
+# In scripts, use parallel parameter
+
 add_questions(questions, parallel=True)
 ```
 
 Force sequential processing:
 ```
-# Use --sequential flag
+# Use --sequential flag
+
 /xlsform-import large_file.pdf --sequential
 ```
 
@@ -441,42 +457,42 @@ Force sequential processing:
 
 ```
 .
-├── survey.xlsx                  # Main XLSForm file (edit this!)
-├── xlsform-ai.json              # Project configuration
-├── activity_log.html            # Activity audit trail
-├── package.json                 # npm scripts for watch/reload
-│
-├── scripts/                     # Utility scripts
-│   ├── config.py                # Configuration management
-│   ├── form_structure.py        # Form parsing and smart insertion
-│   ├── add_questions.py         # Question addition (with smart insertion)
-│   ├── log_activity.py          # Activity logging (with filterable UI)
-│   ├── validate_form.py         # XLSForm validation
-│   ├── parse_pdf.py             # PDF question extraction
-│   ├── parse_docx.py            # Word question extraction
-│   ├── parse_xlsx.py            # Excel question extraction
-│   ├── xlwings_helper.py        # Excel editing with xlwings
-│   └── knowledge_base/          # Best practices and patterns
-│       └── data/                # Knowledge base documents
-│
-├── {agent-specific}/            # AI assistant configuration
-│   ├── commands/                # Slash commands
-│   │   ├── xlsform-add.md       # Add questions
-│   │   ├── xlsform-import.md    # Import from files
-│   │   ├── xlsform-validate.md  # Validate form
-│   │   ├── xlsform-update.md    # Modify questions
-│   │   ├── xlsform-remove.md    # Delete questions
-│   │   ├── xlsform-move.md      # Reorder questions
-│   │   └── xlsform-translate.md # Translate multilingual columns
-│   │
-│   └── skills/                  # XLSForm knowledge
-│       ├── xlsform-core/        # Core XLSForm skill
-│       │   └── references/      # XLSForm reference docs
-│       └── activity-logging/    # Activity logging skill
-│
-└── {agent-specific}/            # Other configured agents
-    ├── commands/                # (same commands, copied to each agent)
-    └── skills/                  # (same skills, copied to each agent)
+â”œâ”€â”€ survey.xlsx                  # Main XLSForm file (edit this!)
+â”œâ”€â”€ xlsform-ai.json              # Project configuration
+â”œâ”€â”€ activity_log.html            # Activity audit trail
+â”œâ”€â”€ package.json                 # npm scripts for watch/reload
+â”‚
+â”œâ”€â”€ scripts/                     # Utility scripts
+â”‚   â”œâ”€â”€ config.py                # Configuration management
+â”‚   â”œâ”€â”€ form_structure.py        # Form parsing and smart insertion
+â”‚   â”œâ”€â”€ add_questions.py         # Question addition (with smart insertion)
+â”‚   â”œâ”€â”€ log_activity.py          # Activity logging (with filterable UI)
+â”‚   â”œâ”€â”€ validate_form.py         # XLSForm validation
+â”‚   â”œâ”€â”€ parse_pdf.py             # PDF question extraction
+â”‚   â”œâ”€â”€ parse_docx.py            # Word question extraction
+â”‚   â”œâ”€â”€ parse_xlsx.py            # Excel question extraction
+â”‚   â”œâ”€â”€ xlwings_helper.py        # Excel editing with xlwings
+â”‚   â””â”€â”€ knowledge_base/          # Best practices and patterns
+â”‚       â””â”€â”€ data/                # Knowledge base documents
+â”‚
+â”œâ”€â”€ {agent-specific}/            # AI assistant configuration
+â”‚   â”œâ”€â”€ commands/                # Slash commands
+â”‚   â”‚   â”œâ”€â”€ xlsform-add.md       # Add questions
+â”‚   â”‚   â”œâ”€â”€ xlsform-import.md    # Import from files
+â”‚   â”‚   â”œâ”€â”€ xlsform-validate.md  # Validate form
+â”‚   â”‚   â”œâ”€â”€ xlsform-update.md    # Modify questions
+â”‚   â”‚   â”œâ”€â”€ xlsform-remove.md    # Delete questions
+â”‚   â”‚   â”œâ”€â”€ xlsform-move.md      # Reorder questions
+â”‚   â”‚   â””â”€â”€ xlsform-translate.md # Translate multilingual columns
+â”‚   â”‚
+â”‚   â””â”€â”€ skills/                  # XLSForm knowledge
+â”‚       â”œâ”€â”€ xlsform-core/        # Core XLSForm skill
+â”‚       â”‚   â””â”€â”€ references/      # XLSForm reference docs
+â”‚       â””â”€â”€ activity-logging/    # Activity logging skill
+â”‚
+â””â”€â”€ {agent-specific}/            # Other configured agents
+    â”œâ”€â”€ commands/                # (same commands, copied to each agent)
+    â””â”€â”€ skills/                  # (same skills, copied to each agent)
 ```
 
 **Note:** All configured agents receive the same commands and skills. The system ensures consistency across all agents.
@@ -486,7 +502,8 @@ Offline validator location:
 
 ---
 
-# Implementation Protocols
+# Implementation Protocols
+
 
 ## Universal Implementation Protocol
 
@@ -526,7 +543,8 @@ xlsx_path = Path(xlsform_file)
 if not xlsx_path.exists():
     raise FileNotFoundError(f"{xlsform_file} not found")
 
-# Check if file is open (for xlwings vs openpyxl decision)
+# Check if file is open (for xlwings vs openpyxl decision)
+
 ```
 
 **Why:** Determines whether to use xlwings (open file) or openpyxl (closed file).
@@ -552,7 +570,8 @@ from log_activity import ActivityLogger
 **Step 5: Use Appropriate Helper Functions**
 
 ```python
-# Example: Adding questions
+# Example: Adding questions
+
 questions = [
     {
         'type': 'text',
@@ -615,14 +634,16 @@ If `form_title` or `form_id` are missing after any XLSForm operation, the agent 
 **[ALERT] THIS STEP IS NOT OPTIONAL. YOU MUST LOG EVERY XLSFORM MODIFICATION.**
 
 ```python
-# Import these EVERY TIME (add to top of your script)
+# Import these EVERY TIME (add to top of your script)
+
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path('scripts')))
 
 from log_activity import ActivityLogger
 
-# After making changes to survey.xlsx, YOU MUST LOG:
+# After making changes to survey.xlsx, YOU MUST LOG:
+
 logger = ActivityLogger()
 logger.log_action(
     action_type="add_questions",  # Be specific: add_questions, update_questions, remove_questions, etc.
@@ -630,7 +651,8 @@ logger.log_action(
     details=f"Questions: {', '.join([q['name'] for q in questions])}\nRows: {row_numbers}"  # Full details
 )
 
-# Verify logging worked
+# Verify logging worked
+
 print(f"[OK] Activity logged to: activity_log.html")
 ```
 
@@ -708,7 +730,7 @@ print(f"  File: {xlsx_path}")
 3. [OK] Did I print the success message?
 4. [OK] Did I verify `activity_log.html` was updated?
 
-**If answer to ANY is NO → LOG FIRST, then complete.**
+**If answer to ANY is NO â†’ LOG FIRST, then complete.**
 
 ## Command-Specific Protocols
 
@@ -812,12 +834,15 @@ from add_questions import add_questions
 from log_activity import ActivityLogger
 
 # Extract questions from PDF
+
 questions = extract_questions('questionnaire.pdf', pages='1-10')
 
-# Add to form
+# Add to form
+
 add_questions('survey.xlsx', questions)
 
-# Log activity
+# Log activity
+
 logger = ActivityLogger()
 logger.log_action(
     action_type="import_pdf",
@@ -899,6 +924,7 @@ result = subprocess.run(
 )
 
 # Parse and report
+
 report = json.loads(result.stdout)
 odk_raw = report["details"]["odk_validate"].get("raw_output") or "none"
 print("summary:", report["summary"])
@@ -906,7 +932,8 @@ print("engines:", report["engines"])
 print("Exact ODK validator output:")
 print(odk_raw)
 
-# Log activity
+# Log activity
+
 logger = ActivityLogger()
 logger.log_action(
     action_type="validate",
@@ -936,7 +963,7 @@ logger.log_action(
 
 **Auto-fix capabilities:**
 - `/xlsform-validate --fix` - Automatically fix simple issues:
-  - Correct obvious typos in type (selct_one → select_one)
+  - Correct obvious typos in type (selct_one â†’ select_one)
   - Add missing constraint_message with generic text
   - Remove duplicate columns
 
@@ -973,18 +1000,23 @@ sys.path.insert(0, str(Path('scripts')))
 from form_structure import FormStructure
 from log_activity import ActivityLogger
 
-# Find question
+# Find question
+
 form = FormStructure(worksheet, header_row)
 question = form.get_question('age')
 
-# Update constraint
+# Update constraint
+
 question['constraint'] = '. >= 18 and . <= 100'
 question['constraint_message'] = 'Age must be 18-100'
 
-# Save changes
-# ... implementation depends on openpyxl/xlwings ...
+# Save changes
 
-# Log activity
+# ... implementation depends on openpyxl/xlwings ...
+
+
+# Log activity
+
 logger = ActivityLogger()
 logger.log_action(
     action_type="update_questions",
@@ -1033,11 +1065,13 @@ sys.path.insert(0, str(Path('scripts')))
 from form_structure import FormStructure
 from log_activity import ActivityLogger
 
-# Find question
+# Find question
+
 form = FormStructure(worksheet, header_row)
 question = form.get_question('old_question')
 
-# Check dependencies
+# Check dependencies
+
 dependencies = form.find_dependencies('old_question')
 if dependencies:
     print(f"WARNING: Question is used in:")
@@ -1045,10 +1079,12 @@ if dependencies:
         print(f"  - {dep}")
     # Get user confirmation
 
-# Remove question
+# Remove question
+
 worksheet.delete_rows(question['row'])
 
-# Log activity
+# Log activity
+
 logger = ActivityLogger()
 logger.log_action(
     action_type="remove_questions",
@@ -1100,15 +1136,18 @@ sys.path.insert(0, str(Path('scripts')))
 from form_structure import FormStructure, find_insertion_row
 from log_activity import ActivityLogger
 
-# Find question
+# Find question
+
 form = FormStructure(worksheet, header_row)
 question = form.get_question('name')
 
-# Find new location
+# Find new location
+
 insert_after_row = find_insertion_row(worksheet, 'demographics_end')
 worksheet.move_row(question['row'], insert_after_row)
 
-# Log activity
+# Log activity
+
 logger = ActivityLogger()
 logger.log_action(
     action_type="move_questions",
@@ -1177,7 +1216,8 @@ if not xlsx_path.exists():
 if not xlsx_path.is_file():
     raise ValueError(f"{xlsx_path} is not a file")
 
-# Check file permissions
+# Check file permissions
+
 if not os.access(xlsx_path, os.R_OK | os.W_OK):
     raise PermissionError(f"Cannot read/write {xlsx_path}")
 ```
@@ -1482,7 +1522,8 @@ logger.log_action(
 
 ---
 
-# Reference Documentation
+# Reference Documentation
+
 
 ## Configuration Reference
 
@@ -1836,42 +1877,42 @@ label: Age of ${respondent_name}
 | Sub-Agent | Auto-Activate Threshold | Capabilities | Coordination |
 |-----------|------------------------|--------------|--------------|
 | **validation-agent** | 100+ questions | - Duplicate detection<br>- Type validation<br>- Choice list verification<br>- Best practices check | Used after all modifications<br>- Part of import/export workflows |
-| **import-agent** | 10+ pages or 1MB+ | - PDF parsing<br>- Word extraction<br>- Excel reading<br>- Type detection | Parallel chunks → schema-agent → validation-agent |
-| **export-agent** | Manual only | - XForm XML<br>- PyXForm JSON<br>- ODK format<br>- Kobo format<br>- CommCare format | schema-agent → export-agent |
+| **import-agent** | 10+ pages or 1MB+ | - PDF parsing<br>- Word extraction<br>- Excel reading<br>- Type detection | Parallel chunks â†’ schema-agent â†’ validation-agent |
+| **export-agent** | Manual only | - XForm XML<br>- PyXForm JSON<br>- ODK format<br>- Kobo format<br>- CommCare format | schema-agent â†’ export-agent |
 | **schema-agent** | 50+ questions | - Structure analysis<br>- Dependency mapping<br>- Optimization suggestions<br>- Circular reference detection | Analyzes before/after modifications<br>- Validates structure integrity |
-| **translation-agent** | Manual only | - Multi-language support<br>- Cultural adaptation<br>- Translation validation<br>- Language workflows | translation-agent → validation-agent |
+| **translation-agent** | Manual only | - Multi-language support<br>- Cultural adaptation<br>- Translation validation<br>- Language workflows | translation-agent â†’ validation-agent |
 
 ### Coordination Patterns
 
 **Import Workflow:**
 ```
 import-agent (parallel chunks)
-    ↓
+    â†“
 schema-agent (analyze structure)
-    ↓
+    â†“
 validation-agent (validate all)
 ```
 
 **Export Workflow:**
 ```
 schema-agent (analyze)
-    ↓
+    â†“
 export-agent (convert)
 ```
 
 **Large Edit Workflow:**
 ```
 validation-agent (parallel chunks)
-    ↓
+    â†“
 merge results
-    ↓
+    â†“
 validation-agent (final validation)
 ```
 
 **Translation Workflow:**
 ```
 translation-agent (translate)
-    ↓
+    â†“
 validation-agent (validate all languages)
 ```
 
@@ -1918,7 +1959,7 @@ validation-agent (validate all languages)
 - Start with easy questions (name, age)
 - Group related questions together
 - Put sensitive questions later
-- Use logical flow (demographics → main questions → wrap-up)
+- Use logical flow (demographics â†’ main questions â†’ wrap-up)
 
 **Repeats:**
 - Use `begin_repeat`/`end_repeat` for repeated items
@@ -1980,13 +2021,14 @@ validation-agent (validate all languages)
 
 ---
 
-# Advanced Patterns
+# Advanced Patterns
+
 
 ## Complex Form Patterns
 
 ### Pattern 1: Cascading Select
 
-**Use case:** Country → State → City selection
+**Use case:** Country â†’ State â†’ City selection
 
 **Implementation:**
 ```xlsform
@@ -2044,13 +2086,16 @@ type      name        label
 text      name        What is your name?
 text      age_label   Age
 
-# In the label column for age_label:
-# Use: Age of ${name}
+# In the label column for age_label:
+
+# Use: Age of ${name}
+
 ```
 
 **Advanced: Multiple variables**
 ```xlsform
-# label: Age of ${name} (${relationship_to_head})
+# label: Age of ${name} (${relationship_to_head})
+
 ```
 
 **Key points:**
@@ -2066,9 +2111,9 @@ text      age_label   Age
 
 **Implementation:**
 ```xlsform
-type           name      label::english    label::español     label::français
-text           name      What is your name? ¿Cómo te llamas?  Quel est votre nom?
-select_one     gender    What is your gender? ¿Cuál es tu género? Quel est votre genre?
+type           name      label::english    label::espaÃ±ol     label::franÃ§ais
+text           name      What is your name? Â¿CÃ³mo te llamas?  Quel est votre nom?
+select_one     gender    What is your gender? Â¿CuÃ¡l es tu gÃ©nero? Quel est votre genre?
 ```
 
 **Settings sheet:**
@@ -2139,13 +2184,13 @@ country    *file_name=countries.csv*
 ### Decision Tree: Parallel vs Sequential
 
 ```
-Is task size ≥ threshold?
-├─ Yes → Use automatic parallel processing
-│   ├─ 100+ questions → Parallel validation
-│   ├─ 10+ pages → Parallel import
-│   └─ 1MB+ file → Parallel parsing
-│
-└─ No → Use sequential processing (faster startup)
+Is task size â‰¥ threshold?
+â”œâ”€ Yes â†’ Use automatic parallel processing
+â”‚   â”œâ”€ 100+ questions â†’ Parallel validation
+â”‚   â”œâ”€ 10+ pages â†’ Parallel import
+â”‚   â””â”€ 1MB+ file â†’ Parallel parsing
+â”‚
+â””â”€ No â†’ Use sequential processing (faster startup)
 ```
 
 ### Manual Override
@@ -2248,10 +2293,12 @@ central.project_id = 1
 
 **Upload:**
 ```bash
-# Manual upload
+# Manual upload
+
 python scripts/deploy_odk.py survey.xlsx
 
-# Auto-upload with watch mode
+# Auto-upload with watch mode
+
 npm run watch
 ```
 
@@ -2285,7 +2332,8 @@ npm run watch
 **Pre-commit hook:**
 ```bash
 #!/bin/bash
-# .git/hooks/pre-commit
+# .git/hooks/pre-commit
+
 
 python scripts/validate_form.py survey.xlsx
 if [ $? -ne 0 ]; then
@@ -2347,7 +2395,8 @@ ls -la survey.xlsx
 
 **Step 4: Check Activity Log**
 ```bash
-# Open activity_log.html in browser
+# Open activity_log.html in browser
+
 ```
 - Review recent changes
 - Identify what caused issue
@@ -2378,7 +2427,7 @@ ls -la survey.xlsx
 - **Issue:** Duplicate names
 - **Solution:** Rename duplicates with descriptive names
 - **Issue:** Invalid types
-- **Solution:** Fix typos (selct_one → select_one)
+- **Solution:** Fix typos (selct_one â†’ select_one)
 - **Issue:** Missing choice lists
 - **Solution:** Create choice list or fix list_name typo
 
@@ -2500,7 +2549,8 @@ ls -la survey.xlsx
 
 ---
 
-# Appendices
+# Appendices
+
 
 ## Appendix A: Command Syntax Reference
 
@@ -2606,20 +2656,20 @@ All agents receive the same structure during init:
 
 ```
 {agent}/
-├── commands/           # Slash commands (same for all agents)
-│   ├── xlsform-add.md
-│   ├── xlsform-import.md
-│   ├── xlsform-validate.md
-│   ├── xlsform-update.md
-│   ├── xlsform-remove.md
-│   ├── xlsform-move.md
-│   └── xlsform-translate.md
-│
-└── skills/             # Knowledge packages (same for all agents)
-    ├── xlsform-core/
-    │   └── SKILL.md
-    └── activity-logging/
-        └── SKILL.md
+â”œâ”€â”€ commands/           # Slash commands (same for all agents)
+â”‚   â”œâ”€â”€ xlsform-add.md
+â”‚   â”œâ”€â”€ xlsform-import.md
+â”‚   â”œâ”€â”€ xlsform-validate.md
+â”‚   â”œâ”€â”€ xlsform-update.md
+â”‚   â”œâ”€â”€ xlsform-remove.md
+â”‚   â”œâ”€â”€ xlsform-move.md
+â”‚   â””â”€â”€ xlsform-translate.md
+â”‚
+â””â”€â”€ skills/             # Knowledge packages (same for all agents)
+    â”œâ”€â”€ xlsform-core/
+    â”‚   â””â”€â”€ SKILL.md
+    â””â”€â”€ activity-logging/
+        â””â”€â”€ SKILL.md
 ```
 
 ## Appendix D: Glossary
@@ -2652,7 +2702,8 @@ All agents receive the same structure during init:
 
 ---
 
-# Project-Specific Notes
+# Project-Specific Notes
+
 
 Add any project-specific notes here:
 
@@ -2670,3 +2721,6 @@ ARCED International is a Global Research & Learning Studio. We partner with inst
 With 12+ years of evidence-led execution, serving 40+ countries, and impacting 5M+ lives, we develop purpose-built platforms that deliver clarity to research and learning teams.
 
 Learn more at: https://arced-international.com
+
+
+

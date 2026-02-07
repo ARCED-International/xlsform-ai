@@ -1,4 +1,4 @@
----
+﻿---
 description: Remove questions or choice lists from XLSForm. Use this to delete questions from the survey sheet, remove choice lists from the choices sheet, or clean up unused items.
 arguments:
   - name: target
@@ -9,7 +9,17 @@ arguments:
     required: false
 ---
 
-# Remove XLSForm Questions or Choice Lists
+# Remove XLSForm Questions or Choice Lists
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## Implementation Protocol
 
@@ -238,10 +248,15 @@ Before removing, verify:
 Example:
 ```python
 # Find row with name = target in column 2
+
 # Delete that row
+
 # Check if question type was select_one/select_multiple
+
 # If yes, check if choice list is now unused
+
 # If unused, offer to remove choice list
+
 ```
 
 ### Removing a Choice List
@@ -253,9 +268,13 @@ Example:
 Example:
 ```python
 # Find all rows in choices sheet where list_name = target
+
 # Delete all those rows
+
 # Check survey sheet for questions using this list_name
+
 # Warn about invalid questions
+
 ```
 
 ### Safe Removal Pattern
@@ -458,3 +477,6 @@ SUCCESS: Removed: 3 questions
   Total rows removed: 3
   Choice lists removed: options (5 choices)
 ```
+
+
+

@@ -1,4 +1,4 @@
----
+﻿---
 description: Safely revert XLSForm changes using immutable snapshots. Use this command to view history, create checkpoints, undo the last change, or restore a specific revision.
 arguments:
   - name: action
@@ -15,7 +15,17 @@ arguments:
     required: false
 ---
 
-# Revert XLSForm Safely
+# Revert XLSForm Safely
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## Implementation Protocol
 
@@ -95,3 +105,6 @@ python scripts/form_history.py restore --revision 20260207121001-ab12cd34
 - Keep the workbook open if the user is observing changes live.
 - Never use destructive git commands for XLSForm rollback.
 - If restore fails, report error clearly and stop before further edits.
+
+
+

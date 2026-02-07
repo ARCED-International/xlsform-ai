@@ -1,4 +1,4 @@
----
+﻿---
 description: Validate an XLSForm for errors, warnings, and best practices. Use this command to check for duplicate names, missing choice lists, invalid types, syntax errors, structural issues, and get suggestions for improvements.
 arguments:
   - name: fix
@@ -6,7 +6,17 @@ arguments:
     required: false
 ---
 
-# Validate XLSForm
+# Validate XLSForm
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## Implementation Protocol
 
@@ -191,8 +201,11 @@ These MUST be fixed for the form to work:
 #### A. Duplicate Question Names
 ```python
 # Check survey sheet 'name' column for duplicates
+
 # Report: Row numbers and duplicate names
+
 # Severity: ERROR
+
 ```
 
 Example output:
@@ -208,8 +221,11 @@ Fix: Rename the duplicates (e.g., age -> age_2, location -> household_location)
 #### B. Duplicate Choice Names in Same List
 ```python
 # Check choices sheet for duplicate name values within same list_name
+
 # Report: list_name and duplicate choice names
+
 # Severity: ERROR
+
 ```
 
 Example output:
@@ -224,8 +240,11 @@ Fix: Rename one of the duplicates
 #### C. Missing Choice Lists
 ```python
 # For each select_one/select_multiple, verify list_name exists in choices
+
 # Report: Question row and missing list_name
+
 # Severity: ERROR
+
 ```
 
 Example output:
@@ -241,8 +260,11 @@ Fix: Create the missing choice lists or fix the list_name typo
 #### D. Invalid Question Types
 ```python
 # Check all type values against valid XLSForm types
+
 # Report: Invalid types and row numbers
+
 # Severity: ERROR
+
 ```
 
 Example output:
@@ -258,8 +280,11 @@ Fix: Correct the typos in the type column
 #### E. Invalid Name Syntax
 ```python
 # Check name column starts with letter/underscore
+
 # Check for invalid characters
+
 # Severity: ERROR
+
 ```
 
 Example output:
@@ -275,9 +300,13 @@ Fix: Use 'first_question' and 'respondent_name' instead
 #### F. Unbalanced Groups/Repeats
 ```python
 # Count begin_group vs end_group
+
 # Count begin_repeat vs end_repeat
+
 # Check proper nesting
+
 # Severity: ERROR
+
 ```
 
 Example output:
@@ -293,7 +322,9 @@ Fix: Add the missing end_group and end_repeat rows
 #### G. Spaces in select_multiple Choice Names
 ```python
 # For select_multiple questions, check choice names for spaces
+
 # Severity: ERROR
+
 ```
 
 Example output:
@@ -312,7 +343,9 @@ These SHOULD be fixed to avoid issues:
 #### A. Missing Constraint Messages
 ```python
 # Check for constraints without constraint_message
+
 # Severity: WARNING
+
 ```
 
 Example output:
@@ -327,13 +360,17 @@ Recommendation: Add "Must be 18 or older" as constraint_message
 #### B. Missing Required Messages
 ```python
 # Check for required=yes without required_message
+
 # Severity: WARNING
+
 ```
 
 #### C. Labels Missing for begin group
 ```python
 # Check for begin_group without labels
+
 # Severity: WARNING
+
 ```
 
 Example output:
@@ -348,9 +385,13 @@ Recommendation: Add a descriptive label like "Demographic Information"
 #### D. Suspicious Formulas
 ```python
 # Check for common formula errors
+
 # - Missing ${} in relevant/constraint
+
 # - Wrong syntax in calculations
+
 # Severity: WARNING
+
 ```
 
 Example output:
@@ -398,6 +439,7 @@ Expect the REPL output from `scripts/validate_form.py` to be structured like thi
 
 ```
 # XLSFORM_VALIDATION_RESULT
+
 valid: false
 file: C:\path\survey.xlsx
 timestamp_utc: 2026-02-07T12:00:00+00:00
@@ -472,6 +514,18 @@ When user provides `--fix` flag or asks to fix issues:
    - Relevance/constraint formulas (too complex)
    - Group/repeat structure (needs manual review)
    - Choice list decisions (needs user input)
+
+### Mandatory Decision Prompt for Non-Blocking Conflicts
+
+If warnings require a modeling choice, do not choose automatically.
+Example: imported names with numeric suffix warnings (`q308_phq1`, `fiq_1`).
+
+Ask the user to choose in REPL:
+1. Keep imported names as-is
+2. Rename all flagged names semantically
+3. Rename only selected fields (user specifies)
+
+Wait for user selection before applying any renaming.
 
 ## Example Usage
 
@@ -551,3 +605,6 @@ Mention related commands:
 - "After fixing validation errors, use /xlsform-add to add missing questions"
 - "Use /xlsform-update to fix invalid types"
 - "Use /xlsform-remove to delete duplicate questions"
+
+
+

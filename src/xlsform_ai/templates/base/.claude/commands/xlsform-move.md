@@ -1,4 +1,4 @@
----
+﻿---
 description: Move or reorder XLSForm questions. Use this to move questions to different positions, move questions into/out of groups or repeats, or reorder questions within a form.
 arguments:
   - name: question
@@ -12,7 +12,17 @@ arguments:
     required: false
 ---
 
-# Move XLSForm Questions
+# Move XLSForm Questions
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
@@ -90,7 +100,7 @@ Group structure:
   begin group demographics (row 5)
     text name (row 6)
     integer age (row 7)
-    ← income_question will go here
+    â† income_question will go here
   end group demographics (row 8)
 
 Action: Insert at row 8, shift end_group down
@@ -113,7 +123,8 @@ Before moving, verify:
 **IMPORTANT:** Use xlwings helper when file is open in Excel:
 
 ```bash
-# For files open in Excel (recommended - preserves formatting)
+# For files open in Excel (recommended - preserves formatting)
+
 python scripts/xlwings_helper.py move --question <name> --location <target>
 ```
 
@@ -196,7 +207,7 @@ Group after:
   begin group (row 5)
     name (row 6)
     age (row 7)
-    income (row 8) ← moved here
+    income (row 8) â† moved here
   end group (row 9)
 ```
 
@@ -223,7 +234,7 @@ Result:
   begin group demographics (row 5)
     name (row 6)
   end group (row 7)
-  phone (row 8) ← moved here, outside groups
+  phone (row 8) â† moved here, outside groups
   begin group contact_info (row 9)
     (empty or shifts)
   end group (row 10)
@@ -255,7 +266,7 @@ Result:
 
   New order:
     Row 2: first_name
-    Row 3: age_question ← moved here
+    Row 3: age_question â† moved here
     Row 4: last_name
     ...
 ```
@@ -325,7 +336,7 @@ New group structure:
   begin group demographics (row 5)
     text name (row 6)
     integer age (row 7)
-    text income (row 8) ← moved here
+    text income (row 8) â† moved here
   end group (row 9)
 ```
 
@@ -451,3 +462,6 @@ Action: Removing empty contact_info group.
 
   Empty group removed: contact_info
 ```
+
+
+

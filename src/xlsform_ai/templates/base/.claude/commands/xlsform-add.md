@@ -1,4 +1,4 @@
----
+﻿---
 description: Add questions to an XLSForm survey. Use this command to add new questions, specify question types (text, select_one, select_multiple, geopoint, integer, decimal, date, etc.), create choice lists, add multiple questions at once, or add questions with constraints and relevance.
 arguments:
   - name: questions
@@ -15,7 +15,17 @@ arguments:
     required: false
 ---
 
-# Add XLSForm Questions
+# Add XLSForm Questions
+
+## Conflict Decision Protocol
+
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- Present 2-4 REPL options and ask the user to choose before proceeding.
+- Put the recommended option first and include a one-line tradeoff for each option.
+- Wait for explicit user selection before applying changes.
+- Only auto-decide when the user explicitly asked for automatic decisions.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+
 
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
@@ -224,15 +234,15 @@ label: <choice display text>
 
 When type is not specified, detect from description:
 
-- **"select one" / "choose one" / "radio"** → `select_one`
-- **"select multiple" / "check all that apply" / "checkbox"** → `select_multiple`
-- **"enter name" / "write" / "text"** → `text`
-- **"age" / "number" / "how many"** → `integer`
-- **"weight" / "height" / "price"** → `decimal`
-- **"date" / "when"** → `date`
-- **"location" / "GPS" / "coordinates"** → `geopoint`
-- **"photo" / "picture" / "image"** → `image`
-- **"yes/no" / "true or false"** → `select_one yes_no` (reuse if exists)
+- **"select one" / "choose one" / "radio"** â†’ `select_one`
+- **"select multiple" / "check all that apply" / "checkbox"** â†’ `select_multiple`
+- **"enter name" / "write" / "text"** â†’ `text`
+- **"age" / "number" / "how many"** â†’ `integer`
+- **"weight" / "height" / "price"** â†’ `decimal`
+- **"date" / "when"** â†’ `date`
+- **"location" / "GPS" / "coordinates"** â†’ `geopoint`
+- **"photo" / "picture" / "image"** â†’ `image`
+- **"yes/no" / "true or false"** â†’ `select_one yes_no` (reuse if exists)
 
 ### Name Generation
 
@@ -243,10 +253,10 @@ When user doesn't specify a name:
 3. Ensure uniqueness by adding number suffix if needed
 
 **Examples:**
-- "What is your name?" → `respondent_name`
-- "How old are you?" → `age` or `respondent_age`
-- "Do you like pizza?" → `likes_pizza`
-- "What is your gender?" → `gender`
+- "What is your name?" â†’ `respondent_name`
+- "How old are you?" â†’ `age` or `respondent_age`
+- "Do you like pizza?" â†’ `likes_pizza`
+- "What is your gender?" â†’ `gender`
 
 ### Choice List Handling
 
@@ -364,9 +374,9 @@ Added successfully! Both questions are now inside the household_member repeat.
 ### Adding to a Group or Repeat
 
 When user specifies a location:
-- "in the demographics group" → find begin group, add inside
-- "after the name question" → find name question, add after it
-- "in the household repeat" → find begin repeat, add inside
+- "in the demographics group" â†’ find begin group, add inside
+- "after the name question" â†’ find name question, add after it
+- "in the household repeat" â†’ find begin repeat, add inside
 
 ### Importing from Files
 
@@ -397,16 +407,16 @@ Should I add all these questions? (You can specify which ones to include)
 ### Conditional Questions
 
 When user implies conditionality:
-- "Add age question if they're 18+" → add with `relevant: ${previous} >= 18`
-- "Only show if they answered yes to previous" → detect from context
+- "Add age question if they're 18+" â†’ add with `relevant: ${previous} >= 18`
+- "Only show if they answered yes to previous" â†’ detect from context
 
 Extract the condition and add to `relevant` column.
 
 ### Questions with Constraints
 
 When user mentions limits:
-- "Add age question (must be 0-120)" → add with constraint
-- "Enter percentage (0-100)" → add with constraint
+- "Add age question (must be 0-120)" â†’ add with constraint
+- "Enter percentage (0-100)" â†’ add with constraint
 
 Extract the constraint and:
 1. Add to `constraint` column
@@ -452,3 +462,6 @@ Did you mean:
 
 Please confirm the correction.
 ```
+
+
+
