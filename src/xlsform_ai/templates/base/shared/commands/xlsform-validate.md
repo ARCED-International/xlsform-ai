@@ -47,6 +47,7 @@ Consult these files for patterns and best practices before validation:
 
 ```bash
 python scripts/validate_form.py survey.xlsx
+python scripts/validate_form.py survey.xlsx --json
 ```
 
 This uses:
@@ -54,11 +55,21 @@ This uses:
 - XLSForm to XForm conversion (pyxform)
 - Offline ODK engine at `tools/ODK-Validate.jar` (if available)
 
-For machine-readable output:
+The `--json` output includes detailed engine results and exact ODK output at:
+- `details.odk_validate.raw_output`
 
-```bash
-python scripts/validate_form.py survey.xlsx --json
-```
+### 2.1 Final User-Facing Output (Mandatory)
+
+The user does not see script stdout directly. In your final assistant response, always include:
+
+1. A validation summary table with status tags:
+   - `[PASS]` for passed checks
+   - `[WARN]` for warnings
+   - `[FAIL]` for errors
+2. An engine status table (local + ODK) including status, ran, and exit code
+3. A verbatim fenced block titled `Exact ODK Validator Output` from `details.odk_validate.raw_output`
+
+If ODK output is empty, print `none` and explicitly report the `odk_validate.status` reason.
 
 If you need programmatic usage in Python, prefer the explicit local validator function:
 
@@ -419,6 +430,30 @@ If validation dependencies are unavailable, status may show:
 
 Treat these as warnings and recommend running `xlsform-ai init --force` to refresh tooling.
 
+### Final Assistant Response Template (Use This Structure)
+
+````markdown
+## Validation Summary
+
+| Check | Status | Count | Notes |
+| --- | --- | ---: | --- |
+| Errors | [FAIL] | <n> | Blocking issues |
+| Warnings | [WARN] | <n> | Review recommended |
+| Suggestions | [PASS] | <n> | Best-practice improvements |
+
+## Engine Status
+
+| Engine | Status | Ran | Exit Code | Notes |
+| --- | --- | --- | --- | --- |
+| local | <passed/failed> | true | n/a | Local structural checks |
+| odk_validate | <status> | <true/false> | <code or n/a> | ODK jar validation |
+
+## Exact ODK Validator Output
+```text
+<paste report.details.odk_validate.raw_output verbatim, or "none">
+```
+````
+
 ## Auto-Fix Mode
 
 When user provides `--fix` flag or asks to fix issues:
@@ -440,39 +475,30 @@ When user provides `--fix` flag or asks to fix issues:
 
 ## Example Usage
 
+User: `/xlsform-validate`
+
+Your response should be rendered as:
+
+| Check | Status | Count | Notes |
+| --- | --- | ---: | --- |
+| Errors | [FAIL] | 2 | Duplicate name + missing choice list |
+| Warnings | [WARN] | 1 | ODK warning present |
+| Suggestions | [PASS] | 0 | none |
+
+| Engine | Status | Ran | Exit Code | Notes |
+| --- | --- | --- | --- | --- |
+| local | failed | true | n/a | Structural checks failed |
+| odk_validate | completed | true | 1 | Jar executed |
+
+Exact ODK Validator Output:
+```text
+<verbatim output from details.odk_validate.raw_output>
 ```
-User: /xlsform-validate
-
-Your response:
-# XLSFORM_VALIDATION_RESULT
-valid: true
-summary:
-  errors: 0
-  warnings: 0
-  suggestions: 0
-engines:
-  local.status: passed
-  odk_validate.status: completed
-
-User: /xlsform-validate
-
-Your response:
-# XLSFORM_VALIDATION_RESULT
-valid: false
-summary:
-  errors: 2
-  warnings: 1
-errors:
-  - Duplicate question name 'age' at rows 8 and 25
-  - Missing choice list 'fruits' referenced at survey row 15
-warnings:
-  - [odk] Warning: ...
 
 Fix options:
-1. Rename row 25 to 'age_follow_up'
-2. Create the 'fruits' list in choices
-3. Re-run /xlsform-validate after updates
-```
+1. Rename row 25 to `age_follow_up`
+2. Create the `fruits` list in choices
+3. Re-run `/xlsform-validate` after updates
 
 ## Special Cases
 

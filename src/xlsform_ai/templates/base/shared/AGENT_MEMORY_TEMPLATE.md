@@ -654,16 +654,23 @@ print(f"[OK] Activity logged to: activity_log.html")
 **Step 8: Validate Changes**
 
 ```python
+import json
 import subprocess
 import sys
 
 result = subprocess.run(
-    [sys.executable, "scripts/validate_form.py", str(xlsx_path)],
+    [sys.executable, "scripts/validate_form.py", str(xlsx_path), "--json"],
     capture_output=True,
     text=True,
     check=False
 )
-print(result.stdout)  # Contains # XLSFORM_VALIDATION_RESULT structured output
+report = json.loads(result.stdout)
+odk_raw = report["details"]["odk_validate"].get("raw_output") or "none"
+
+print("Validation summary:", report["summary"])
+print("ODK status:", report["engines"]["odk_validate"]["status"])
+print("Exact ODK validator output (verbatim):")
+print(odk_raw)
 
 if result.returncode != 0:
     print("WARNING: validation reported blocking errors")
@@ -840,19 +847,29 @@ logger.log_action(
 **Protocol:**
 
 1. Load skills: `/skill:xlsform-core`, `/skill:activity-logging`
-2. Run: `python scripts/validate_form.py survey.xlsx`
-3. Review structured output block `# XLSFORM_VALIDATION_RESULT`
+2. Run: `python scripts/validate_form.py survey.xlsx --json`
+3. Parse JSON report, especially:
+   - `summary`
+   - `engines.local`
+   - `engines.odk_validate`
+   - `details.odk_validate.raw_output`
 4. Report results:
-    - Critical errors (must fix)
-    - Warnings (should fix)
-    - Suggestions (nice to have)
+   - Structured summary table with status tags: `[PASS]`, `[WARN]`, `[FAIL]`
+   - Engine status table (local + ODK)
+   - Exact ODK validator output in a verbatim `text` block
 5. Log action: `logger.log_action(action_type="validate", ...)`
+
+**Required final response shape:**
+- `Validation Summary` table (errors/warnings/suggestions)
+- `Engine Status` table (local + odk_validate)
+- `Exact ODK Validator Output` fenced `text` block with exact text from `details.odk_validate.raw_output` (or `none`)
 
 **Example:**
 
 ```python
 import sys
 from pathlib import Path
+import json
 sys.path.insert(0, str(Path('scripts')))
 
 from log_activity import ActivityLogger
@@ -860,14 +877,19 @@ import subprocess
 import sys
 
 result = subprocess.run(
-    [sys.executable, "scripts/validate_form.py", "survey.xlsx"],
+    [sys.executable, "scripts/validate_form.py", "survey.xlsx", "--json"],
     capture_output=True,
     text=True,
     check=False
 )
 
-# Report results
-print(result.stdout)
+# Parse and report
+report = json.loads(result.stdout)
+odk_raw = report["details"]["odk_validate"].get("raw_output") or "none"
+print("summary:", report["summary"])
+print("engines:", report["engines"])
+print("Exact ODK validator output:")
+print(odk_raw)
 
 # Log activity
 logger = ActivityLogger()
@@ -1166,17 +1188,21 @@ if not os.access(xlsx_path, os.R_OK | os.W_OK):
 
 **Detection:**
 ```python
+import json
 import subprocess
 import sys
 
 result = subprocess.run(
-    [sys.executable, "scripts/validate_form.py", "survey.xlsx"],
+    [sys.executable, "scripts/validate_form.py", "survey.xlsx", "--json"],
     capture_output=True,
     text=True,
     check=False
 )
 
-print(result.stdout)  # Structured block starts with # XLSFORM_VALIDATION_RESULT
+report = json.loads(result.stdout)
+print(report["summary"])
+print("Exact ODK validator output:")
+print(report["details"]["odk_validate"].get("raw_output") or "none")
 if result.returncode != 0:
     print("CRITICAL ERRORS FOUND")
     # Do not proceed with deployment
@@ -1582,6 +1608,8 @@ add_questions('survey.xlsx', questions)
 - JSON output option: `python scripts/validate_form.py survey.xlsx --json`
 - Offline path: XLSForm -> XForm (pyxform) -> `tools/ODK-Validate.jar`
 - Common engine statuses: `completed`, `jar_not_found`, `java_not_found`, `pyxform_not_found`, `xform_conversion_failed`
+- Exact ODK output path in JSON: `details.odk_validate.raw_output`
+- For user-facing responses, present summary and engine tables plus verbatim ODK output block
 
 **Programmatic Function:**
 - `validate_xlsxform()` returns `(errors, warnings, suggestions)` for local checks

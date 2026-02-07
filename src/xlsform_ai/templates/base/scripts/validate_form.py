@@ -345,6 +345,7 @@ def run_odk_validate(
         "errors": [],
         "warnings": [],
         "info": [],
+        "raw_output": "",
         "command": None,
         "xform_path": None,
     }
@@ -407,6 +408,7 @@ def run_odk_validate(
             combined_output = "\n".join(
                 part for part in [proc.stdout.strip(), proc.stderr.strip()] if part
             )
+            result["raw_output"] = combined_output
             parsed_errors, parsed_warnings, parsed_info = _parse_odk_output(combined_output)
 
             result["ran"] = True
@@ -469,6 +471,7 @@ def run_odk_validate(
     combined_output = "\n".join(
         part for part in [proc.stdout.strip(), proc.stderr.strip()] if part
     )
+    result["raw_output"] = combined_output
     parsed_errors, parsed_warnings, parsed_info = _parse_odk_output(combined_output)
 
     result["ran"] = True
@@ -540,6 +543,7 @@ def build_validation_report(
                 "errors": odk_result.get("errors", []),
                 "warnings": odk_result.get("warnings", []),
                 "info": odk_result.get("info", []),
+                "raw_output": odk_result.get("raw_output", ""),
                 "command": odk_result.get("command"),
                 "xform_path": odk_result.get("xform_path"),
             },
@@ -650,6 +654,7 @@ def main() -> None:
             "errors": [],
             "warnings": [],
             "info": [],
+            "raw_output": "",
             "command": None,
         }
     else:

@@ -96,6 +96,31 @@ suggestions:
 
 Use `python scripts/validate_form.py survey.xlsx --json` when machine-readable output is required.
 
+## User-Facing Response Requirements
+
+Users do not see script stdout directly. Your final response must include:
+
+1. A structured summary table with status icons:
+   - `[PASS]` for passed checks
+   - `[WARN]` for warnings
+   - `[FAIL]` for errors
+
+2. Engine status table (local + ODK), including:
+   - status
+   - ran
+   - exit code
+   - jar path when available
+
+3. **Exact ODK validator output (verbatim)** in a fenced `text` block.
+   - Read from JSON output path: `report.details.odk_validate.raw_output`
+   - Do not paraphrase or rewrite this block
+   - If empty, print `none` and explain using `odk_validate.status`
+
+Recommended flow:
+- Run `python scripts/validate_form.py survey.xlsx --json`
+- Parse JSON
+- Render user-facing tables and verbatim ODK block in assistant response
+
 ## Common Issues to Check
 
 ### Syntax Errors
