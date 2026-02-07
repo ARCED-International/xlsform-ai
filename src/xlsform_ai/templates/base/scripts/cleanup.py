@@ -16,7 +16,7 @@ if RICH_AVAILABLE:
     console = Console()
 
 
-def cleanup_project(project_dir=None, dry_run=False):
+def cleanup_project(project_dir=None, dry_run=False, require_confirm=True):
     """Remove XLSForm AI configuration files, keeping output files.
 
     Args:
@@ -33,11 +33,11 @@ def cleanup_project(project_dir=None, dry_run=False):
         ".claude",           # Claude Code configuration
         "scripts",           # Helper scripts
         "package.json",      # npm scripts
-        "xlsform-ai.json",   # Project configuration
     ]
 
     # Files to keep (output files)
     to_keep = [
+        "xlsform-ai.json",  # Project configuration
         "survey.xlsx",      # Main output file
         "*.xlsx",           # Any Excel files
         "*.html",           # Activity log files
@@ -46,6 +46,40 @@ def cleanup_project(project_dir=None, dry_run=False):
     removed = []
     kept = []
     errors = []
+    planned = []
+
+    for item in to_remove:
+        item_path = project_dir / item
+        if item_path.exists():
+            planned.append(item_path)
+
+    if not dry_run and require_confirm:
+        if planned:
+            print("\nCleanup will remove these files/directories:")
+            for item_path in planned:
+                print(f"  - {item_path}")
+            print("\nNote: `xlsform-ai init` will reinstall these files.")
+            confirm = input("Continue with cleanup? (y/N): ").strip().lower()
+            if confirm not in ("y", "yes"):
+                return {
+                    "removed": [],
+                    "kept": [],
+                    "log_files": [],
+                    "errors": [],
+                    "dry_run": dry_run,
+                    "planned": [str(p) for p in planned],
+                    "cancelled": True
+                }
+        else:
+            return {
+                "removed": [],
+                "kept": [],
+                "log_files": [],
+                "errors": [],
+                "dry_run": dry_run,
+                "planned": [],
+                "cancelled": False
+            }
 
     for item in to_remove:
         item_path = project_dir / item
@@ -94,7 +128,9 @@ def cleanup_project(project_dir=None, dry_run=False):
         "kept": kept,
         "log_files": log_files,
         "errors": errors,
-        "dry_run": dry_run
+        "dry_run": dry_run,
+        "planned": [str(p) for p in planned],
+        "cancelled": False
     }
 
 
@@ -114,6 +150,11 @@ def print_cleanup_rich(result):
     """Print results using rich formatting."""
     from rich.tree import Tree
     from rich import box
+
+    if result.get("cancelled"):
+        console.print("\n[yellow][WARNING] Cleanup cancelled by user.[/yellow]")
+        console.print("[yellow]No files were removed.[/yellow]")
+        return
 
     # Create main tree
     tree = Tree("🧹 Cleanup Summary", style="bold cyan")
@@ -169,6 +210,7 @@ def print_cleanup_rich(result):
                 f"  [cyan]xlsform-ai init --here[/cyan] [dim](to reuse same directory)[/dim]\n"
                 f"  [cyan]xlsform-ai init <new-project>[/cyan] [dim](to create new project)[/dim]\n\n"
                 f"[bold cyan][INFO] Note:[/bold cyan]\n"
+                f"  [dim]init will reinstall scripts, commands, and other project files.[/dim]\n"
                 f"  [dim]Your activity logs were preserved and will be reused on reinstall.[/dim]\n"
                 f"  [dim]Your XLSForm files (*.xlsx) are safe and ready to use.[/dim]",
                 title="[bold green]Next Steps[/bold green]",
@@ -185,6 +227,10 @@ def print_cleanup_rich(result):
 
 def print_cleanup_simple(result):
     """Print results with simple formatting (fallback)."""
+    if result.get("cancelled"):
+        print("\n[!] Cleanup cancelled by user. No files were removed.")
+        return
+
     mode = "DRY RUN - " if result["dry_run"] else ""
 
     print(f"\n{mode}Cleanup Summary")
@@ -216,6 +262,7 @@ def print_cleanup_simple(result):
         print("\n[OK] Cleanup completed successfully!")
         print("\nTo reinstall XLSForm AI:")
         print("  xlsform-ai init --here")
+        print("\nNote: init will reinstall scripts, commands, and other project files.")
 
 
 if __name__ == "__main__":

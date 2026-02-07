@@ -1,6 +1,6 @@
 {
   "name": "xlsform-ai-project",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "XLSForm project with AI-assisted development",
   "scripts": {
     "watch": "nodemon --watch survey.xlsx --exec \"npm run upload && npm run reload\"",
@@ -12,6 +12,6 @@
     "nodemon": "^3.0.0"
   },
   "keywords": ["xlsform", "odk", "survey"],
-  "author": "",
+  "author": "ARCED International",
   "license": "MIT"
 }

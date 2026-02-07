@@ -212,91 +212,88 @@ class TemplateManager:
 
                     print(f"[OK] Configured {agent} assistant")
 
-            # Create configuration file with multi-agent support
-            # Preserve existing xlsform_file setting to protect user data
+            # Create or merge configuration file with multi-agent support
+            # IMPORTANT: Never overwrite xlsform-ai.json; merge if it exists.
             config_file = project_path / "xlsform-ai.json"
-            if not config_file.exists() or overwrite:
-                try:
-                    # Preserve existing xlsform_file if config exists
-                    existing_survey_file = None
-                    existing_author = None
-                    existing_location = None
-                    if config_file.exists():
-                        try:
-                            with open(config_file, 'r', encoding='utf-8') as f:
-                                existing_config = json.load(f)
-                                existing_survey_file = existing_config.get("xlsform_file")
-                                existing_author = existing_config.get("author")
-                                existing_location = existing_config.get("location")
-                        except Exception:
-                            pass
+            try:
+                existing_config = {}
+                if config_file.exists():
+                    try:
+                        with open(config_file, 'r', encoding='utf-8') as f:
+                            existing_config = json.load(f) or {}
+                    except Exception:
+                        existing_config = {}
 
-                    config_data = DEFAULT_CONFIG.copy()
-                    config_data["project_name"] = project_path.name
-                    config_data["created"] = datetime.now().isoformat()
+                config_data = self._merge_config_with_defaults(DEFAULT_CONFIG, existing_config)
 
-                    # Preserve existing survey file setting (IMPORTANT: never change user's survey file)
-                    if existing_survey_file:
-                        config_data["xlsform_file"] = existing_survey_file
+                config_data["project_name"] = existing_config.get("project_name", project_path.name)
+                config_data["created"] = existing_config.get("created", datetime.now().isoformat())
 
-                    # Auto-detect author for new projects or if not already set
-                    if not existing_author:
-                        try:
-                            # Import author_utils from scripts directory
-                            import sys
-                            scripts_dir = project_path / "scripts"
-                            if scripts_dir.exists() and str(scripts_dir) not in sys.path:
-                                sys.path.insert(0, str(scripts_dir))
-                            from author_utils import get_detected_author
+                if existing_config.get("xlsform_file"):
+                    config_data["xlsform_file"] = existing_config["xlsform_file"]
 
-                            detected_author = get_detected_author()
+                # Auto-detect author for new projects or if not already set
+                if not config_data.get("author"):
+                    try:
+                        import sys
+                        scripts_dir = project_path / "scripts"
+                        if scripts_dir.exists() and str(scripts_dir) not in sys.path:
+                            sys.path.insert(0, str(scripts_dir))
+                        from author_utils import get_detected_author
+
+                        detected_author = get_detected_author()
+                        if detected_author:
                             config_data["author"] = detected_author
                             config_data["author_updated"] = datetime.now().isoformat()
-                        except Exception:
-                            # Silently fall back if detection fails
-                            pass
-                    else:
-                        config_data["author"] = existing_author
+                    except Exception:
+                        pass
 
-                    if existing_location:
-                        config_data["location"] = existing_location
-                    else:
-                        try:
-                            import sys
-                            scripts_dir = project_path / "scripts"
-                            if scripts_dir.exists() and str(scripts_dir) not in sys.path:
-                                sys.path.insert(0, str(scripts_dir))
-                            from author_utils import get_best_location
+                if not config_data.get("location"):
+                    try:
+                        import sys
+                        scripts_dir = project_path / "scripts"
+                        if scripts_dir.exists() and str(scripts_dir) not in sys.path:
+                            sys.path.insert(0, str(scripts_dir))
+                        from author_utils import get_best_location
 
-                            detected_location = get_best_location(project_path, allow_network=True)
-                            if detected_location:
-                                config_data["location"] = detected_location
-                                config_data["location_updated"] = datetime.now().isoformat()
-                        except Exception:
-                            pass
+                        detected_location = get_best_location(project_path, allow_network=True)
+                        if detected_location:
+                            config_data["location"] = detected_location
+                            config_data["location_updated"] = datetime.now().isoformat()
+                    except Exception:
+                        pass
 
-                    # Add multi-agent configuration
+                existing_agents = config_data.get("enabled_agents") or []
+                if not existing_agents:
                     config_data["enabled_agents"] = agents
-                    config_data["primary_agent"] = agents[0] if agents else "claude"
-                    config_data["settings"]["parallel_execution"] = {
-                        "enabled": True,
-                        "question_threshold": 50,
-                        "page_threshold": 10,
-                        "size_threshold_mb": 1.0,
-                        "user_preference": "auto"
-                    }
+                else:
+                    for agent in agents:
+                        if agent not in existing_agents:
+                            existing_agents.append(agent)
+                    config_data["enabled_agents"] = existing_agents
 
-                    with open(config_file, 'w', encoding='utf-8') as f:
-                        json.dump(config_data, f, indent=2)
+                if not config_data.get("primary_agent"):
+                    config_data["primary_agent"] = agents[0] if agents else DEFAULT_AGENT
 
-                    print(f"[OK] Created xlsform-ai.json configuration")
+                config_data.setdefault("settings", {})
+                config_data["settings"].setdefault("parallel_execution", {
+                    "enabled": True,
+                    "question_threshold": 50,
+                    "page_threshold": 10,
+                    "size_threshold_mb": 1.0,
+                    "user_preference": "auto"
+                })
 
-                    # Show author information
-                    if config_data.get("author"):
-                        print(f"[INFO] Author detected: {config_data['author']}")
-                        print(f"[INFO] You can change this later by editing xlsform-ai.json")
-                except Exception as e:
-                    print(f"Note: Could not create config file: {e}")
+                with open(config_file, 'w', encoding='utf-8') as f:
+                    json.dump(config_data, f, indent=2)
+
+                print(f"[OK] Merged xlsform-ai.json configuration")
+
+                if config_data.get("author"):
+                    print(f"[INFO] Author detected: {config_data['author']}")
+                    print(f"[INFO] You can change this later by editing xlsform-ai.json")
+            except Exception as e:
+                print(f"Note: Could not update config file: {e}")
 
             # Create example XLSForm file - NEVER overwrite if it exists
             if not survey_xlsx.exists():
@@ -346,6 +343,30 @@ class TemplateManager:
                 shutil.copytree(item, target)
             else:
                 shutil.copy2(item, target)
+
+    def _merge_config_with_defaults(self, defaults: dict, existing: dict) -> dict:
+        """Merge existing config with defaults, preserving existing values."""
+        if not isinstance(defaults, dict):
+            return existing if existing is not None else defaults
+
+        existing = existing if isinstance(existing, dict) else {}
+        merged = {}
+
+        for key, default_val in defaults.items():
+            if key in existing:
+                existing_val = existing[key]
+                if isinstance(default_val, dict) and isinstance(existing_val, dict):
+                    merged[key] = self._merge_config_with_defaults(default_val, existing_val)
+                else:
+                    merged[key] = existing_val
+            else:
+                merged[key] = default_val
+
+        for key, existing_val in existing.items():
+            if key not in merged:
+                merged[key] = existing_val
+
+        return merged
 
     def get_template_path(self) -> Path:
         """Get the path to the base template.
