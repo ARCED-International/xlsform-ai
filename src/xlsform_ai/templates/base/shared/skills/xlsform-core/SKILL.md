@@ -105,5 +105,6 @@ This skill is automatically used by these commands:
 - /xlsform-update - Modify existing questions
 - /xlsform-remove - Remove questions
 - /xlsform-move - Reorder questions
+- /xlsform-translate - Add and complete multilingual translations
 
 These commands will automatically invoke this skill's knowledge when working with XLSForms.

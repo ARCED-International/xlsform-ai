@@ -63,6 +63,7 @@ XLSForm AI is a CLI tool that sets up projects with specialized skills and comma
 - `/xlsform-update` - Modify questions
 - `/xlsform-remove` - Delete questions
 - `/xlsform-move` - Reorder questions
+- `/xlsform-translate` - Add/complete multilingual translations
 - `/xlsform-revert` - Restore from history safely
 
 ### Standardized Modules
@@ -256,6 +257,42 @@ Reorder questions in the form.
 /xlsform-move Move the age question after the name question
 ```
 
+### `/xlsform-translate`
+
+Add and complete multilingual translations in `survey` and `choices`.
+
+```bash
+# Add Bangla language columns and translate full content
+/xlsform-translate add Bangla language
+
+# Fill only missing Bangla translations
+/xlsform-translate do the bangla translations for the remaining questions
+```
+
+Script entrypoint:
+
+```bash
+python scripts/translate_form.py "add Bangla language"
+python scripts/translate_form.py "do the bangla translations for the remaining questions"
+
+# AI-first contextual translation map (recommended)
+python scripts/translate_form.py "add Bangla language" --translation-map-file .xlsform-ai/translation/bn.json
+
+# Optional runtime fallback
+python scripts/translate_form.py "add Bangla language" --translator auto
+```
+
+Default behavior is AI-first: the agent can provide contextual translations via `--translation-map` or `--translation-map-file`.
+`deep-translator` is optional fallback only (install with `pip install -e ".[translate]"`).
+Language display labels are normalized to ASCII-friendly names by default (for example, `Bangla (bn)`, `Spanish (es)`).
+
+Structured output marker:
+
+```text
+# XLSFORM_TRANSLATION_RESULT
+status: completed|completed_with_warnings|dry_run|failed
+```
+
 ### `/xlsform-revert`
 
 Safely revert XLSForm changes from immutable snapshots.
@@ -442,6 +479,7 @@ Important runtime artifact:
 │   ├── parse_docx.py        # Word parser
 │   ├── parse_xlsx.py        # Excel parser
 │   ├── add_questions.py     # Add questions with best practices
+│   ├── translate_form.py    # Multilingual translation workflow
 │   ├── log_activity.py      # Activity logger
 │   ├── cleanup.py           # Cleanup utility
 │   ├── xlwings_helper.py    # Excel editing
@@ -453,7 +491,7 @@ Important runtime artifact:
 
 **All actions are automatically logged to a beautiful HTML file!**
 
-Every time you use XLSForm AI commands (add, update, validate, import), the activity is logged with:
+Every time you use XLSForm AI commands (add, update, validate, import, translate), the activity is logged with:
 - Date and time
 - Action type
 - Description and details
@@ -569,6 +607,7 @@ The template ships with a curated knowledge base for common patterns and best pr
 - `src/xlsform_ai/templates/base/scripts/knowledge_base/data/random_sampling.md`
 - `src/xlsform_ai/templates/base/scripts/knowledge_base/data/nested_repeats.md`
 - `src/xlsform_ai/templates/base/scripts/knowledge_base/data/use_cases.md`
+- `src/xlsform_ai/templates/base/scripts/knowledge_base/data/multilingual_translation.md`
 
 ### Project-Specific Docs
 

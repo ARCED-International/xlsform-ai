@@ -118,6 +118,7 @@ XLSForm AI is an AI-powered toolkit for creating, modifying, and validating XLSF
 | `/xlsform-update` | Modify questions | `/xlsform-update Add constraint to age` |
 | `/xlsform-remove` | Delete questions | `/xlsform-remove Remove q1` |
 | `/xlsform-move` | Reorder questions | `/xlsform-move Move name to top` |
+| `/xlsform-translate` | Translate multilingual columns (AI-first, optional runtime fallback) | `/xlsform-translate add Bangla language` |
 | `/xlsform-revert` | Restore previous revisions | `/xlsform-revert restore-last` |
 
 ### Essential Skills
@@ -177,7 +178,7 @@ When you run `xlsform-ai init`, each agent receives:
 
 1. **Custom directory structure** - e.g., `.claude/`, `.copilot/`, `.gemini/`
 2. **Shared skills** - `xlsform-core`, `activity-logging` (same for all agents)
-3. **Shared commands** - All 6 slash commands (same for all agents)
+3. **Shared commands** - All 8 slash commands (same for all agents)
 4. **Agent-specific memory file** - Copied from shared template:
    - Claude → `.claude/CLAUDE.md`
    - Copilot → `.copilot/MEMORY.md`
@@ -465,7 +466,8 @@ Force sequential processing:
 │   │   ├── xlsform-validate.md  # Validate form
 │   │   ├── xlsform-update.md    # Modify questions
 │   │   ├── xlsform-remove.md    # Delete questions
-│   │   └── xlsform-move.md      # Reorder questions
+│   │   ├── xlsform-move.md      # Reorder questions
+│   │   └── xlsform-translate.md # Translate multilingual columns
 │   │
 │   └── skills/                  # XLSForm knowledge
 │       ├── xlsform-core/        # Core XLSForm skill
@@ -2461,6 +2463,7 @@ ls -la survey.xlsx
 | `/xlsform-update` | Modify questions | `/xlsform-update Add constraint` | /xlsform-update | Use command xlsform-update | @xlsform-update |
 | `/xlsform-remove` | Delete questions | `/xlsform-remove Remove q1` | /xlsform-remove | Use command xlsform-remove | @xlsform-remove |
 | `/xlsform-move` | Reorder questions | `/xlsform-move Move name to top` | /xlsform-move | Use command xlsform-move | @xlsform-move |
+| `/xlsform-translate` | Translate multilingual content (AI-first, optional runtime fallback) | `/xlsform-translate add Bangla language` | /xlsform-translate | Use command xlsform-translate | @xlsform-translate |
 | `/xlsform-revert` | Revert safely | `/xlsform-revert restore --revision <id>` | /xlsform-revert | Use command xlsform-revert | @xlsform-revert |
 
 ### Skill Syntax
@@ -2487,6 +2490,7 @@ ls -la survey.xlsx
 | `random_sampling.md` | Randomization patterns | random(), randomize(), indexed-repeat() |
 | `nested_repeats.md` | Nested repeat guidance | Hierarchy design, pitfalls |
 | `use_cases.md` | Common survey modules | Sector patterns and examples |
+| `multilingual_translation.md` | Translation standards | language headers, placeholder safety, multilingual coverage |
 
 ### How to Access
 
@@ -2514,7 +2518,7 @@ All 17 agents have full feature parity. Every agent can:
 - [OK] Add, update, remove, move questions
 - [OK] Import from PDF, Word, Excel
 - [OK] Validate forms
-- [OK] Use all 7 slash commands
+- [OK] Use all 8 slash commands
 - [OK] Access xlsform-core skill
 - [OK] Access activity-logging skill
 - [OK] Log activities automatically
@@ -2557,7 +2561,8 @@ All agents receive the same structure during init:
 │   ├── xlsform-validate.md
 │   ├── xlsform-update.md
 │   ├── xlsform-remove.md
-│   └── xlsform-move.md
+│   ├── xlsform-move.md
+│   └── xlsform-translate.md
 │
 └── skills/             # Knowledge packages (same for all agents)
     ├── xlsform-core/
