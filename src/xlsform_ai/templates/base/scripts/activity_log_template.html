@@ -310,12 +310,12 @@
             stroke-linejoin: round;
         }
 
-        .icon-btn.is-active svg {
-            transform: rotate(90deg) scale(1.05);
-        }
-
         .icon-btn svg {
             transition: transform var(--transition);
+        }
+
+        .icon-btn:hover svg {
+            transform: rotate(6deg) scale(1.05);
         }
 
         .icon-btn:hover {
@@ -1784,8 +1784,6 @@
 
                 // Column visibility
                 document.getElementById('btn-columns').addEventListener('click', () => {
-                    const btn = document.getElementById('btn-columns');
-                    btn.classList.toggle('is-active');
                     document.getElementById('columns-modal').classList.add('active');
                 });
                 document.getElementById('btn-close-columns').addEventListener('click', () => {
