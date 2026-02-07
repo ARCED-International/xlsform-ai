@@ -62,6 +62,9 @@ from log_activity import ActivityLogger
 Never assume fixed column positions. Always read headers from row 1 and use `build_column_mapping()`.
 This rule applies to survey, choices, and settings; always map headers before writing row 2 values in settings.
 
+**CRITICAL: Standard Metadata**
+Always include standard metadata rows (`start`, `end`, `today`, `deviceid`, `phonenumber`, `username`, `email`, `audit`) unless the user explicitly opts out.
+
 ### 3. Log the Action
 
 After successfully adding questions:

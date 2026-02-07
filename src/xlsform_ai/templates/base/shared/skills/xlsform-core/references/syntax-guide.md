@@ -45,6 +45,17 @@ An XLSForm workbook has three main sheets:
 3. **No spaces in column names:** Use underscores (e.g., `constraint_message`)
 4. **Optional columns can be omitted** if not needed
 
+## Metadata Question Types
+
+Standard metadata types (auto-captured; labels should still be included for readability):
+`start`, `end`, `today`, `deviceid`, `phonenumber`, `username`, `email`, `audit`
+
+Notes:
+- Always include labels; metadata is still auto-captured.
+- Metadata rows typically appear near the top of the survey but can be placed anywhere.
+- Audit logging with location tracking is supported in ODK Collect, not Enketo webforms.
+- To capture a specific location (e.g., a store GPS), add a normal `geopoint` question with a label.
+
 ## Choices Sheet
 
 ### Required Columns

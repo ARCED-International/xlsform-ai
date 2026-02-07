@@ -422,6 +422,28 @@ Give each submission a unique name based on fields.
 
 ---
 
+## Standard Metadata Block
+
+Include standard metadata fields (no labels) near the top of the survey unless the user opts out.
+
+| type | name | label | parameters |
+| --- | --- | --- | --- |
+| start | start |  |  |
+| end | end |  |  |
+| today | today |  |  |
+| deviceid | deviceid |  |  |
+| phonenumber | phonenumber |  |  |
+| username | username |  |  |
+| email | email |  |  |
+| audit | audit |  | location-priority=high-accuracy location-min-interval=180 location-max-age=300 |
+
+Notes:
+- Always include labels; metadata is still auto-captured.
+- `audit` location tracking is supported in ODK Collect, not Enketo webforms.
+- To capture a specific location (e.g., store GPS), add a normal `geopoint` question with a label.
+
+---
+
 ## Randomization
 
 Randomize choice order.

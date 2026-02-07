@@ -13,6 +13,7 @@ except ImportError as exc:
 SETTINGS_SHEET_NAME = "settings"
 REQUIRED_SETTINGS_COLUMNS = ["form_title", "form_id"]
 PROTECTED_SETTINGS_COLUMNS = {"version"}
+VERSION_FORMULA = '=TEXT(NOW(), "yyyymmddhhmmss")'
 _KEY_VALUE_HEADERS = {"column_name", "value"}
 _KNOWN_SETTINGS_COLUMNS = [
     "form_title",
@@ -235,6 +236,21 @@ def ensure_settings_columns(sheet) -> Dict[str, int]:
     return header_map
 
 
+def _ensure_version_formula(sheet, header_map: Dict[str, int]) -> None:
+    """Ensure version column exists and contains the required formula."""
+    header_map_lower = {k.lower(): v for k, v in header_map.items()}
+    version_col = header_map.get("version") or header_map_lower.get("version")
+    if not version_col:
+        version_col = len(header_map) + 1
+        sheet.cell(row=1, column=version_col, value="version")
+        header_map["version"] = version_col
+
+    cell = sheet.cell(row=2, column=version_col)
+    current = cell.value
+    if current != VERSION_FORMULA:
+        cell.value = VERSION_FORMULA
+
+
 def set_form_settings(xlsx_path: Path, form_title: Optional[str] = None, form_id: Optional[str] = None) -> bool:
     """Create/update settings sheet and set form_title/form_id.
 
@@ -253,6 +269,7 @@ def set_form_settings(xlsx_path: Path, form_title: Optional[str] = None, form_id
         sheet = wb.create_sheet(SETTINGS_SHEET_NAME)
 
     header_map = ensure_settings_columns(sheet)
+    _ensure_version_formula(sheet, header_map)
     header_map_lower = {k.lower(): v for k, v in header_map.items()}
     row = 2
     if form_title is not None:

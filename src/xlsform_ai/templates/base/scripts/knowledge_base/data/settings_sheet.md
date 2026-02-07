@@ -18,9 +18,8 @@ Only row 2 should contain values. Do not insert extra rows.
 
 ### version
 - Purpose: Form version for deployment updates.
-- Rule: Do not overwrite if it contains a formula.
-- Best practice: Use an Excel formula that auto-updates on save.
-- Example formula (do not replace): `=TEXT(YEAR(NOW())-2000,"00")&TEXT(MONTH(NOW()),"00")&TEXT(DAY(NOW()),"00")&TEXT(HOUR(NOW()),"00")&TEXT(MINUTE(NOW()),"00")`.
+- Rule: Must always be this formula (do not leave blank or replace with a literal):
+  `=TEXT(NOW(), "yyyymmddhhmmss")`
 
 ### instance_name
 - Purpose: Defines the default instance name shown for submissions.
@@ -42,4 +41,4 @@ Only row 2 should contain values. Do not insert extra rows.
 - Read column names from row 1.
 - Write values to row 2 only.
 - Do not create new rows for settings.
-- Never overwrite `version` if it contains a formula.
+- Ensure `version` is present and set to `=TEXT(NOW(), "yyyymmddhhmmss")`.

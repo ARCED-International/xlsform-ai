@@ -58,6 +58,13 @@ For select_one or select_multiple, you need both sheets:
 - Always read headers from row 1 and map columns before writing
 - For `settings`, write values only in row 2, aligned to the header column
 
+### 5. Standard Metadata (Default Include)
+- Include standard metadata rows in the survey unless the user opts out:
+  `start`, `end`, `today`, `deviceid`, `phonenumber`, `username`, `email`, `audit`
+- Always include labels for readability; metadata is still auto-captured.
+- Audit location tracking is supported in ODK Collect, not Enketo webforms.
+- Use a normal `geopoint` question (with a label) for capturing a specific location.
+
 ### 4. Question Types
 - Text types: `text`, `integer`, `decimal`, `note`
 - Select: `select_one listname`, `select_multiple listname`

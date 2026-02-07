@@ -573,6 +573,13 @@ Use `build_column_mapping()` from `form_structure` to locate columns like `const
   `public_key`, `submission_url`, `style`, `name`, `clean_text_values`.
 - Instance name suggestions are allowed (e.g., include key IDs + `uuid()`), but still written in row 2.
 
+**Standard Metadata (Default Include Unless User Opts Out):**
+- Always include standard metadata fields in the **survey** sheet unless the user says not to.
+- Metadata types: `start`, `end`, `today`, `deviceid`, `phonenumber`, `username`, `email`, `audit`.
+- Always include **labels** for readability; metadata is still auto-captured.
+- Audit note: location tracking only in ODK Collect (not Enketo webforms) and configured via `parameters`.
+- GPS for a location should use a normal `geopoint` question (not metadata).
+
 **Step 6: Apply Changes with Error Handling**
 
 ```python
@@ -2173,8 +2180,8 @@ npm run watch
 ```
 
 **Versioning:**
-- Add `form_version` in settings sheet
-- Increment version with each deployment
+- Ensure `version` exists in settings sheet and is set to `=TEXT(NOW(), "yyyymmddhhmmss")`
+- Version auto-updates on save; do not replace with a literal value
 - Track version in activity log
 
 ### Multi-User Collaboration
