@@ -91,6 +91,7 @@ def check_cli_installation() -> bool:
     Returns:
         True if all components are available
     """
+    import importlib
     from .templates import TemplateManager
 
     try:
@@ -118,6 +119,29 @@ def check_cli_installation() -> bool:
             print_warning("Some template files are missing:")
             for f in missing:
                 console.print(f"  - {f.relative_to(template_path)}")
+            return False
+
+        runtime_modules = [
+            ("openpyxl", "openpyxl"),
+            ("pyxform", "pyxform"),
+            ("pdfplumber", "pdfplumber"),
+            ("docx", "python-docx"),
+        ]
+        missing_runtime = []
+        for module_name, package_name in runtime_modules:
+            try:
+                importlib.import_module(module_name)
+            except Exception:
+                missing_runtime.append(package_name)
+
+        if missing_runtime:
+            print_warning("Some runtime dependencies are missing:")
+            for package_name in missing_runtime:
+                console.print(f"  - {package_name}")
+            print_warning(
+                "Install with: python -m pip install "
+                + " ".join(missing_runtime)
+            )
             return False
 
         print_success("XLSForm AI CLI is properly installed")

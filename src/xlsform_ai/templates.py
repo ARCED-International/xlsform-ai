@@ -3,6 +3,8 @@
 import json
 import os
 import shutil
+import subprocess
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
@@ -20,6 +22,12 @@ ODK_VALIDATE_FALLBACK_TAG = "v1.20.0"
 ODK_VALIDATE_FALLBACK_URL = (
     "https://github.com/getodk/validate/releases/download/v1.20.0/ODK-Validate-v1.20.0.jar"
 )
+PROJECT_RUNTIME_DEPENDENCIES = [
+    "openpyxl>=3.1.0",
+    "pyxform>=2.0.0",
+    "pdfplumber>=0.11.0",
+    "python-docx>=1.1.0",
+]
 
 
 class TemplateManager:
@@ -159,6 +167,20 @@ class TemplateManager:
                     print(f"[OK] Activity log template included")
                 else:
                     print(f"[WARNING] Activity log template not found in scripts directory")
+
+            if self._ensure_project_runtime_dependencies():
+                print("[OK] Project runtime dependencies ready")
+            else:
+                print(
+                    "[ERROR] Failed to install required runtime dependencies "
+                    "(openpyxl, pyxform, pdfplumber, python-docx)."
+                )
+                print(
+                    "[ERROR] Run one of these commands and retry init:\n"
+                    "  python -m pip install openpyxl pyxform pdfplumber python-docx\n"
+                    "  py -3 -m pip install openpyxl pyxform pdfplumber python-docx"
+                )
+                return False
 
             if self._ensure_odk_validate_jar(project_path, overwrite=overwrite):
                 print("[OK] ODK Validate offline engine ready")
@@ -495,6 +517,83 @@ class TemplateManager:
                 except Exception:
                     pass
             return jar_path.exists()
+
+    def _candidate_python_commands(self) -> List[List[str]]:
+        """Return candidate Python launch commands for dependency bootstrap."""
+        candidates: List[List[str]] = []
+
+        # Prefer user-shell python first because project scripts are commonly run as `python scripts/...`.
+        candidates.append(["python"])
+        if os.name == "nt":
+            candidates.append(["py", "-3"])
+
+        # Fallback to current interpreter (e.g., uv tool environment).
+        current = str(Path(sys.executable))
+        if current:
+            candidates.append([current])
+
+        deduped: List[List[str]] = []
+        seen = set()
+        for cmd in candidates:
+            key = tuple(cmd)
+            if key not in seen:
+                seen.add(key)
+                deduped.append(cmd)
+        return deduped
+
+    def _run_command(self, command: List[str], timeout_seconds: int = 180) -> bool:
+        """Run command and return success/failure."""
+        try:
+            proc = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                timeout=timeout_seconds,
+                check=False,
+            )
+            return proc.returncode == 0
+        except Exception:
+            return False
+
+    def _ensure_project_runtime_dependencies(self) -> bool:
+        """
+        Ensure required runtime dependencies are installed for project scripts.
+
+        Returns:
+            True if dependencies verified in at least one usable Python runtime.
+        """
+        verify_snippet = (
+            "import openpyxl,pyxform,pdfplumber,docx;"
+            "print('deps-ok')"
+        )
+
+        for launcher in self._candidate_python_commands():
+            if not self._run_command(launcher + ["-V"], timeout_seconds=20):
+                continue
+
+            # If already installed for this runtime, no-op.
+            if self._run_command(launcher + ["-c", verify_snippet], timeout_seconds=30):
+                return True
+
+            # Ensure pip exists.
+            if not self._run_command(launcher + ["-m", "pip", "--version"], timeout_seconds=30):
+                self._run_command(launcher + ["-m", "ensurepip", "--upgrade"], timeout_seconds=120)
+
+            install_cmd = launcher + [
+                "-m",
+                "pip",
+                "install",
+                "--disable-pip-version-check",
+            ] + PROJECT_RUNTIME_DEPENDENCIES
+            installed = self._run_command(install_cmd, timeout_seconds=600)
+            if not installed:
+                continue
+
+            if self._run_command(launcher + ["-c", verify_snippet], timeout_seconds=30):
+                return True
+
+        return False
 
     def get_template_path(self) -> Path:
         """Get the path to the base template.

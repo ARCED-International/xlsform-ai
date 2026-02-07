@@ -106,6 +106,13 @@ pip install uv
 xlsform-ai check
 ```
 
+If you run project scripts directly (for example, `python scripts/validate_form.py`),
+ensure runtime dependencies are installed in that Python environment:
+
+```bash
+python -m pip install openpyxl pyxform pdfplumber python-docx
+```
+
 ## Quick Start
 
 ### Create a New Project
