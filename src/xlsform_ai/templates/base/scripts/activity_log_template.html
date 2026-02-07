@@ -310,6 +310,14 @@
             stroke-linejoin: round;
         }
 
+        .icon-btn.is-active svg {
+            transform: rotate(90deg) scale(1.05);
+        }
+
+        .icon-btn svg {
+            transition: transform var(--transition);
+        }
+
         .icon-btn:hover {
             color: var(--color-gray-900);
             border-color: var(--color-gray-400);
@@ -1039,8 +1047,9 @@
             <div class="filter-actions">
                 <button class="icon-btn" id="btn-columns" title="Show/Hide Columns">
                     <svg viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M1.5 12s3.8-7 10.5-7 10.5 7 10.5 7-3.8 7-10.5 7S1.5 12 1.5 12z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M4 6h16"></path>
+                        <path d="M4 12h16"></path>
+                        <path d="M4 18h16"></path>
                     </svg>
                 </button>
                 <button class="icon-btn" id="btn-export" title="Export">
@@ -1775,6 +1784,8 @@
 
                 // Column visibility
                 document.getElementById('btn-columns').addEventListener('click', () => {
+                    const btn = document.getElementById('btn-columns');
+                    btn.classList.toggle('is-active');
                     document.getElementById('columns-modal').classList.add('active');
                 });
                 document.getElementById('btn-close-columns').addEventListener('click', () => {
