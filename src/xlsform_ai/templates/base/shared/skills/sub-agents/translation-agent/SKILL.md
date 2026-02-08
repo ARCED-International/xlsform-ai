@@ -35,6 +35,14 @@ Always use:
 python scripts/translate_form.py "<instruction>"
 ```
 
+## Strict Script Policy
+
+- `[REQUIRED]` Use only `scripts/translate_form.py` for translation actions and diagnostics.
+- `[REQUIRED]` Use `python scripts/translate_form.py "<instruction>" --dry-run --json` for preflight checks.
+- `[FORBIDDEN]` Do not run inline `python -c` workbook inspections during translation workflows.
+- `[FORBIDDEN]` Do not create temporary workspace scripts for translation workflows.
+- `[FORBIDDEN]` Do not use `Workbook.get(...)`; maintained code must use `workbook["sheet_name"]` after checking `sheet_name in workbook.sheetnames`.
+
 Natural language examples:
 
 - `/xlsform-translate add Bangla language`
@@ -47,7 +55,8 @@ Natural language examples:
    - `--translation-map` (inline JSON)
    - `--translation-map-file` (JSON file)
 3. Runtime translation is optional fallback only:
-   - use `--translator auto`
+   - default is AI-only (`--translator none`)
+   - use `--translator auto` only when fallback is explicitly desired
    - install fallback package only when needed: `pip install -e ".[translate]"`
 4. If runtime fallback is unavailable, the script must continue and report pending translation cells.
 

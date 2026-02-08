@@ -30,7 +30,16 @@ Core command:
 python scripts/translate_form.py "<instruction>"
 ```
 
+Strict execution rules:
+
+- Use `translate_form.py` only for translation workflows and diagnostics.
+- Use `python scripts/translate_form.py "<instruction>" --dry-run --json` for preflight checks.
+- Do not use inline `python -c` workbook diagnostics.
+- Do not create temporary workspace scripts for translation tasks.
+- Do not use `Workbook.get(...)`; use `workbook["sheet_name"]` with existence checks.
+
 Default language label behavior:
 
 - Use language names without shortcode by default (for example, `Bangla`).
 - Add shortcode only when explicitly requested via `--include-language-code`.
+- Keep runtime translator disabled by default (`--translator none`); use `--translator auto` only as fallback.

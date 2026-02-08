@@ -19,10 +19,18 @@ Use the same translation workflow and safety rules:
 5. Fill translations for missing/all rows based on instruction mode.
 6. Validate and report structured results.
 
+Strict execution rules:
+
+- Use only `python scripts/translate_form.py ...` for translation workflows.
+- Use `--dry-run --json` for inspection/pre-checks.
+- Do not run inline `python -c` workbook diagnostics.
+- Do not create temporary workspace scripts for translation tasks.
+
 Run:
 
 ```bash
-python scripts/translate_form.py --file survey.xlsx --translator auto --language "<TargetLanguage>" "<instruction>"
+python scripts/translate_form.py --file survey.xlsx --translator none --language "<TargetLanguage>" "<instruction>"
+python scripts/translate_form.py --file survey.xlsx --translator none --language "<TargetLanguage>" "<instruction>" --dry-run --json
 ```
 
 Fallback if runtime translator is unavailable:

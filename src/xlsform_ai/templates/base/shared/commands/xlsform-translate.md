@@ -32,6 +32,14 @@ arguments:
 /skill:translation-agent
 ```
 
+### Strict Script Policy
+
+- `[REQUIRED]` Use existing entrypoint only: `scripts/translate_form.py`.
+- `[REQUIRED]` For inspection/pre-checks, use `--dry-run --json` (never ad-hoc workbook probing).
+- `[FORBIDDEN]` Do not use inline `python -c` for translation diagnostics.
+- `[FORBIDDEN]` Do not create temporary `.py` scripts in workspace for translation tasks.
+- `[FORBIDDEN]` Do not use `Workbook.get(...)`; when direct workbook access is unavoidable in maintained scripts, use `workbook["sheet_name"]` with existence checks.
+
 ### 2. Use the Translation Script
 
 Always execute translation through:
@@ -61,12 +69,19 @@ When user explicitly wants shortcode in headers/settings values:
 python scripts/translate_form.py "add Bangla language" --include-language-code
 ```
 
+Preflight inspection (required before applying large translation changes):
+
+```bash
+python scripts/translate_form.py "<instruction>" --dry-run --json
+```
+
 ### 3. Translation Mode Rules
 
 - AI-first translation is the default approach:
   - generate contextual translations in the agent
   - pass them using `--translation-map` or `--translation-map-file`
 - Runtime translation is optional fallback:
+  - default is AI-only (`--translator none`)
   - `--translator auto` tries Google translation only if `deep-translator` is installed
   - if runtime translator is unavailable, the script reports pending cells instead of failing
 - Optional fallback install:

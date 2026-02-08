@@ -16,6 +16,8 @@
 - [MANDATORY] If `settings.form_title`, `settings.form_id`, or `settings.version` is missing, ask an interactive settings-bootstrap question with suggested values before write operations.
 - [FORBIDDEN] During `/xlsform-import`, do not use ad-hoc `python -c` diagnostics or temporary workspace scripts.
 - [MANDATORY] During `/xlsform-import`, use only `scripts/settings_status.py` and `scripts/import_summary.py` for settings/JSON diagnostics.
+- [FORBIDDEN] During `/xlsform-translate`, do not use ad-hoc `python -c` diagnostics or temporary workspace scripts.
+- [MANDATORY] During `/xlsform-translate`, use only `scripts/translate_form.py` (with `--dry-run --json` for diagnostics).
 
 This is an XLSForm project with AI-assisted development capabilities using multi-agent architecture.
 
@@ -2058,9 +2060,19 @@ Household Survey  household_survey   English
 **Translation workflow:**
 1. Use `/skill:translation-agent`
 2. Ask user whether to keep base headers as-is or convert base headers to English
-3. Add language columns after each base column (for example `label`, then `label::Bangla`)
-4. Add translated labels and choices
-5. Validate all translations
+3. Run preflight diagnostics only via `python scripts/translate_form.py "<instruction>" --dry-run --json`
+4. Apply translation using `python scripts/translate_form.py "<instruction>" ...`
+5. Add language columns after each base column (for example `label`, then `label::Bangla`)
+6. Add translated labels and choices
+7. Validate all translations
+
+**Forbidden in translation workflow:**
+- Inline workbook probes with `python -c` (for example `Workbook.get(...)`)
+- Temporary translation helper scripts in workspace
+
+**Translator runtime policy:**
+- Default to AI-only (`--translator none`)
+- Use `--translator auto` only as optional fallback
 
 **Base header decision options (mandatory prompt):**
 1. Keep base headers as-is (recommended)

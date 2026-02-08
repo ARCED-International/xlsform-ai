@@ -1322,8 +1322,8 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument(
         "--translator",
         choices=["auto", "google", "none"],
-        default="auto",
-        help="Runtime translation backend. 'auto' uses google if available, otherwise AI map only.",
+        default="none",
+        help="Runtime translation backend. Default 'none' keeps AI-first translation; 'auto' uses google if available.",
     )
     parser.add_argument(
         "--translation-map",
