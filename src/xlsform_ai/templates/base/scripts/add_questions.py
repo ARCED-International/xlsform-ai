@@ -151,7 +151,8 @@ def get_best_practices(question_type, question_name, question_label=""):
     # Name fields: no numbers, special chars
     if any(keyword in question_name.lower() for keyword in ["name", "first", "last", "full"]):
         result.update({
-            "constraint": "regex(., '^[a-zA-Z\\\\s\\\\-\\\\\\\\.']$')",
+            # Use double-quoted regex literal so apostrophes in names are valid XPath strings.
+            "constraint": "regex(., \"^[A-Za-z\\\\s\\\\-\\\\.']+$\")",
             "constraint_message": "Please enter a valid name (letters only)",
             "required": "" if is_non_input else "yes",
             "required_message": "" if is_non_input else "Name is required"
@@ -209,6 +210,49 @@ def _cell_has_value(value) -> bool:
     if isinstance(value, str):
         return bool(value.strip())
     return True
+
+
+def _repair_legacy_name_regex_constraints(ws, column_map: Dict[str, int]) -> List[int]:
+    """Repair known legacy malformed name regex constraints in-place.
+
+    Older template versions generated invalid XPath regex literals for name fields.
+    This pass keeps behavior backward-compatible by repairing only known bad patterns.
+    """
+    constraint_col = column_map.get("constraint")
+    name_col = column_map.get("name")
+    if not constraint_col or not name_col:
+        return []
+
+    # Canonical safe regex for name-like inputs (allows letters, spaces, hyphen, dot, apostrophe).
+    fixed_constraint = "regex(., \"^[A-Za-z\\\\s\\\\-\\\\.']+$\")"
+
+    # Normalize by dropping whitespace to make matching robust.
+    legacy_candidates = {
+        "regex(.,'^[a-zA-Z\\\\s\\\\-\\\\\\\\.']$')",
+        "regex(.,'^[a-zA-Z\\s\\-\\\\.']$')",
+        "regex(.,'^[a-zA-Z\\\\s\\\\-\\\\.']+$')",
+        "regex(.,'^[a-zA-Z\\s\\-\\.']+$')",
+        "regex(.,'^[A-Za-z\\\\s\\\\-\\\\.\\\\']+$')",
+        "regex(.,'^[A-Za-z\\s\\-\\.\\']+$')",
+    }
+
+    fixed_rows: List[int] = []
+    for row_idx in range(2, ws.max_row + 1):
+        name_val = ws.cell(row_idx, name_col).value
+        constraint_val = ws.cell(row_idx, constraint_col).value
+        if not (_cell_has_value(name_val) and _cell_has_value(constraint_val)):
+            continue
+
+        name_text = str(name_val).strip().lower()
+        if not any(token in name_text for token in ("name", "first", "last", "full")):
+            continue
+
+        normalized = re.sub(r"\s+", "", str(constraint_val))
+        if normalized in legacy_candidates:
+            ws.cell(row_idx, constraint_col, fixed_constraint)
+            fixed_rows.append(row_idx)
+
+    return fixed_rows
 
 
 _SELECT_TYPES = {"select_one", "select_multiple"}
@@ -928,6 +972,9 @@ def add_questions(
                 # Fail gracefully if freeze panes doesn't work
                 pass
 
+        # Repair known malformed legacy name regex constraints before save.
+        repaired_regex_rows = _repair_legacy_name_regex_constraints(ws, column_map)
+
         # Save workbook
         wb.save(survey_file)
 
@@ -948,6 +995,10 @@ def add_questions(
                     if choices_added:
                         detail_lines.append(
                             f"Choices added: {len(choices_added)} across {len({item['list_name'] for item in choices_added})} list(s)"
+                        )
+                    if repaired_regex_rows:
+                        detail_lines.append(
+                            f"Repaired malformed name regex constraints at rows: {', '.join(str(r) for r in repaired_regex_rows)}"
                         )
                     if snapshot_revision:
                         detail_lines.append(f"Snapshot revision: {snapshot_revision}")

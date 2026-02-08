@@ -263,7 +263,8 @@ class SmartConstraintGenerator:
         # Name fields
         if any(kw in question_name_lower for kw in ["name", "first", "last", "full"]):
             return ConstraintSet(
-                constraint="regex(., '^[a-zA-Z\\s\\-\\.\']+$')",
+                # Use double-quoted regex literal so apostrophes in names are valid XPath strings.
+                constraint="regex(., \"^[A-Za-z\\s\\-\\.']+$\")",
                 constraint_message="Please enter a valid name (letters only)",
                 required="" if is_non_input else "yes",
                 required_message="" if is_non_input else "Name is required"

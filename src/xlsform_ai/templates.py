@@ -423,17 +423,31 @@ class TemplateManager:
         if self._file_has_utf8_bom(destination_path):
             return True
 
+        def _frontmatter_description_present(text: str) -> bool:
+            lines = text.splitlines()
+            # Ignore leading blank lines.
+            start = 0
+            while start < len(lines) and not lines[start].strip():
+                start += 1
+            if start >= len(lines) or lines[start].strip() != "---":
+                return False
+            # Find closing frontmatter marker.
+            end = start + 1
+            while end < len(lines) and lines[end].strip() != "---":
+                end += 1
+            if end >= len(lines):
+                return False
+            frontmatter = "\n".join(lines[start + 1:end]).lower()
+            return "description:" in frontmatter
+
         try:
             source_text = source_path.read_text(encoding="utf-8-sig")
             dest_text = destination_path.read_text(encoding="utf-8-sig")
         except Exception:
             return False
 
-        source_head = "\n".join(source_text.splitlines()[:30]).lower()
-        dest_head = "\n".join(dest_text.splitlines()[:30]).lower()
-
-        source_has_description = "description:" in source_head
-        dest_has_description = "description:" in dest_head
+        source_has_description = _frontmatter_description_present(source_text)
+        dest_has_description = _frontmatter_description_present(dest_text)
 
         if source_has_description and not dest_has_description:
             return True

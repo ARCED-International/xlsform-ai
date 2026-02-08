@@ -103,49 +103,26 @@ Consult these files for patterns and best practices before writing changes:
 - or_other only works without translations and without choice_filter; it uses English "Specify other".
 - Settings sheet is optional but recommended; include form_title, form_id, version (yyyymmddrr).
 
-### 2. Import from Scripts Directory
+### 2. Use Script Entrypoints Only
 
-**CRITICAL: Always import from the `scripts/` directory:**
+Run these entrypoints directly (no inline Python wrappers):
 
-```python
-import sys
-from pathlib import Path
-sys.path.insert(0, str(Path('scripts')))
-
-from form_structure import FormStructure
-from add_questions import add_questions
-from log_activity import ActivityLogger
+```bash
+python scripts/parse_pdf.py <source> --pages <range> [--auto-scale] --output .xlsform-ai/tmp/import.json
+python scripts/parse_docx.py <source> [--media-dir <dir> --media-prefix <prefix> --auto-scale] --output .xlsform-ai/tmp/import.json
+python scripts/parse_xlsx.py <source> [--sheet <sheet_name>] --output .xlsform-ai/tmp/import.json
+python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy <preserve|semantic> --file survey.xlsx
 ```
 
-**NEVER import from other locations.**
+`add_questions.py` already handles activity logging and safe column mapping.
 
-**CRITICAL: Column Mapping Rule**
+### 3. Log and Validate
 
-Never assume fixed column positions. Always read headers from row 1 and use `build_column_mapping()` before writing.
+- Keep activity logging enabled in `xlsform-ai.json`.
+- Validate after import:
 
-### 3. Log the Action
-
-After successfully importing questions:
-
-```python
-from scripts.log_activity import ActivityLogger
-
-logger = ActivityLogger()
-
-# Determine action type based on file type
-
-if file_ext == '.pdf':
-    action_type = "import_pdf"
-elif file_ext == '.docx':
-    action_type = "import_docx"
-elif file_ext == '.xlsx':
-    action_type = "import_xlsx"
-
-logger.log_action(
-    action_type=action_type,
-    description=f"Imported {count} questions from {file_type}",
-    details=f"Source: {source_path}\nPages: {page_range}\nQuestions: {question_summary}"
-)
+```bash
+python scripts/validate_form.py survey.xlsx --json
 ```
 
 ### What NOT To Do
@@ -230,32 +207,8 @@ If debugging is needed, patch existing `scripts/*.py` entrypoints instead of cre
 
 ### Cross-Platform Compatibility
 
-When creating Python code for file parsing that runs on bash/PowerShell/Linux:
-
-1. **Avoid Unicode characters** in print statements
-   - Use ASCII: `SUCCESS` instead of checkmark symbols
-   - Use ASCII: `ERROR` instead of X symbols
-
-2. **Handle encoding explicitly** at script start
-   ```python
-   import sys
-   if sys.platform == 'win32':
-       sys.stdout.reconfigure(encoding='utf-8', errors='replace')
-   ```
-
-3. **Use proper file paths** for cross-platform compatibility
-   - Use `pathlib.Path` instead of string paths
-   - Use forward slashes or `os.path.join()`
-
-4. **Always add the scripts path before importing helpers**
-   ```python
-   import sys
-   from pathlib import Path
-
-   scripts_dir = Path("scripts").resolve()
-   if str(scripts_dir) not in sys.path:
-       sys.path.insert(0, str(scripts_dir))
-   ```
+Use only the maintained `scripts/*.py` entrypoints above.
+Do not write wrapper code for encoding/path handling during import.
 
 ### Stop on Errors, Verify Before Logging
 
