@@ -22,6 +22,8 @@ Validation checks aligned with XLSForm rules and common converter behavior.
 5. Avoid ambiguous numeric name patterns (best practice)
 - avoid leading numeric names like 1st_age
 - avoid trailing numeric base names like age_3 or fruits_2
+- avoid question-code prefixes like q1_ or q308_
+- prefer short semantic names (target <=20 chars; hard cap <=32)
 - prefer semantic disambiguation like age_child or age_spouse
 - this prevents conflicts/confusion with repeat and select_multiple export suffixes
 

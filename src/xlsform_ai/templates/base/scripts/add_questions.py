@@ -256,15 +256,33 @@ def _repair_legacy_name_regex_constraints(ws, column_map: Dict[str, int]) -> Lis
 
 
 _SELECT_TYPES = {"select_one", "select_multiple"}
+_TARGET_QUESTION_NAME_LEN = 20
 _MAX_QUESTION_NAME_LEN = 32
+_TARGET_LIST_NAME_LEN = 20
 _MAX_LIST_NAME_LEN = 24
-_MAX_TOKEN_LEN = 10
+_MAX_TOKEN_LEN = 8
 _QUESTION_STOPWORDS = {
     "a", "an", "the", "is", "are", "was", "were", "be", "to", "for", "of", "and",
     "or", "in", "on", "at", "with", "from", "by", "as", "that", "this", "these",
     "those", "what", "which", "who", "whom", "whose", "when", "where", "why", "how",
     "do", "does", "did", "can", "could", "will", "would", "should", "your", "you",
     "please", "tell", "me",
+}
+_GENERIC_NAME_TOKENS = {
+    "question",
+    "questions",
+    "respondent",
+    "response",
+    "module",
+    "section",
+    "item",
+    "field",
+    "value",
+    "option",
+    "options",
+    "answer",
+    "answers",
+    "please",
 }
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 _INVALID_IDENTIFIER_RE = re.compile(r"[^a-z0-9_]+")
@@ -327,24 +345,39 @@ def _ensure_unique_identifier(base_name: str, used_names: set, max_length: int =
 def _derive_name_from_label(label: str) -> str:
     text = str(label or "").strip().lower()
     text = re.sub(r"\$\{[^}]+\}", " ", text)
-    tokens = [tok for tok in _TOKEN_RE.findall(text) if tok and tok not in _QUESTION_STOPWORDS]
+    raw_tokens = _TOKEN_RE.findall(text)
+    tokens = [tok for tok in raw_tokens if tok and tok not in _QUESTION_STOPWORDS]
+    tokens = [tok for tok in tokens if tok not in _GENERIC_NAME_TOKENS]
+    # Keep only the earliest unique tokens for concise but meaningful identifiers.
+    deduped_tokens: List[str] = []
+    seen = set()
+    for token in tokens:
+        if token in seen:
+            continue
+        seen.add(token)
+        deduped_tokens.append(token)
+    tokens = deduped_tokens
     if not tokens:
-        tokens = _TOKEN_RE.findall(text)
+        tokens = raw_tokens
     if not tokens:
         return "question"
 
-    compact_tokens = [tok[:_MAX_TOKEN_LEN] for tok in tokens[:4] if tok]
+    compact_tokens = [tok[:_MAX_TOKEN_LEN] for tok in tokens[:2] if tok]
     if not compact_tokens:
-        compact_tokens = tokens[:2]
+        compact_tokens = tokens[:1]
     base = "_".join(compact_tokens)
-    return _to_ascii_identifier(base, fallback="question", max_length=_MAX_QUESTION_NAME_LEN)
+    return _to_ascii_identifier(
+        base,
+        fallback="question",
+        max_length=_TARGET_QUESTION_NAME_LEN,
+    )
 
 
 def _derive_short_list_name(question_name: str) -> str:
     base = _to_ascii_identifier(
         question_name,
         fallback="choices",
-        max_length=max(_MAX_LIST_NAME_LEN, 16),
+        max_length=max(_TARGET_LIST_NAME_LEN, 16),
     )
     for suffix in ("_field", "_var", "_question", "_item"):
         if base.endswith(suffix):
@@ -362,7 +395,7 @@ def _derive_short_list_name(question_name: str) -> str:
     return _to_ascii_identifier(
         f"{compact}_opts",
         fallback="choices_opts",
-        max_length=_MAX_LIST_NAME_LEN,
+        max_length=_TARGET_LIST_NAME_LEN,
     )
 
 
@@ -464,7 +497,7 @@ def _extract_questions_payload(data) -> List[Dict[str, object]]:
 def add_questions(
     questions_data,
     survey_file=None,
-    name_strategy: str = "preserve",
+    name_strategy: str = "semantic",
     insert_after_metadata=None,
     parallel=None,
     **legacy_kwargs,
@@ -474,7 +507,7 @@ def add_questions(
     Args:
         questions_data: List/dict payload of questions. Supports parser JSON with `text`+`choices`.
         survey_file: Path to survey XLSForm file (optional, uses config if not specified)
-        name_strategy: `preserve` or `semantic` for incoming question names.
+        name_strategy: `preserve` or `semantic` for incoming question names (default: semantic).
         insert_after_metadata: Legacy compatibility parameter (ignored).
         parallel: Legacy compatibility parameter (ignored).
         legacy_kwargs: Any legacy compatibility parameters (ignored).
@@ -672,18 +705,20 @@ def add_questions(
             question["label"] = label_text
 
             raw_name = question.get("name")
+            name_max_len = _TARGET_QUESTION_NAME_LEN
             if name_strategy == "semantic" or not _cell_has_value(raw_name):
                 base_name = _derive_name_from_label(label_text)
             else:
+                name_max_len = _MAX_QUESTION_NAME_LEN
                 base_name = _to_ascii_identifier(
                     str(raw_name),
                     fallback=_derive_name_from_label(label_text),
-                    max_length=_MAX_QUESTION_NAME_LEN,
+                    max_length=name_max_len,
                 )
             unique_name = _ensure_unique_identifier(
                 base_name,
                 used_question_names,
-                max_length=_MAX_QUESTION_NAME_LEN,
+                max_length=name_max_len,
             )
             used_question_names.add(unique_name)
             question["name"] = unique_name
@@ -691,6 +726,8 @@ def add_questions(
             normalized_choices = _normalize_choice_entries(question.get("choices"))
             base_type, inline_list_name = _split_select_type(question.get("type", ""))
             explicit_list_name = str(question.get("list_name") or inline_list_name or "").strip()
+
+            list_max_len = _TARGET_LIST_NAME_LEN if name_strategy == "semantic" else _MAX_LIST_NAME_LEN
 
             if normalized_choices:
                 if base_type not in _SELECT_TYPES:
@@ -704,7 +741,7 @@ def add_questions(
                         list_name = _to_ascii_identifier(
                             explicit_list_name,
                             fallback=_derive_short_list_name(unique_name),
-                            max_length=_MAX_LIST_NAME_LEN,
+                            max_length=list_max_len,
                         )
                 else:
                     proposed = _derive_short_list_name(unique_name)
@@ -713,7 +750,7 @@ def add_questions(
                         list_name = _ensure_unique_identifier(
                             list_name,
                             used_list_names,
-                            max_length=_MAX_LIST_NAME_LEN,
+                            max_length=list_max_len,
                         )
                     if list_name in existing_choice_lists:
                         existing_signature = tuple(
@@ -723,7 +760,7 @@ def add_questions(
                             list_name = _ensure_unique_identifier(
                                 list_name,
                                 used_list_names,
-                                max_length=_MAX_LIST_NAME_LEN,
+                                max_length=list_max_len,
                             )
 
                 used_list_names.add(list_name)
@@ -747,7 +784,7 @@ def add_questions(
                         list_name = _to_ascii_identifier(
                             explicit_list_name,
                             fallback="choices_opts",
-                            max_length=_MAX_LIST_NAME_LEN,
+                            max_length=list_max_len,
                         )
                     if list_name:
                         question["type"] = f"{base_type} {list_name}"
@@ -1045,8 +1082,8 @@ if __name__ == "__main__":
     parser.add_argument(
         '--name-strategy',
         choices=['preserve', 'semantic'],
-        default='preserve',
-        help='Question naming strategy for incoming payloads (default: preserve)',
+        default='semantic',
+        help='Question naming strategy for incoming payloads (default: semantic)',
     )
     parser.add_argument('--file', '-f',
                        help='Override XLSForm file name (default: use config or survey.xlsx)')

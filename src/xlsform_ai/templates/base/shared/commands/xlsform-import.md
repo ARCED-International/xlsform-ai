@@ -96,8 +96,8 @@ Consult these files for patterns and best practices before writing changes:
 - Data after 20 adjacent blank rows or columns may be ignored.
 - Survey requires type/name/label; choices requires list_name/name/label.
 - Question names: start with letter/underscore; allowed letters, digits, hyphen, underscore, period.
-- Keep imported semantic question names concise (target <=32 chars) while still descriptive.
-- Keep generated choice list names concise (target <=24 chars, e.g., `phq_freq_opts` not long sentence fragments).
+- Keep imported semantic question names short by default (target <=20 chars, hard cap <=32).
+- Keep generated choice list names concise (target <=20 chars, hard cap <=24, e.g., `phq_freq_opts`).
 - select_multiple choice names must not contain spaces.
 - For cascading selects with duplicate choice names, set allow_choice_duplicates in settings.
 - or_other only works without translations and without choice_filter; it uses English "Specify other".
@@ -111,7 +111,7 @@ Run these entrypoints directly (no inline Python wrappers):
 python scripts/parse_pdf.py <source> --pages <range> [--auto-scale] --output .xlsform-ai/tmp/import.json
 python scripts/parse_docx.py <source> [--media-dir <dir> --media-prefix <prefix> --auto-scale] --output .xlsform-ai/tmp/import.json
 python scripts/parse_xlsx.py <source> [--sheet <sheet_name>] --output .xlsform-ai/tmp/import.json
-python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy <preserve|semantic> --file survey.xlsx
+python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy semantic --file survey.xlsx
 ```
 
 `add_questions.py` already handles activity logging and safe column mapping.
@@ -200,7 +200,7 @@ Then pass the selected option to parser flags:
 python scripts/parse_pdf.py <source> --pages <range> [--auto-scale] --output .xlsform-ai/tmp/import.json
 python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix> [--auto-scale] --output .xlsform-ai/tmp/import.json
 python scripts/parse_xlsx.py <source> --sheet <sheet_name> --output .xlsform-ai/tmp/import.json
-python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy <preserve|semantic>
+python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy semantic
 ```
 
 If debugging is needed, patch existing `scripts/*.py` entrypoints instead of creating throwaway wrappers.
@@ -371,7 +371,7 @@ Example decision prompt:
 ```text
 [Interactive Panel]
 Q1. Naming strategy for imported fields
-- A: Apply semantic renaming (Recommended) - concise descriptive names (<=32 chars) and compact list names (<=24 chars)
+- A: Apply semantic renaming (Recommended) - short semantic names (target <=20 chars) and compact list names
 - B: Keep source names as-is - fastest, but may keep risky names
 - C: Keep source names and only deduplicate collisions - balanced compromise
 
@@ -432,8 +432,8 @@ Create unique, descriptive names:
 - "What is your name?" -> `respondent_name`
 - "How old are you?" -> `age`
 - "What is your gender?" -> `gender`
-- Keep names concise (prefer <=32 chars) and avoid long sentence-like identifiers.
-- Keep select list names concise (prefer <=24 chars; e.g., `phq_freq_opts`, `gender_opts`).
+- Keep names short and semantic (prefer <=20 chars; avoid long sentence-like identifiers).
+- Keep select list names concise (prefer <=20 chars; hard cap <=24).
 
 Check for duplicates and resolve with semantic names (avoid numeric suffixes).
 

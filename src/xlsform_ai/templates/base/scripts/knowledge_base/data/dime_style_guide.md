@@ -77,8 +77,10 @@ Use this 3-part structure:
 2. Always start with a letter
 3. Avoid trailing numeric suffixes in base names (avoid `age_3`, `income_2`)
 4. Use semantic disambiguation (`age_child`, `income_primary`) instead of numbered variants
-5. Maximum 32 characters (for Stata compatibility)
-6. Be descriptive but concise
+5. Avoid question-number prefixes and paper-only identifiers (avoid `q1_`, `q308_`)
+6. Keep names as short as possible while meaningful (default target <=20 chars)
+7. Maximum 32 characters (for Stata compatibility)
+8. Be descriptive but concise
 
 Trailing numeric suffixes are discouraged because repeat groups and select_multiple exports often generate `_1`, `_2`, etc., which can cause collisions or confusion in analysis.
 
@@ -169,7 +171,7 @@ required: yes
 type: text
 name: respondent_name
 label: What is your name?
-constraint: regex(., '^[a-zA-Z\\s\\-\\.\']+$')
+constraint: regex(., "^[A-Za-z\\s\\-\\.']+$")
 constraint_message: Please enter a valid name (letters only)
 required: yes
 ```

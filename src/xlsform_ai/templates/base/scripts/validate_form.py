@@ -75,6 +75,8 @@ def _build_header_map(sheet) -> Dict[str, int]:
 
 _LEADING_DIGIT_RE = re.compile(r"^\d")
 _TRAILING_DIGIT_RE = re.compile(r"\d$")
+_QUESTION_CODE_PREFIX_RE = re.compile(r"^q\d+(_|$)")
+_SHORT_NAME_TARGET = 20
 
 
 def validate_choices_sheet(sheet) -> Tuple[List[str], List[str], set]:
@@ -153,10 +155,21 @@ def validate_survey_sheet(sheet, choice_lists: set) -> Tuple[List[str], List[str
             else:
                 names[name] = row_idx
 
+            if len(name) > _SHORT_NAME_TARGET:
+                warnings.append(
+                    f"Question name '{name}' at row {row_idx} is long ({len(name)} chars). "
+                    f"Prefer short semantic names around <= {_SHORT_NAME_TARGET} chars when possible."
+                )
+
             if _LEADING_DIGIT_RE.search(name):
                 warnings.append(
                     f"Question name '{name}' at row {row_idx} starts with a number. "
                     "Use a leading letter for compatibility and clarity."
+                )
+            if _QUESTION_CODE_PREFIX_RE.search(name.lower()):
+                warnings.append(
+                    f"Question name '{name}' at row {row_idx} starts with a question-code prefix. "
+                    "Avoid q123-style prefixes; use short semantic names instead."
                 )
             if _TRAILING_DIGIT_RE.search(name):
                 warnings.append(

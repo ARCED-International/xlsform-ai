@@ -42,6 +42,11 @@ See references/settings-sheet.md for settings guidance.
 - Every question name must be unique.
 - Choice names must be unique within each list_name.
 - Use snake_case for names (respondent_age, not Respondent Age).
+- Keep names starting with a letter and avoid leading numbers.
+- Avoid trailing numeric suffixes in base names (avoid age_1, fruits_2).
+- Prefer short semantic names by default (target <=20 chars, hard cap <=32).
+- Avoid question-code prefixes like q1_, q308_, sec1_ when generating final variable names.
+- Use preserve mode only when the user explicitly asks to keep source variable names.
 
 ### 2. list_name Consistency
 - For select_one or select_multiple, the list name after the type must match list_name in choices.
@@ -71,6 +76,7 @@ See references/settings-sheet.md for settings guidance.
 Before considering changes complete, verify:
 
 - All question name values are unique
+- Question names are short and semantic by default (prefer <=20 chars)
 - All choice name values are unique within their list
 - list_name in choices matches list name in select questions
 - Question types are valid (no typos like selct_one)

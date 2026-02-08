@@ -4,13 +4,21 @@ This document contains best practices from the official ODK documentation for cr
 
 ## Field Naming Conventions
 
+Guidance aligned with SurveyCTO's variable naming recommendations:
+https://www.surveycto.com/data-collection-quality/survey-variable-names/
+
 ### Use snake_case for field names
 - Always use lowercase letters
 - Separate words with underscores
 - Start with a letter (not a number)
+- Keep names as short as possible while still meaningful
+- Default target length: <=20 characters (hard cap <=32 for analysis-tool compatibility)
 - Avoid ending names with numeric suffixes (e.g., avoid `age_3`, `fruits_1`)
 - Be descriptive but concise
 - Use semantic variants instead of numbers (`age_child`, `age_spouse`)
+- Avoid question-number prefixes and paper-only IDs (e.g., `q1_`, `q308_`)
+- Avoid copying full question text into the name
+- Use short module prefixes only when they add real meaning (e.g., `hh_`, `phq_`)
 - Reason: repeat exports and select_multiple exports commonly generate `_1`, `_2`, etc.
 
 **Good examples:**
@@ -27,6 +35,7 @@ This document contains best practices from the official ODK documentation for cr
 
 ### Field name length
 - Keep under 32 characters for Stata compatibility
+- Prefer <=20 by default (shorter is generally better for code and analysis)
 - Make names meaningful but not excessively long
 
 ## Constraints and Validation
@@ -39,7 +48,7 @@ This document contains best practices from the official ODK documentation for cr
 
 ### Name Fields
 - **Type:** text
-- **Constraint:** `regex(., '^[a-zA-Z\s\-\.']+$')`
+- **Constraint:** `regex(., "^[A-Za-z\s\-\.']+$")`
 - **Constraint Message:** Please enter a valid name (letters only)
 - **Required:** yes
 

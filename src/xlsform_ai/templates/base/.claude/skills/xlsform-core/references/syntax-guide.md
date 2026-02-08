@@ -57,9 +57,12 @@ Keep data contiguous and avoid large blank blocks inside the sheet.
 ### Naming Rules (survey sheet name)
 
 - Must start with a letter or underscore.
+- Must be short but meaningful (default target <=20, hard cap <=32).
 - Allowed characters: letters, digits, hyphens, underscores, periods.
 - Case-sensitive.
 - Must be unique within the form.
+- Recommended: avoid leading numbers and trailing numeric suffixes in base names.
+- Recommended: avoid question-code prefixes like `q1_` or `q308_`.
 
 ## Choices Sheet
 

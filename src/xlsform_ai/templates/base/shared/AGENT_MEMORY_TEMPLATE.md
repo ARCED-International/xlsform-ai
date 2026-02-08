@@ -1842,8 +1842,9 @@ validation-agent (validate all languages)
 - Do not start or end names with numbers: avoid `1st_visit` and `age_3`
 - Use semantic disambiguation instead of numeric suffixes: `age_child`, `age_spouse`
 - This avoids confusion with repeat exports (`age_1`, `age_2`) and select_multiple exports (`fruits_1`, `fruits_2`)
-- Keep question names concise (target <=32 chars) while preserving meaning
-- Keep select `list_name` values concise (target <=24 chars)
+- Avoid question-code prefixes like `q1_` and `q308_` in final names
+- Default auto-naming policy: short semantic names (target <=20 chars, hard cap <=32)
+- Keep select `list_name` values concise (target <=20 chars, hard cap <=24)
 
 **Type Selection:**
 - Use `integer` for whole numbers (age, count)
