@@ -6,44 +6,28 @@ description: Import questions from questionnaire files into an XLSForm (PDF/Word
 
 ## Conflict Decision Protocol
 
-- [MANDATORY] Use a sequential questioning loop (interactive): present EXACTLY ONE decision question at a time.
-- [MANDATORY] For each decision, format the prompt as:
-  - `**Question:** <single concrete decision>`
-  - `**Why it matters:** <one sentence>`
-  - `**Recommended:** Option [A] - <1-2 sentence reason>`
-  - Options as a Markdown table:
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- [MANDATORY] If an interactive question tool is available (`AskUserQuestion`, `request_user_input`, or client-native choice UI), use it.
+- [PREFERRED] In interactive-tool mode, ask all pending decisions in one interactive panel as separate questions, each with 2-4 mutually exclusive options.
+- [MANDATORY] Put the recommended option first and include a one-line tradeoff.
+- [MANDATORY] Wait for explicit user selection before applying changes.
+- [FALLBACK] If no interactive tool is available, ask in plain REPL text with numbered options.
+- [FORBIDDEN] Do not make silent decisions on required conflicts.
+- [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.
 
-| Option | Description |
-|--------|-------------|
-| A | <recommended option> |
-| B | <alternative option> |
-| C | <alternative option> (optional) |
-| Short | Provide a different short answer (<=5 words) (optional) |
+### Interactive Decision Prompting (Preferred)
 
-- [MANDATORY] End with a strict answer instruction:
-  - `Reply with one option only: A, B, C, or Short.`
-- [MANDATORY] Wait for the user reply before asking the next decision or making any edits.
-- [FORBIDDEN] Do not bundle multiple decisions in one message.
-- [FORBIDDEN] Do not ask for combined answers like "1, 1, keep current".
-- [FORBIDDEN] Do not proceed when a required decision is unresolved.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first and wait for reply.
-### Sequential Decision Prompting (Required)
+When multiple decisions are pending (for example naming, auto-scale, media location), use one interactive panel when the client supports it.
 
-When multiple decisions are needed (for example naming, auto-scale, media location), ask them sequentially:
+- Include one structured choice question per decision.
+- Keep options mutually exclusive (2-4 options per question).
+- Put the recommended option first with a one-line tradeoff.
+- Apply changes only after explicit selections.
 
-1. Ask Decision 1 and wait for answer.
-2. Apply/store Decision 1.
-3. Ask Decision 2 and wait for answer.
-4. Continue until all decisions are answered.
-
-Prompt format:
-
-```text
-Decision: <title>
-1. <option 1> (Recommended) - <one-line tradeoff>
-2. <option 2> - <one-line tradeoff>
-Reply with one option number only (e.g., 1).
-```
+Fallback when no interactive panel tool exists:
+- Ask the same decisions in plain REPL text with numbered options.
+- Ask one decision at a time and wait for the answer.
 
 ## Implementation Protocol
 
@@ -327,9 +311,9 @@ Or:
 
 Or:
 
-ÃƒÂ¢Ã‹Å“Ã‚Â Option 1
-ÃƒÂ¢Ã‹Å“Ã‚Â Option 2
-ÃƒÂ¢Ã‹Å“Ã‚Â Option 3
+- Option 1
+- Option 2
+- Option 3
 ```
 
 ### Constraint Extraction
@@ -395,30 +379,36 @@ Do you want to import all questions, or would you like to:
 
 ## Interactive Confirmation
 
-Ask one decision at a time using the interactive Q/A format.
+Use the interactive question panel when available and include all pending decisions in the same panel.
 
 Example decision prompt:
 
 ```text
-**Question:** Which naming strategy should we use for imported fields?
-**Why it matters:** Numeric and duplicate-style names can create repeat/export ambiguity and harder maintenance.
-**Recommended:** Option [A] - Apply semantic renaming for long-term XLSForm clarity.
+[Interactive Panel]
+Q1. Naming strategy for imported fields
+- A: Apply semantic renaming (Recommended) - best long-term XLSForm clarity
+- B: Keep source names as-is - fastest, but may keep risky names
+- C: Keep source names and only deduplicate collisions - balanced compromise
 
-| Option | Description |
-|--------|-------------|
-| A | Apply semantic renaming (recommended) |
-| B | Keep source names as-is |
-| C | Keep source names but only deduplicate collisions |
-| Short | Provide a different short answer (<=5 words) |
+Q2. Frequency/Likert conversion
+- A: Auto-convert to select_one (Recommended) - cleaner coded analysis
+- B: Keep as text - no automatic type inference risk
 
-Reply with one option only: A, B, C, or Short.
+Q3. Media destination
+- A: Save to ./media/<source_stem> (Recommended) - portable project layout
+- B: Save beside source file - easy local review
+- C: Use custom path - user-controlled location
+- D: Skip image extraction - no media files added
 ```
 
-Then ask the next decision only after answer:
-- Frequency/Likert auto-conversion (`--auto-scale`)
-- Media destination (`./media/<source_stem>`, beside source, custom, or skip)
+Fallback REPL format (only if interactive panel is unavailable):
 
-Never request combined responses in one message.
+```text
+Decision: <title>
+1. <option 1> (Recommended) - <one-line tradeoff>
+2. <option 2> - <one-line tradeoff>
+Reply with one option number only (e.g., 1).
+```
 
 ### Option 2: Select Questions
 
@@ -426,7 +416,7 @@ Never request combined responses in one message.
 Available questions:
 [SUCCESS:] 1. What is your name? (text)
 [SUCCESS:] 2. What is your gender? (select_one)
-[ ] 3. How old are you? (integer) ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Skip
+[ ] 3. How old are you? (integer) -> Skip
 [SUCCESS:] 4. Select your favorite fruits (select_multiple)
 ...
 

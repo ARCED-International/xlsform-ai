@@ -16,27 +16,16 @@ arguments:
 
 ## Conflict Decision Protocol
 
-- [MANDATORY] Use a sequential questioning loop (interactive): present EXACTLY ONE decision question at a time.
-- [MANDATORY] For each decision, format the prompt as:
-  - `**Question:** <single concrete decision>`
-  - `**Why it matters:** <one sentence>`
-  - `**Recommended:** Option [A] - <1-2 sentence reason>`
-  - Options as a Markdown table:
+- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
+- [MANDATORY] If an interactive question tool is available (`AskUserQuestion`, `request_user_input`, or client-native choice UI), use it.
+- [PREFERRED] In interactive-tool mode, ask all pending decisions in one interactive panel as separate questions, each with 2-4 mutually exclusive options.
+- [MANDATORY] Put the recommended option first and include a one-line tradeoff.
+- [MANDATORY] Wait for explicit user selection before applying changes.
+- [FALLBACK] If no interactive tool is available, ask in plain REPL text with numbered options.
+- [FORBIDDEN] Do not make silent decisions on required conflicts.
+- [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.
 
-| Option | Description |
-|--------|-------------|
-| A | <recommended option> |
-| B | <alternative option> |
-| C | <alternative option> (optional) |
-| Short | Provide a different short answer (<=5 words) (optional) |
-
-- [MANDATORY] End with a strict answer instruction:
-  - `Reply with one option only: A, B, C, or Short.`
-- [MANDATORY] Wait for the user reply before asking the next decision or making any edits.
-- [FORBIDDEN] Do not bundle multiple decisions in one message.
-- [FORBIDDEN] Do not ask for combined answers like "1, 1, keep current".
-- [FORBIDDEN] Do not proceed when a required decision is unresolved.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first and wait for reply.
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
 **CRITICAL: Use existing helper scripts - DO NOT write inline code**
@@ -113,7 +102,7 @@ Group structure:
   begin group demographics (row 5)
     text name (row 6)
     integer age (row 7)
-    ÃƒÂ¢Ã¢â‚¬Â Ã‚Â income_question will go here
+    ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â income_question will go here
   end group demographics (row 8)
 
 Action: Insert at row 8, shift end_group down
@@ -220,7 +209,7 @@ Group after:
   begin group (row 5)
     name (row 6)
     age (row 7)
-    income (row 8) ÃƒÂ¢Ã¢â‚¬Â Ã‚Â moved here
+    income (row 8) ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â moved here
   end group (row 9)
 ```
 
@@ -247,7 +236,7 @@ Result:
   begin group demographics (row 5)
     name (row 6)
   end group (row 7)
-  phone (row 8) ÃƒÂ¢Ã¢â‚¬Â Ã‚Â moved here, outside groups
+  phone (row 8) ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â moved here, outside groups
   begin group contact_info (row 9)
     (empty or shifts)
   end group (row 10)
@@ -279,7 +268,7 @@ Result:
 
   New order:
     Row 2: first_name
-    Row 3: age_question ÃƒÂ¢Ã¢â‚¬Â Ã‚Â moved here
+    Row 3: age_question ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â moved here
     Row 4: last_name
     ...
 ```
@@ -349,7 +338,7 @@ New group structure:
   begin group demographics (row 5)
     text name (row 6)
     integer age (row 7)
-    text income (row 8) ÃƒÂ¢Ã¢â‚¬Â Ã‚Â moved here
+    text income (row 8) ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â moved here
   end group (row 9)
 ```
 
