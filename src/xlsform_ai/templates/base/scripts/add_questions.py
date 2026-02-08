@@ -69,6 +69,15 @@ try:
 except ImportError:
     HISTORY_AVAILABLE = False
 
+# Try to import settings helpers, fail gracefully if not available
+try:
+    from settings_utils import ensure_settings_columns, VERSION_FORMULA
+    SETTINGS_UTILS_AVAILABLE = True
+except ImportError:
+    SETTINGS_UTILS_AVAILABLE = False
+    ensure_settings_columns = None
+    VERSION_FORMULA = '=TEXT(NOW(), "yyyymmddhhmmss")'
+
 
 # Try to import AI components, fail gracefully if not available
 try:
@@ -203,6 +212,9 @@ def _cell_has_value(value) -> bool:
 
 
 _SELECT_TYPES = {"select_one", "select_multiple"}
+_MAX_QUESTION_NAME_LEN = 32
+_MAX_LIST_NAME_LEN = 24
+_MAX_TOKEN_LEN = 10
 _QUESTION_STOPWORDS = {
     "a", "an", "the", "is", "are", "was", "were", "be", "to", "for", "of", "and",
     "or", "in", "on", "at", "with", "from", "by", "as", "that", "this", "these",
@@ -214,7 +226,12 @@ _TOKEN_RE = re.compile(r"[a-z0-9]+")
 _INVALID_IDENTIFIER_RE = re.compile(r"[^a-z0-9_]+")
 
 
-def _to_ascii_identifier(raw_value: str, fallback: str = "question") -> str:
+def _to_ascii_identifier(
+    raw_value: str,
+    fallback: str = "question",
+    max_length: int = 64,
+    allow_trailing_numeric: bool = False,
+) -> str:
     text = str(raw_value or "").strip().lower()
     text = text.replace("-", "_")
     text = _INVALID_IDENTIFIER_RE.sub("_", text)
@@ -224,9 +241,15 @@ def _to_ascii_identifier(raw_value: str, fallback: str = "question") -> str:
     if text[0].isdigit():
         text = f"q_{text}"
     # Avoid trailing numeric suffixes in base variable/list names to reduce repeat/export ambiguity.
-    if text[-1].isdigit():
+    if not allow_trailing_numeric and text[-1].isdigit():
         text = f"{text}_var"
-    return text[:64]
+    text = text[:max_length]
+    if not allow_trailing_numeric and text and text[-1].isdigit():
+        if len(text) >= max_length:
+            text = text[:-1] + "v"
+        else:
+            text = f"{text}v"
+    return text
 
 
 def _suffix_letters(index: int) -> str:
@@ -242,16 +265,18 @@ def _suffix_letters(index: int) -> str:
     return "".join(reversed(letters))
 
 
-def _ensure_unique_identifier(base_name: str, used_names: set) -> str:
-    candidate = _to_ascii_identifier(base_name)
+def _ensure_unique_identifier(base_name: str, used_names: set, max_length: int = 64) -> str:
+    candidate = _to_ascii_identifier(base_name, max_length=max_length)
     if candidate not in used_names:
         return candidate
 
     idx = 1
     while True:
-        candidate_with_suffix = f"{candidate}_{_suffix_letters(idx)}"
+        suffix = f"_{_suffix_letters(idx)}"
+        base_trimmed = candidate[: max(1, max_length - len(suffix))]
+        candidate_with_suffix = f"{base_trimmed}{suffix}"
         if candidate_with_suffix not in used_names:
-            return candidate_with_suffix[:64]
+            return candidate_with_suffix[:max_length]
         idx += 1
 
 
@@ -264,9 +289,37 @@ def _derive_name_from_label(label: str) -> str:
     if not tokens:
         return "question"
 
-    # Keep names short and readable.
-    base = "_".join(tokens[:6])
-    return _to_ascii_identifier(base, fallback="question")
+    compact_tokens = [tok[:_MAX_TOKEN_LEN] for tok in tokens[:4] if tok]
+    if not compact_tokens:
+        compact_tokens = tokens[:2]
+    base = "_".join(compact_tokens)
+    return _to_ascii_identifier(base, fallback="question", max_length=_MAX_QUESTION_NAME_LEN)
+
+
+def _derive_short_list_name(question_name: str) -> str:
+    base = _to_ascii_identifier(
+        question_name,
+        fallback="choices",
+        max_length=max(_MAX_LIST_NAME_LEN, 16),
+    )
+    for suffix in ("_field", "_var", "_question", "_item"):
+        if base.endswith(suffix):
+            base = base[: -len(suffix)]
+            break
+
+    tokens = [tok for tok in base.split("_") if tok]
+    if len(tokens) >= 3:
+        compact = "_".join(tokens[:3])
+    elif len(tokens) >= 2:
+        compact = "_".join(tokens[:2])
+    else:
+        compact = base
+
+    return _to_ascii_identifier(
+        f"{compact}_opts",
+        fallback="choices_opts",
+        max_length=_MAX_LIST_NAME_LEN,
+    )
 
 
 def _split_select_type(raw_type: str) -> Tuple[str, str]:
@@ -436,6 +489,23 @@ def add_questions(
         # Load workbook
         wb = openpyxl.load_workbook(survey_file)
 
+        # Ensure settings.version uses formula default unless user explicitly overrides via update-settings.
+        if SETTINGS_UTILS_AVAILABLE:
+            try:
+                if "settings" in wb.sheetnames:
+                    settings_sheet = wb["settings"]
+                else:
+                    settings_sheet = wb.create_sheet("settings")
+                settings_header_map = ensure_settings_columns(settings_sheet)
+                settings_header_lower = {k.lower(): v for k, v in settings_header_map.items()}
+                version_col = settings_header_map.get("version") or settings_header_lower.get("version")
+                if version_col:
+                    version_cell = settings_sheet.cell(row=2, column=version_col)
+                    if version_cell.value is None or str(version_cell.value).strip() == "":
+                        version_cell.value = VERSION_FORMULA
+            except Exception:
+                pass
+
         # Get survey sheet
         if "survey" not in wb.sheetnames:
             return {"success": False, "error": "'survey' sheet not found"}
@@ -555,8 +625,16 @@ def add_questions(
             if name_strategy == "semantic" or not _cell_has_value(raw_name):
                 base_name = _derive_name_from_label(label_text)
             else:
-                base_name = _to_ascii_identifier(str(raw_name), fallback=_derive_name_from_label(label_text))
-            unique_name = _ensure_unique_identifier(base_name, used_question_names)
+                base_name = _to_ascii_identifier(
+                    str(raw_name),
+                    fallback=_derive_name_from_label(label_text),
+                    max_length=_MAX_QUESTION_NAME_LEN,
+                )
+            unique_name = _ensure_unique_identifier(
+                base_name,
+                used_question_names,
+                max_length=_MAX_QUESTION_NAME_LEN,
+            )
             used_question_names.add(unique_name)
             question["name"] = unique_name
 
@@ -570,18 +648,33 @@ def add_questions(
                 signature = tuple(sorted((c["name"], c["label"].lower()) for c in normalized_choices))
 
                 if explicit_list_name:
-                    list_name = explicit_list_name
+                    if explicit_list_name in existing_choice_lists:
+                        list_name = explicit_list_name
+                    else:
+                        list_name = _to_ascii_identifier(
+                            explicit_list_name,
+                            fallback=_derive_short_list_name(unique_name),
+                            max_length=_MAX_LIST_NAME_LEN,
+                        )
                 else:
-                    proposed = _to_ascii_identifier(f"{unique_name}_opts", fallback="choices")
+                    proposed = _derive_short_list_name(unique_name)
                     list_name = existing_choice_signatures.get(signature, proposed)
                     if list_name in used_list_names and list_name not in existing_choice_lists:
-                        list_name = _ensure_unique_identifier(list_name, used_list_names)
+                        list_name = _ensure_unique_identifier(
+                            list_name,
+                            used_list_names,
+                            max_length=_MAX_LIST_NAME_LEN,
+                        )
                     if list_name in existing_choice_lists:
                         existing_signature = tuple(
                             sorted((k, v.lower()) for k, v in existing_choice_lists[list_name].items())
                         )
                         if existing_signature != signature:
-                            list_name = _ensure_unique_identifier(list_name, used_list_names)
+                            list_name = _ensure_unique_identifier(
+                                list_name,
+                                used_list_names,
+                                max_length=_MAX_LIST_NAME_LEN,
+                            )
 
                 used_list_names.add(list_name)
                 question["type"] = f"{base_type} {list_name}"
@@ -598,7 +691,14 @@ def add_questions(
                     existing_choice_lists.setdefault(list_name, {})[choice_item["name"]] = choice_item["label"]
             else:
                 if base_type in _SELECT_TYPES:
-                    list_name = explicit_list_name
+                    if explicit_list_name in existing_choice_lists:
+                        list_name = explicit_list_name
+                    else:
+                        list_name = _to_ascii_identifier(
+                            explicit_list_name,
+                            fallback="choices_opts",
+                            max_length=_MAX_LIST_NAME_LEN,
+                        )
                     if list_name:
                         question["type"] = f"{base_type} {list_name}"
                     else:

@@ -219,7 +219,8 @@ class ActivityLogger:
                 console.print(
                     "[bold yellow]Set them in the settings sheet (row 2) or run:[/bold yellow] "
                     "`xlsform-ai update-settings --title \"...\" --id \"...\"` "
-                    "(version defaults to formula unless `--version` is set) "
+                    "(version defaults to formula unless `--version` is set). "
+                    "To set only version formula: `python scripts/update_settings.py --ensure-version-formula`. "
                     "or `python scripts/update_settings.py --title \"...\" --id \"...\"`"
                 )
                 console.print("")
@@ -228,7 +229,8 @@ class ActivityLogger:
                 print(
                     "Set them in the settings sheet (row 2) or run: "
                     "xlsform-ai update-settings --title \"...\" --id \"...\" "
-                    "(version defaults to formula unless --version is set) "
+                    "(version defaults to formula unless --version is set). "
+                    "To set only version formula: python scripts/update_settings.py --ensure-version-formula. "
                     "or python scripts/update_settings.py --title \"...\" --id \"...\""
                 )
                 print("")
@@ -246,6 +248,7 @@ class ActivityLogger:
         settings = read_form_settings(self._xlsform_path)
         data["form_title"] = settings.get("form_title", "")
         data["form_id"] = settings.get("form_id", "")
+        data["form_version"] = settings.get("version", "")
 
     def _load_log_data(self) -> dict:
         """Load existing log data or create new structure.
@@ -259,6 +262,7 @@ class ActivityLogger:
             "project_name": self.project_name,
             "form_title": "",
             "form_id": "",
+            "form_version": "",
             "created": datetime.now().isoformat(),
             "last_updated": datetime.now().isoformat(),
             "total_actions": 0,

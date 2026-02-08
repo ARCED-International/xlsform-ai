@@ -80,7 +80,13 @@ def _normalize_variable_name(raw_value: str) -> str:
 
 
 def _strip_choice_prefix(text: str) -> str:
-    return _clean_text(re.sub(r"^\s*(?:\(?[A-Za-z]\)|[A-Za-z][\.\)]|\(?\d+\)|\d+[\.\)]|[-*+])\s+", "", text))
+    return _clean_text(
+        re.sub(
+            r"^\s*(?:\(?[A-Za-z]\)|[A-Za-z][\.\)]|\(?\d+\)?[\.\)\:\-=]?|[-*+])\s+",
+            "",
+            text,
+        )
+    )
 
 
 def _looks_like_question(text: str) -> bool:
@@ -117,7 +123,7 @@ def _infer_select_mode(question_text: str, response_hint: str = "") -> str:
 def _extract_numbered_inline_options(raw_text: str) -> List[str]:
     # Handles patterns like: "1 Always 2 Often 3 Sometimes 4 Rarely 5 Never"
     matches = re.findall(
-        r"(?:^|\s)\(?\d{1,2}\)?[\.\:\-]?\s*([A-Za-z][A-Za-z/&\-\s]{1,60}?)(?=(?:\s+\(?\d{1,2}\)?[\.\:\-]?\s+)|$)",
+        r"(?:^|\s)\(?\d{1,2}\)?[\.\:\-=]?\s*([A-Za-z][A-Za-z/&\-\s]{1,60}?)(?=(?:\s+\(?\d{1,2}\)?[\.\:\-=]?\s+)|$)",
         raw_text,
     )
     cleaned = [_clean_text(m) for m in matches if _clean_text(m)]
@@ -125,27 +131,110 @@ def _extract_numbered_inline_options(raw_text: str) -> List[str]:
     return cleaned if len(cleaned) >= 2 else []
 
 
-def _infer_standard_scale_options(question_text: str) -> List[str]:
+def _infer_standard_scale_options(question_text: str, response_hint: str = "") -> List[str]:
     text = _clean_text(question_text).lower()
-    if not text:
+    hint = _clean_text(response_hint).lower()
+    combined = f"{text} {hint}".strip()
+    if not combined:
         return []
 
-    if any(token in text for token in ["how often", "frequency", "frequently", "often do you"]):
-        return ["Always", "Often", "Sometimes", "Rarely", "Never"]
+    # If response hint already contains explicit options, prefer those.
+    if hint:
+        hinted_options = _parse_option_blob(response_hint)
+        if len(hinted_options) >= 2:
+            return hinted_options
 
-    if "agree" in text and "disagree" in text:
-        return ["Strongly agree", "Agree", "Neutral", "Disagree", "Strongly disagree"]
+    frequency_scale = ["Always", "Often", "Sometimes", "Rarely", "Never"]
+    phq_scale = ["Not at all", "Several days", "More than half the days", "Nearly every day"]
+    agreement_scale = ["Strongly agree", "Agree", "Neutral", "Disagree", "Strongly disagree"]
+    satisfaction_scale = [
+        "Very satisfied",
+        "Satisfied",
+        "Neither satisfied nor dissatisfied",
+        "Dissatisfied",
+        "Very dissatisfied",
+    ]
+    confidence_scale = ["Very confident", "Somewhat confident", "Not very confident", "Not at all confident"]
 
-    if any(token in text for token in ["satisfied", "satisfaction"]):
-        return [
-            "Very satisfied",
-            "Satisfied",
-            "Neither satisfied nor dissatisfied",
-            "Dissatisfied",
-            "Very dissatisfied",
-        ]
+    if any(token in combined for token in ["not at all", "several days", "more than half the days", "nearly every day"]):
+        return phq_scale
+
+    if any(token in combined for token in ["how often", "frequency", "frequently", "often do you"]):
+        return frequency_scale
+    if sum(token in combined for token in ["always", "often", "sometimes", "rarely", "never"]) >= 2:
+        return frequency_scale
+
+    if ("agree" in combined and "disagree" in combined) or "strongly agree" in combined:
+        return agreement_scale
+
+    if any(token in combined for token in ["satisfied", "satisfaction"]):
+        return satisfaction_scale
+
+    if "confident" in combined:
+        return confidence_scale
+
+    # Heuristic mapping for common 4/5-point scales when only numeric hints exist.
+    if re.search(r"\b1\s*[-to]{0,3}\s*5\b", combined) and any(
+        token in combined for token in ["agree", "satisfied", "often", "frequency", "rate"]
+    ):
+        if "agree" in combined:
+            return agreement_scale
+        if "satisf" in combined:
+            return satisfaction_scale
+        return frequency_scale
+
+    if re.search(r"\b1\s*[-to]{0,3}\s*4\b", combined) and any(
+        token in combined for token in ["confident", "often", "frequency", "rate"]
+    ):
+        if "confident" in combined:
+            return confidence_scale
+        return ["Always", "Sometimes", "Rarely", "Never"]
 
     return []
+
+
+def _looks_like_scale_item(question_text: str) -> bool:
+    text = _clean_text(question_text).lower()
+    if not text:
+        return False
+
+    explicit_scale_tokens = [
+        "how often",
+        "frequency",
+        "agree",
+        "disagree",
+        "satisfied",
+        "confidence",
+        "rate",
+        "in the last",
+        "during the last",
+    ]
+    if any(token in text for token in explicit_scale_tokens):
+        return True
+
+    # Likert items are often statements without question marks.
+    if text.endswith("?"):
+        return False
+
+    blocker_tokens = [
+        "name",
+        "phone",
+        "address",
+        "date of",
+        "id number",
+        "specify",
+        "describe",
+        "explain",
+        "age",
+        "how old",
+        "where",
+        "when",
+    ]
+    if any(token in text for token in blocker_tokens):
+        return False
+
+    word_count = len(text.split())
+    return 3 <= word_count <= 24
 
 
 def _parse_option_blob(raw_text: str) -> List[str]:
@@ -426,6 +515,13 @@ def extract_questions_from_docx(
             return
 
         raw_response = (response_text or "").strip()
+        if raw_response:
+            existing_hint = str(current_question.get("_response_hint", "")).strip()
+            if not existing_hint:
+                current_question["_response_hint"] = raw_response
+            elif raw_response not in existing_hint and len(existing_hint) < 500:
+                current_question["_response_hint"] = f"{existing_hint} | {raw_response}"
+
         parsed_options = _parse_option_blob(raw_response)
         if parsed_options:
             current_question["type"] = _infer_select_mode(
@@ -440,6 +536,20 @@ def extract_questions_from_docx(
             return
 
         lowered = raw_response.lower()
+        if auto_scale:
+            inferred_scale = _infer_standard_scale_options(
+                str(current_question.get("text", "")),
+                raw_response,
+            )
+            if inferred_scale:
+                current_question["type"] = "select_one"
+                for idx, label in enumerate(inferred_scale):
+                    image_ref = None
+                    if response_images and idx < len(response_images):
+                        image_ref = response_images[idx]
+                    add_choice(label, image_ref=image_ref)
+                return
+
         if any(token in lowered for token in ["select one", "single choice", "choose one"]):
             current_question["type"] = "select_one"
             return
@@ -542,6 +652,7 @@ def extract_questions_from_docx(
         if header_row_index is None or question_col is None:
             return False
 
+        active_response_template = ""
         for row in rows[header_row_index + 1 :]:
             texts = row["texts"]
             images = row["images"]
@@ -555,6 +666,8 @@ def extract_questions_from_docx(
             response_images = images[response_col] if response_col is not None and response_col < len(images) else []
             variable_name = texts[variable_col] if variable_col is not None and variable_col < len(texts) else ""
             explicit_type = texts[type_col] if type_col is not None and type_col < len(texts) else ""
+            if _clean_text(response_text):
+                active_response_template = response_text
 
             if question_text:
                 parsed_question = QUESTION_RE.match(question_text)
@@ -568,7 +681,10 @@ def extract_questions_from_docx(
                 )
                 if explicit_type:
                     current_question["type"] = _clean_text(explicit_type).lower().replace(" ", "_")
-                apply_response_definition(response_text, response_images=response_images)
+                response_to_apply = response_text
+                if not _clean_text(response_to_apply) and not explicit_type:
+                    response_to_apply = active_response_template
+                apply_response_definition(response_to_apply, response_images=response_images)
                 continue
 
             # Continuation rows for options or response details.
@@ -641,22 +757,32 @@ def extract_questions_from_docx(
     for question in questions:
         choices = question.get("choices")
         text = str(question.get("text", ""))
+        response_hint = str(question.get("_response_hint", ""))
         if choices:
             if not str(question.get("type", "")).startswith("select_"):
                 question["type"] = _infer_select_mode(text)
         else:
             if auto_scale:
-                inferred_scale = _infer_standard_scale_options(text)
+                inferred_scale = _infer_standard_scale_options(text, response_hint=response_hint)
+                if not inferred_scale and response_hint:
+                    hinted_options = _parse_option_blob(response_hint)
+                    if len(hinted_options) >= 2:
+                        inferred_scale = hinted_options
+                if not inferred_scale and _looks_like_scale_item(text):
+                    inferred_scale = _infer_standard_scale_options(text, response_hint="frequency")
                 if inferred_scale:
                     question["type"] = "select_one"
                     question["choices"] = [
                         {"value": _choice_value(label), "label": label} for label in inferred_scale
                     ]
+                    question.pop("_response_hint", None)
                     continue
 
             question["choices"] = None
             if str(question.get("type", "")).startswith("select_"):
                 question["type"] = _infer_non_select_type(text)
+
+        question.pop("_response_hint", None)
 
     return questions
 
@@ -780,6 +906,7 @@ def main() -> None:
 
     if args.output:
         output_path = Path(args.output).resolve()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(json_output, encoding="utf-8")
         print(f"Saved {len(questions)} questions to {output_path}")
     else:

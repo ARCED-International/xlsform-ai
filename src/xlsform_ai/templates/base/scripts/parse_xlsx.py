@@ -252,6 +252,7 @@ def main() -> None:
 
     if args.output:
         output_path = Path(args.output).resolve()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(json_output, encoding="utf-8")
         print(f"Saved {len(questions)} questions to {output_path}")
     else:

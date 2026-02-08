@@ -17,7 +17,7 @@ description: Import questions from questionnaire files into an XLSForm (PDF/Word
 - [FORBIDDEN] Do not make silent decisions on required conflicts.
 - [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
 - Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.
-- [MANDATORY] Missing settings decisions (`form_title`/`form_id`) must follow the same interactive protocol and may not be asked as plain numbered text when interactive tools are available.
+- [MANDATORY] Missing settings decisions (`form_title`/`form_id`/`version`) must follow the same interactive protocol and may not be asked as plain numbered text when interactive tools are available.
 
 ### Interactive Decision Prompting (Preferred)
 
@@ -31,6 +31,23 @@ When multiple decisions are pending (for example naming, auto-scale, media locat
 Fallback when no interactive panel tool exists:
 - Ask the same decisions in plain REPL text with numbered options.
 - Ask one decision at a time and wait for the answer.
+
+### Settings Bootstrap Decision (Mandatory)
+
+Before importing, check row-2 values in `settings` for `form_title`, `form_id`, and `version`.
+
+- If `form_title` or `form_id` is empty, ask a structured interactive question to set them before import.
+- Always suggest values:
+  - Suggested `form_title`: derived from source file stem in title case.
+  - Suggested `form_id`: snake_case from source stem.
+- `version` should default to formula (not a fixed literal):
+  - `=TEXT(NOW(), "yyyymmddhhmmss")`
+- If `version` is blank, propose setting formula immediately.
+
+Interactive options must include:
+- `Set all now (Recommended)` - set suggested `form_title`, `form_id`, and formula `version`.
+- `Set version only` - keep title/id empty for now, set formula `version`.
+- `Continue without setting` - proceed and keep warning visible.
 
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
@@ -64,6 +81,8 @@ If you write inline Python code for file operations, you have failed this comman
 - Data after 20 adjacent blank rows or columns may be ignored.
 - Survey requires type/name/label; choices requires list_name/name/label.
 - Question names: start with letter/underscore; allowed letters, digits, hyphen, underscore, period.
+- Keep imported semantic question names concise (target <=32 chars) while still descriptive.
+- Keep generated choice list names concise (target <=24 chars, e.g., `phq_freq_opts` not long sentence fragments).
 - select_multiple choice names must not contain spaces.
 - For cascading selects with duplicate choice names, set allow_choice_duplicates in settings.
 - or_other only works without translations and without choice_filter; it uses English "Specify other".
@@ -258,7 +277,7 @@ Example decision prompt:
 ```text
 [Interactive Panel]
 Q1. Naming strategy for imported fields
-- A: Apply semantic renaming (Recommended) - best long-term XLSForm clarity
+- A: Apply semantic renaming (Recommended) - concise descriptive names (<=32 chars) and compact list names (<=24 chars)
 - B: Keep source names as-is - fastest, but may keep risky names
 - C: Keep source names and only deduplicate collisions - balanced compromise
 
@@ -334,6 +353,8 @@ Create unique, descriptive names:
 - "What is your name?" -> `respondent_name`
 - "How old are you?" -> `age`
 - "What is your gender?" -> `gender`
+- Keep names concise (prefer <=32 chars) and avoid long sentence-like identifiers.
+- Keep select list names concise (prefer <=24 chars; e.g., `phq_freq_opts`, `gender_opts`).
 
 Check for duplicates and resolve with semantic names (avoid numeric suffixes).
 

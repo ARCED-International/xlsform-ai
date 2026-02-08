@@ -20,7 +20,7 @@ This is the top-level translation skill entrypoint.
 - [FORBIDDEN] Do not make silent decisions on required conflicts.
 - [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
 - Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.
-Use the same operational protocol as:
+Use the same operational protocol as the internal translation sub-agent (`translation-subagent`):
 
 - `shared/skills/sub-agents/translation-agent/SKILL.md`
 

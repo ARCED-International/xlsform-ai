@@ -1,5 +1,5 @@
 ---
-name: translation-agent
+name: translation-subagent
 description: Multilingual XLSForm specialist for language columns, contextual translations, and translation validation in survey/choices/settings.
 ---
 

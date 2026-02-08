@@ -13,6 +13,7 @@
 - [FORBIDDEN] Do not make silent decisions on required conflicts.
 - [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
 - Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.
+- [MANDATORY] If `settings.form_title`, `settings.form_id`, or `settings.version` is missing, ask an interactive settings-bootstrap question with suggested values before write operations.
 
 This is an XLSForm project with AI-assisted development capabilities using multi-agent architecture.
 
@@ -600,7 +601,13 @@ Use `build_column_mapping()` from `form_structure` to locate columns like `const
 **Settings Sheet Rules (Project Standard):**
 - Row 1 headers, Row 2 values (single values row).
 - Settings sheet is optional but recommended. If present, include `form_title`, `form_id`, `version`.
-- `version` is a string; common convention is `yyyymmddrr`.
+- Default `version` value should be formula-driven unless user explicitly requests a literal:
+  `=TEXT(NOW(), "yyyymmddhhmmss")`
+- When `form_title`, `form_id`, or `version` is missing, ask an interactive settings-bootstrap question before proceeding with write operations.
+- Suggested values for the interactive prompt:
+  - `form_title`: source/workbook stem in title case
+  - `form_id`: source/workbook stem in snake_case
+  - `version`: formula above
 - Columns can appear in any order. Always map headers before writing.
 - Common headers: `instance_name`, `default_language`, `public_key`, `submission_url`, `style`,
   `name`, `clean_text_values`, `allow_choice_duplicates`.
@@ -630,7 +637,7 @@ except Exception as e:
 
 **CRITICAL: Missing Settings Reminder (Agent Output, Not Console)**
 
-If `form_title` or `form_id` are missing after any XLSForm operation, the agent MUST explicitly remind the user in a highly noticeable format (e.g., bold banner or "ACTION REQUIRED" line). This reminder is part of the agent's response text, not a console print. It must appear every time until both are set, and should include how to set them (settings sheet row 2 or `xlsform-ai update-settings --title ... --id ...`).
+If `form_title`, `form_id`, or `version` are missing after any XLSForm operation, the agent MUST explicitly remind the user in a highly noticeable format (e.g., bold banner or "ACTION REQUIRED" line). This reminder is part of the agent's response text, not a console print. It must appear every time until all are set, and should include how to set them (settings sheet row 2 or `xlsform-ai update-settings --title ... --id ...`; to set version formula only: `python scripts/update_settings.py --ensure-version-formula`; version defaults to formula unless explicitly overridden).
 
 ### Phase 3: Finalization
 
@@ -1954,6 +1961,8 @@ validation-agent (validate all languages)
 - Do not start or end names with numbers: avoid `1st_visit` and `age_3`
 - Use semantic disambiguation instead of numeric suffixes: `age_child`, `age_spouse`
 - This avoids confusion with repeat exports (`age_1`, `age_2`) and select_multiple exports (`fruits_1`, `fruits_2`)
+- Keep question names concise (target <=32 chars) while preserving meaning
+- Keep select `list_name` values concise (target <=24 chars)
 
 **Type Selection:**
 - Use `integer` for whole numbers (age, count)

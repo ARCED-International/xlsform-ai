@@ -42,12 +42,17 @@ def main():
             "If omitted, the default formula is enforced."
         ),
     )
+    parser.add_argument(
+        "--ensure-version-formula",
+        action="store_true",
+        help="Ensure settings.version uses the default formula even when title/id are unchanged.",
+    )
     parser.add_argument("--file", "-f", help="Path to XLSForm file (defaults to config or survey.xlsx)")
 
     args = parser.parse_args()
 
-    if args.title is None and args.form_id is None and args.version is None:
-        print("Error: Provide --title and/or --id and/or --version.")
+    if args.title is None and args.form_id is None and args.version is None and not args.ensure_version_formula:
+        print("Error: Provide --title and/or --id and/or --version (or --ensure-version-formula).")
         sys.exit(1)
 
     xlsform_path = resolve_xlsform_path(args.file)

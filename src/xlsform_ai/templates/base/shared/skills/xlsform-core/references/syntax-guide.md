@@ -57,6 +57,7 @@ Keep data contiguous and avoid large blank blocks inside the sheet.
 ### Naming Rules (survey sheet name)
 
 - Must start with a letter or underscore.
+- Must be short but meaningful (character length max 25, but the shorter the sweeter)
 - Allowed characters: letters, digits, hyphens, underscores, periods.
 - Case-sensitive.
 - Must be unique within the form.

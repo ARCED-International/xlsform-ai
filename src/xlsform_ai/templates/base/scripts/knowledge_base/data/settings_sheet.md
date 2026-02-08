@@ -15,8 +15,9 @@ The settings sheet is optional but recommended. If present, include the core fie
 
 ### version
 - Version string used to track updates.
-- Common convention: yyyymmddrr (year, month, day, revision).
-- Example: 2026020701
+- Recommended default in this project: formula-based timestamp
+  - `=TEXT(NOW(), "yyyymmddhhmmss")`
+- This can be overridden only when user explicitly requests a fixed value.
 
 If form_id is missing, many tools default to the XLSX filename. If form_title is missing, it may default to form_id.
 

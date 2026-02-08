@@ -21,6 +21,24 @@ arguments:
 - [FORBIDDEN] Do not make silent decisions on required conflicts.
 - [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
 - Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.
+- [MANDATORY] If `settings.form_title`, `settings.form_id`, or `settings.version` is missing, ask an interactive settings bootstrap question before continuing.
+
+### Settings Bootstrap Decision (Mandatory)
+
+Before validation, check row-2 values in `settings`:
+- `form_title`
+- `form_id`
+- `version`
+
+If any are missing, ask an interactive decision with suggested values:
+- Suggested `form_title`: title-cased file stem
+- Suggested `form_id`: snake_case file stem
+- `version`: formula `=TEXT(NOW(), "yyyymmddhhmmss")` (default)
+
+Options:
+- `Set all now (Recommended)` - set title/id suggestions and formula version, then validate.
+- `Set version only` - set version formula only, then validate.
+- `Continue without setting` - validate anyway and keep an action-required warning.
 
 ## Implementation Protocol
 

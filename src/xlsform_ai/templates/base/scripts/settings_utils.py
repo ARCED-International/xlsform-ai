@@ -17,7 +17,7 @@ except Exception:
 
 
 SETTINGS_SHEET_NAME = "settings"
-REQUIRED_SETTINGS_COLUMNS = ["form_title", "form_id"]
+REQUIRED_SETTINGS_COLUMNS = ["form_title", "form_id", "version"]
 PROTECTED_SETTINGS_COLUMNS = {"version"}
 VERSION_FORMULA = '=TEXT(NOW(), "yyyymmddhhmmss")'
 _KEY_VALUE_HEADERS = {"column_name", "value"}
@@ -183,8 +183,8 @@ def _normalize_settings_sheet(sheet) -> None:
 
 
 def read_form_settings(xlsx_path: Path) -> Dict[str, str]:
-    """Read form_title and form_id from settings sheet."""
-    result = {"form_title": "", "form_id": ""}
+    """Read key settings values from settings sheet."""
+    result = {"form_title": "", "form_id": "", "version": ""}
     if not xlsx_path or not Path(xlsx_path).exists():
         return result
 
@@ -216,6 +216,51 @@ def read_form_settings(xlsx_path: Path) -> Dict[str, str]:
                 if value is not None:
                     result[key] = str(value).strip()
     return result
+
+
+def ensure_version_formula_default(xlsx_path: Path) -> bool:
+    """
+    Ensure settings.version uses the default formula when missing.
+
+    This is a lightweight safeguard for projects initialized from external
+    workbooks where settings/version may be blank.
+    """
+    if not xlsx_path:
+        return False
+
+    path = Path(xlsx_path)
+    if not path.exists():
+        return False
+
+    changed = False
+    wb = openpyxl.load_workbook(path)
+    try:
+        sheet = _get_settings_sheet(wb)
+        if sheet is None:
+            sheet = wb.create_sheet(SETTINGS_SHEET_NAME)
+            changed = True
+
+        header_map = ensure_settings_columns(sheet)
+        header_map_lower = {k.lower(): v for k, v in header_map.items()}
+        version_col = header_map.get("version") or header_map_lower.get("version")
+        if not version_col:
+            # Defensive fallback; ensure_settings_columns should normally handle this.
+            version_col = len(header_map) + 1
+            sheet.cell(row=1, column=version_col, value="version")
+            changed = True
+
+        cell = sheet.cell(row=2, column=version_col)
+        if cell.value != VERSION_FORMULA:
+            if cell.value is None or str(cell.value).strip() == "":
+                cell.value = VERSION_FORMULA
+                changed = True
+
+        if changed:
+            wb.save(path)
+    finally:
+        wb.close()
+
+    return changed
 
 
 def ensure_settings_columns(sheet) -> Dict[str, int]:
@@ -326,6 +371,12 @@ def set_form_settings(
 
 def missing_required_settings(xlsx_path: Path) -> List[str]:
     """Return list of missing required settings fields."""
+    # Ensure version formula is present by default before checking for missing fields.
+    try:
+        ensure_version_formula_default(xlsx_path)
+    except Exception:
+        pass
+
     settings = read_form_settings(xlsx_path)
     missing = [key for key in REQUIRED_SETTINGS_COLUMNS if not settings.get(key)]
     return missing
