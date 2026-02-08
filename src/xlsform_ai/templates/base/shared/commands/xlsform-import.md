@@ -49,6 +49,11 @@ Interactive options must include:
 - `Set version only` - keep title/id empty for now, set formula `version`.
 - `Continue without setting` - proceed and keep warning visible.
 
+Settings write safety:
+- Only write columns the user approved in the decision.
+- Do not overwrite existing non-empty `version` unless the user explicitly asks to replace it.
+- Do not modify unrelated settings columns/values.
+
 ## Implementation Protocol
 
 **CRITICAL: Follow this exact protocol when implementing this command:**

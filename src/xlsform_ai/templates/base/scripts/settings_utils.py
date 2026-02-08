@@ -149,6 +149,11 @@ def _normalize_settings_sheet(sheet) -> None:
                 _rebuild_settings_sheet(sheet, headers, values)
             return
 
+        # Standard row-1 header format should be left untouched to avoid
+        # accidentally rewriting unrelated settings values/formatting.
+        if header_row == 1:
+            return
+
         # Standard header row found (row 1 or later)
         headers_with_cols = []
         values: Dict[str, object] = {}
@@ -291,8 +296,9 @@ def _ensure_version_formula(sheet, header_map: Dict[str, int], explicit_version:
     """
     Ensure version column exists.
 
-    Default behavior enforces the standard formula. If explicit_version is provided,
-    that value is used instead (user-intent override).
+    Default behavior preserves existing non-empty values.
+    If explicit_version is provided, that value is used (user-intent override).
+    If version is blank/missing, default formula is written.
     """
     header_map_lower = {k.lower(): v for k, v in header_map.items()}
     version_col = header_map.get("version") or header_map_lower.get("version")
@@ -305,10 +311,14 @@ def _ensure_version_formula(sheet, header_map: Dict[str, int], explicit_version:
     explicit_clean = None
     if explicit_version is not None:
         explicit_clean = str(explicit_version).strip()
-    target_value = explicit_clean if explicit_clean else VERSION_FORMULA
+    if explicit_clean:
+        if cell.value != explicit_clean:
+            cell.value = explicit_clean
+        return
+
     current = cell.value
-    if current != target_value:
-        cell.value = target_value
+    if current is None or str(current).strip() == "":
+        cell.value = VERSION_FORMULA
 
 
 def set_form_settings(

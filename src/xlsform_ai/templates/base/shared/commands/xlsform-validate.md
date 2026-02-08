@@ -40,6 +40,11 @@ Options:
 - `Set version only` - set version formula only, then validate.
 - `Continue without setting` - validate anyway and keep an action-required warning.
 
+Settings write safety:
+- Only apply selected updates.
+- Do not replace a non-empty existing `version` unless user explicitly requests replacement.
+- Preserve all other settings columns and values.
+
 ## Implementation Protocol
 
 **CRITICAL: Follow this exact protocol when implementing this command:**

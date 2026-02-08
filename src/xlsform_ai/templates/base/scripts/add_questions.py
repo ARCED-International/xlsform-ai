@@ -421,6 +421,9 @@ def add_questions(
     questions_data,
     survey_file=None,
     name_strategy: str = "preserve",
+    insert_after_metadata=None,
+    parallel=None,
+    **legacy_kwargs,
 ):
     """Add questions to XLSForm with best practices.
 
@@ -428,6 +431,9 @@ def add_questions(
         questions_data: List/dict payload of questions. Supports parser JSON with `text`+`choices`.
         survey_file: Path to survey XLSForm file (optional, uses config if not specified)
         name_strategy: `preserve` or `semantic` for incoming question names.
+        insert_after_metadata: Legacy compatibility parameter (ignored).
+        parallel: Legacy compatibility parameter (ignored).
+        legacy_kwargs: Any legacy compatibility parameters (ignored).
 
     Returns:
         dict with success status and details

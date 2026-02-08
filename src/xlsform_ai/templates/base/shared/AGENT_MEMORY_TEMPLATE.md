@@ -604,6 +604,7 @@ Use `build_column_mapping()` from `form_structure` to locate columns like `const
 - Default `version` value should be formula-driven unless user explicitly requests a literal:
   `=TEXT(NOW(), "yyyymmddhhmmss")`
 - When `form_title`, `form_id`, or `version` is missing, ask an interactive settings-bootstrap question before proceeding with write operations.
+- Update only approved/targeted settings columns; preserve existing non-empty values in all others (especially `version`).
 - Suggested values for the interactive prompt:
   - `form_title`: source/workbook stem in title case
   - `form_id`: source/workbook stem in snake_case

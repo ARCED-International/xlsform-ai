@@ -76,6 +76,7 @@ See references/settings-sheet.md for settings guidance.
 - Include form_title, form_id, version (common convention yyyymmddrr) if the settings sheet is present.
 - default_language, submission_url, public_key, style, name, allow_choice_duplicates are optional.
 - Default version behavior: use formula `=TEXT(NOW(), "yyyymmddhhmmss")` unless the user explicitly requests a fixed value.
+- Settings write safety: update only targeted columns and preserve existing non-empty values in untouched columns (especially `version`).
 
 ### 6. Question Types (Highlights)
 - Text types: text, integer, decimal, note, range

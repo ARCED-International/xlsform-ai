@@ -36,3 +36,5 @@ If form_id is missing, many tools default to the XLSX filename. If form_title is
 - Row 1 contains column headers.
 - Row 2 contains values aligned to those headers.
 - Always read headers before writing values.
+- When updating selected fields (for example `form_title` and `form_id`), preserve existing values in other columns.
+- Do not overwrite non-empty `version` unless user explicitly requests replacement.
