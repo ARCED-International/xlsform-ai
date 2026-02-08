@@ -75,6 +75,7 @@ TRANSLATABLE_CATEGORY_BASES: Dict[str, List[str]] = {
 }
 
 CATEGORY_ORDER = list(TRANSLATABLE_CATEGORY_BASES.keys())
+CHOICES_CATEGORY_ORDER = ["label", "image", "audio", "video"]
 TEXT_CATEGORIES = {
     "label",
     "hint",
@@ -98,9 +99,15 @@ class LanguageSpec:
     code: str
     display_name: str
 
+    def render_label(self, include_code: bool = False) -> str:
+        if include_code:
+            return f"{self.display_name} ({self.code})"
+        return self.display_name
+
     @property
     def header_label(self) -> str:
-        return f"{self.display_name} ({self.code})"
+        # Default display omits shortcode unless explicitly requested.
+        return self.render_label(include_code=False)
 
 
 @dataclass
@@ -266,6 +273,12 @@ def _header_equals(left: str, right: str) -> bool:
     return _normalize_alias(left) == _normalize_alias(right)
 
 
+def _categories_for_sheet(sheet_name: str) -> List[str]:
+    if str(sheet_name).strip().lower() == "choices":
+        return list(CHOICES_CATEGORY_ORDER)
+    return list(CATEGORY_ORDER)
+
+
 def _parse_header_entry(raw_header: str, col: int) -> HeaderEntry:
     raw = str(raw_header).strip()
     segments = raw.split("::")
@@ -347,8 +360,54 @@ def _choose_base_header(entries: List[HeaderEntry], category: str) -> str:
     return aliases[0]
 
 
-def _canonical_translation_header(base_header: str, language: LanguageSpec) -> str:
-    return f"{base_header}::{language.display_name} ({language.code})"
+def _canonical_translation_header(
+    base_header: str,
+    language: LanguageSpec,
+    include_language_code: bool = False,
+) -> str:
+    return f"{base_header}::{language.render_label(include_code=include_language_code)}"
+
+
+def _shift_entries_for_insert(entries: List[HeaderEntry], insert_col: int) -> None:
+    for entry in entries:
+        if entry.col >= insert_col:
+            entry.col += 1
+
+
+def _shift_entries_for_delete(entries: List[HeaderEntry], deleted_col: int) -> None:
+    for entry in list(entries):
+        if entry.col == deleted_col:
+            entries.remove(entry)
+            continue
+        if entry.col > deleted_col:
+            entry.col -= 1
+
+
+def _insert_header_column(
+    sheet,
+    entries: List[HeaderEntry],
+    insert_col: int,
+    header_value: str,
+    dry_run: bool,
+) -> HeaderEntry:
+    if not dry_run:
+        sheet.insert_cols(insert_col, 1)
+        sheet.cell(row=1, column=insert_col, value=header_value)
+    _shift_entries_for_insert(entries, insert_col)
+    created = _parse_header_entry(header_value, insert_col)
+    entries.append(created)
+    return created
+
+
+def _existing_base_entry(entries: List[HeaderEntry], category: str, base_header: str) -> Optional[HeaderEntry]:
+    candidates = [
+        entry
+        for entry in entries
+        if not entry.is_translation and entry.category == category and _header_equals(entry.base_raw, base_header)
+    ]
+    if not candidates:
+        return None
+    return sorted(candidates, key=lambda entry: entry.col)[0]
 
 
 def _merge_translation_columns(
@@ -388,10 +447,13 @@ def ensure_language_columns(
     sheet,
     sheet_name: str,
     language: LanguageSpec,
+    source_language: LanguageSpec,
     dry_run: bool,
+    categories: List[str],
+    include_language_code: bool = False,
+    base_language_mode: str = "preserve",
 ) -> Dict[str, object]:
     entries = _collect_headers(sheet)
-    max_col = max([entry.col for entry in entries], default=0)
 
     added_headers: List[str] = []
     renamed_headers: List[str] = []
@@ -399,9 +461,43 @@ def ensure_language_columns(
     merged_values = 0
     target_columns: Dict[str, int] = {}
 
-    for category in CATEGORY_ORDER:
+    for category in categories:
         base_header = _choose_base_header(entries, category)
-        expected_header = _canonical_translation_header(base_header, language)
+        base_entry = _existing_base_entry(entries, category, base_header)
+
+        # Ensure the base column exists before creating language variants.
+        if base_entry is None:
+            insert_col = max([entry.col for entry in entries], default=0) + 1
+            base_entry = _insert_header_column(
+                sheet=sheet,
+                entries=entries,
+                insert_col=insert_col,
+                header_value=base_header,
+                dry_run=dry_run,
+            )
+            added_headers.append(base_header)
+
+        # Optional conversion of bare source headers (e.g., label) -> label::English.
+        if base_language_mode == "english" and not base_entry.is_translation:
+            source_header = _canonical_translation_header(
+                base_header=base_entry.base_raw,
+                language=source_language,
+                include_language_code=include_language_code,
+            )
+            if not _header_equals(base_entry.raw, source_header):
+                if not dry_run:
+                    sheet.cell(row=1, column=base_entry.col, value=source_header)
+                renamed_headers.append(f"{base_entry.raw} -> {source_header}")
+                updated = _parse_header_entry(source_header, base_entry.col)
+                entries = [updated if entry.col == base_entry.col else entry for entry in entries]
+                base_entry = updated
+
+        base_header = base_entry.base_raw
+        expected_header = _canonical_translation_header(
+            base_header=base_header,
+            language=language,
+            include_language_code=include_language_code,
+        )
 
         candidates = [
             entry
@@ -430,19 +526,77 @@ def ensure_language_columns(
                 updated = _parse_header_entry(expected_header, primary.col)
                 entries = [updated if entry.col == primary.col else entry for entry in entries]
         else:
-            max_col += 1
-            canonical_col = max_col
-            if not dry_run:
-                sheet.cell(row=1, column=canonical_col, value=expected_header)
+            group_cols = sorted(
+                {
+                    entry.col
+                    for entry in entries
+                    if entry.category == category and _header_equals(entry.base_raw, base_header)
+                }
+            )
+            insert_col = (max(group_cols) + 1) if group_cols else (base_entry.col + 1)
+            _insert_header_column(
+                sheet=sheet,
+                entries=entries,
+                insert_col=insert_col,
+                header_value=expected_header,
+                dry_run=dry_run,
+            )
+            canonical_col = insert_col
             added_headers.append(expected_header)
-            entries.append(_parse_header_entry(expected_header, canonical_col))
 
         if canonical_col is None:
             continue
 
+        # Keep language columns grouped immediately after their base column block.
+        group_cols = sorted(
+            {
+                entry.col
+                for entry in entries
+                if (
+                    entry.category == category
+                    and _header_equals(entry.base_raw, base_header)
+                    and not (entry.is_translation and entry.language_code == language.code)
+                )
+            }
+        )
+        desired_col = (max(group_cols) + 1) if group_cols else canonical_col
+        if canonical_col > desired_col:
+            _insert_header_column(
+                sheet=sheet,
+                entries=entries,
+                insert_col=desired_col,
+                header_value=expected_header,
+                dry_run=dry_run,
+            )
+            moved_source_col = canonical_col + 1
+            merge_result = _merge_translation_columns(
+                sheet=sheet,
+                src_col=moved_source_col,
+                dst_col=desired_col,
+                sheet_name=sheet_name,
+                category=category,
+                dry_run=dry_run,
+            )
+            merged_values += int(merge_result["merged"])
+            header_conflicts.extend(merge_result["conflicts"])
+            if not dry_run:
+                sheet.delete_cols(moved_source_col, 1)
+            _shift_entries_for_delete(entries, moved_source_col)
+            canonical_col = desired_col
+            renamed_headers.append(f"{expected_header} reordered after {base_header}")
+
         target_columns[category] = canonical_col
 
-        duplicate_candidates = [entry for entry in candidates if entry.col != canonical_col]
+        duplicate_candidates = [
+            entry
+            for entry in entries
+            if (
+                entry.is_translation
+                and entry.category == category
+                and entry.language_code == language.code
+                and entry.col != canonical_col
+            )
+        ]
         for duplicate in duplicate_candidates:
             merge_result = _merge_translation_columns(
                 sheet=sheet,
@@ -499,9 +653,10 @@ def _build_translation_memory(
     sheet,
     source_columns: Dict[str, Optional[int]],
     target_columns: Dict[str, int],
+    categories: List[str],
 ) -> Dict[Tuple[str, str], str]:
     memory: Dict[Tuple[str, str], str] = {}
-    for category in CATEGORY_ORDER:
+    for category in categories:
         src_col = source_columns.get(category)
         dst_col = target_columns.get(category)
         if not src_col or not dst_col:
@@ -692,6 +847,8 @@ def translate_sheet(
     dry_run: bool,
     translator_backend: str,
     translation_map: Dict[str, Dict[str, str]],
+    include_language_code: bool,
+    base_language_mode: str,
 ) -> Dict[str, object]:
     result = {
         "sheet": sheet_name,
@@ -711,11 +868,17 @@ def translate_sheet(
         "errors": [],
     }
 
+    categories = _categories_for_sheet(sheet_name)
+
     header_state = ensure_language_columns(
         sheet=sheet,
         sheet_name=sheet_name,
         language=language,
+        source_language=source_language,
         dry_run=dry_run or mode == "validate-only",
+        categories=categories,
+        include_language_code=include_language_code,
+        base_language_mode=base_language_mode,
     )
     target_columns = header_state["target_columns"]
     result["headers_added"] = list(header_state["added_headers"])
@@ -728,7 +891,7 @@ def translate_sheet(
 
     entries = _collect_headers(sheet)
     source_columns: Dict[str, Optional[int]] = {}
-    for category in CATEGORY_ORDER:
+    for category in categories:
         source_columns[category] = _choose_source_column(
             sheet=sheet,
             entries=entries,
@@ -751,11 +914,15 @@ def translate_sheet(
             "Cross-language text cells will remain pending."
         )
 
-    memory = _build_translation_memory(sheet, source_columns, target_columns) if mode == "add-missing" else {}
+    memory = (
+        _build_translation_memory(sheet, source_columns, target_columns, categories)
+        if mode == "add-missing"
+        else {}
+    )
     warning_cap = 25
 
     for row_idx in range(2, sheet.max_row + 1):
-        for category in CATEGORY_ORDER:
+        for category in categories:
             src_col = source_columns.get(category)
             dst_col = target_columns.get(category)
             if not src_col or not dst_col:
@@ -857,6 +1024,7 @@ def ensure_default_language(
     language: LanguageSpec,
     set_mode: str,
     dry_run: bool,
+    include_language_code: bool = False,
 ) -> Dict[str, object]:
     changes = {
         "header_added": False,
@@ -884,7 +1052,7 @@ def ensure_default_language(
             sheet.cell(row=1, column=default_col, value="default_language")
         changes["header_added"] = True
 
-    desired = language.header_label
+    desired = language.render_label(include_code=include_language_code)
     current_val = sheet.cell(row=2, column=default_col).value
     current_text = str(current_val).strip() if _cell_has_value(current_val) else ""
 
@@ -1171,6 +1339,21 @@ def parse_arguments() -> argparse.Namespace:
         default="auto",
         help="How to manage settings.default_language.",
     )
+    parser.add_argument(
+        "--base-language-mode",
+        choices=["preserve", "english"],
+        default="preserve",
+        help=(
+            "How to handle original unlabeled base columns. "
+            "'preserve' keeps headers like 'label'; "
+            "'english' renames base headers like 'label' to 'label::English'."
+        ),
+    )
+    parser.add_argument(
+        "--include-language-code",
+        action="store_true",
+        help="Include shortcode in language labels (e.g., 'Bangla (bn)') instead of default 'Bangla'.",
+    )
     parser.add_argument("--dry-run", action="store_true", help="Preview changes without saving the workbook.")
     parser.add_argument("--json", action="store_true", help="Print JSON output instead of structured text.")
     return parser.parse_args()
@@ -1326,6 +1509,8 @@ def main() -> int:
                     dry_run=effective_dry_run,
                     translator_backend=args.translator,
                     translation_map=translation_map,
+                    include_language_code=bool(args.include_language_code),
+                    base_language_mode=str(args.base_language_mode or "preserve"),
                 )
                 runtime_backends.add(str(translated.get("runtime_backend", "none")))
                 aggregate["headers_added"].extend(translated["headers_added"])
@@ -1358,6 +1543,7 @@ def main() -> int:
             language=target_languages[0],
             set_mode=args.set_default_language,
             dry_run=effective_dry_run,
+            include_language_code=bool(args.include_language_code),
         )
 
         pre_report = build_report(

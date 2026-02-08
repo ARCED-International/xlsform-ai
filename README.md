@@ -110,7 +110,7 @@ If you run project scripts directly (for example, `python scripts/validate_form.
 ensure runtime dependencies are installed in that Python environment:
 
 ```bash
-python -m pip install openpyxl pyxform pdfplumber python-docx
+python -m pip install openpyxl pyxform pdfplumber python-docx deep-translator
 ```
 
 ## Quick Start
@@ -287,11 +287,17 @@ python scripts/translate_form.py "add Bangla language" --translation-map-file .x
 
 # Optional runtime fallback
 python scripts/translate_form.py "add Bangla language" --translator auto
+
+# Optional: convert base columns to source-language headers (after confirmation)
+python scripts/translate_form.py "add Bangla language" --base-language-mode english
+
+# Optional: include language shortcode in headers/settings values
+python scripts/translate_form.py "add Bangla language" --include-language-code
 ```
 
 Default behavior is AI-first: the agent can provide contextual translations via `--translation-map` or `--translation-map-file`.
 `deep-translator` is optional fallback only (install with `pip install -e ".[translate]"`).
-Language display labels are normalized to ASCII-friendly names by default (for example, `Bangla (bn)`, `Spanish (es)`).
+Language display labels are normalized to ASCII-friendly names by default (for example, `Bangla`, `Spanish`). Use `--include-language-code` to emit `Bangla (bn)`.
 
 Structured output marker:
 

@@ -31,7 +31,7 @@ $pythonInstalled = $false
 
 try {
     python -m pip --version | Out-Null
-    python -m pip install --disable-pip-version-check openpyxl pyxform pdfplumber python-docx
+    python -m pip install --disable-pip-version-check openpyxl pyxform pdfplumber python-docx deep-translator
     $pythonInstalled = $true
 } catch {
     # try py launcher
@@ -40,7 +40,7 @@ try {
 if (-not $pythonInstalled) {
     try {
         py -3 -m pip --version | Out-Null
-        py -3 -m pip install --disable-pip-version-check openpyxl pyxform pdfplumber python-docx
+        py -3 -m pip install --disable-pip-version-check openpyxl pyxform pdfplumber python-docx deep-translator
         $pythonInstalled = $true
     } catch {
         # no usable python launcher
@@ -50,7 +50,7 @@ if (-not $pythonInstalled) {
 if (-not $pythonInstalled) {
     Write-Host "Could not find python/py on PATH." -ForegroundColor Yellow
     Write-Host "Please install dependencies manually:" -ForegroundColor Yellow
-    Write-Host "  python -m pip install openpyxl pyxform pdfplumber python-docx" -ForegroundColor Yellow
+    Write-Host "  python -m pip install openpyxl pyxform pdfplumber python-docx deep-translator" -ForegroundColor Yellow
 }
 
 # Verify installation

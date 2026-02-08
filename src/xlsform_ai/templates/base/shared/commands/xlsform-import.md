@@ -22,6 +22,8 @@ description: Import questions from questionnaire files into an XLSForm (PDF/Word
 
 - `[FORBIDDEN]` Do not create ad-hoc `.py` scripts in the project workspace for import.
 - `[REQUIRED]` Use existing entrypoints first: `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/add_questions.py`.
+- `[FORBIDDEN]` Do not use heredoc inline Python (for example `python - <<'PY' ... PY`) in normal import flow.
+- `[FORBIDDEN]` Do not orchestrate parser flow with inline `python -c` snippets.
 - Fallback script creation is allowed only if:
   1. existing entrypoints fail after retry,
   2. user explicitly approves fallback in REPL,
@@ -166,6 +168,8 @@ Then pass the selected option to parser flags:
 
 - **Do NOT** create ad-hoc scripts in project workspace (e.g., `import_fathers_survey.py`)
 - **Do NOT** use inline Python snippets for parser execution
+- **Do NOT** run heredoc Python blocks such as `python - <<'PY' ... PY`
+- **Do NOT** run parser orchestration via `python -c "..."` one-liners
 - **Do** call parser scripts directly:
 
 ```bash

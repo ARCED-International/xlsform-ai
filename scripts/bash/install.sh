@@ -21,13 +21,13 @@ uv tool install xlsform-ai-cli --from git+https://github.com/ARCED-International
 # Install runtime dependencies for local `python scripts/...` workflows
 echo "Installing runtime dependencies for project scripts..."
 if command -v python &> /dev/null; then
-    python -m pip install --disable-pip-version-check openpyxl pyxform pdfplumber python-docx
+    python -m pip install --disable-pip-version-check openpyxl pyxform pdfplumber python-docx deep-translator
 elif command -v python3 &> /dev/null; then
-    python3 -m pip install --disable-pip-version-check openpyxl pyxform pdfplumber python-docx
+    python3 -m pip install --disable-pip-version-check openpyxl pyxform pdfplumber python-docx deep-translator
 else
     echo "Could not find python/python3 on PATH."
     echo "Please install dependencies manually:"
-    echo "  python -m pip install openpyxl pyxform pdfplumber python-docx"
+    echo "  python -m pip install openpyxl pyxform pdfplumber python-docx deep-translator"
 fi
 
 # Verify installation

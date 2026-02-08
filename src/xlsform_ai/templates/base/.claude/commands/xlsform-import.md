@@ -30,6 +30,8 @@ If you write inline Python code for file operations, you have failed this comman
 
 - `[FORBIDDEN]` Do not create ad-hoc `.py` scripts in the project workspace for import.
 - `[REQUIRED]` Use existing entrypoints first: `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/add_questions.py`.
+- `[FORBIDDEN]` Do not use heredoc inline Python (for example `python - <<'PY' ... PY`) in normal import flow.
+- `[FORBIDDEN]` Do not orchestrate parser flow with inline `python -c` snippets.
 - Fallback script creation is allowed only if:
   1. existing entrypoints fail after retry,
   2. user explicitly approves fallback in REPL,
@@ -249,6 +251,19 @@ Image extraction options:
 4. Skip image extraction
 
 Choose option (1-4):
+```
+
+### Safe Execution (Use script entrypoints)
+
+- **Do NOT** create ad-hoc scripts in project workspace (e.g., `import_fathers_survey.py`)
+- **Do NOT** run heredoc Python blocks such as `python - <<'PY' ... PY`
+- **Do NOT** run parser orchestration via `python -c "..."` one-liners
+- **Do** call parser scripts directly:
+
+```bash
+python scripts/parse_pdf.py <source> --pages <range> [--auto-scale]
+python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix> [--auto-scale]
+python scripts/parse_xlsx.py <source> --sheet <sheet_name>
 ```
 
 ### Option 2: Select Questions

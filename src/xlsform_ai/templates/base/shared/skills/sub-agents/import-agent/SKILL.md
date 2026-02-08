@@ -69,6 +69,8 @@ Identify form structure:
 
 - `[FORBIDDEN]` Do not create ad-hoc `.py` scripts in project workspace during import.
 - `[REQUIRED]` Use existing entrypoints: `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/add_questions.py`.
+- `[FORBIDDEN]` Do not use heredoc inline Python (for example `python - <<'PY' ... PY`) in normal import flow.
+- `[FORBIDDEN]` Do not orchestrate parser flow with inline `python -c` snippets.
 - Fallback scripts are allowed only after retry failure, explicit user approval, and temp-file cleanup.
 
 ### Phase 1: Document Analysis

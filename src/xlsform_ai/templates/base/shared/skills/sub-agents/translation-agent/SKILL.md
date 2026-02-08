@@ -61,14 +61,15 @@ Natural language examples:
 
 Use:
 
-- `label::Spanish (es)`
-- `hint::Spanish (es)`
+- Default: `label::Bangla`, `hint::Bangla`
+- Optional shortcode mode: `label::Bangla (bn)`, `hint::Bangla (bn)`
 
 Pattern:
 
-- `<base_column>::<Language Name> (<language_code>)`
+- Default: `<base_column>::<Language Name>`
+- Optional shortcode mode: `<base_column>::<Language Name> (<language_code>)`
 
-Use ASCII-friendly language display names by default (`Bangla`, `Spanish`, `French`).
+Use ASCII-friendly language display names by default (`Bangla`, `Spanish`, `French`) and only include shortcode when user explicitly asks.
 
 ## Translatable Column Coverage
 
@@ -85,6 +86,13 @@ Ensure target-language columns for these bases where applicable:
 
 Also support `media::image`, `media::audio`, and `media::video` when present.
 
+For `choices` sheet specifically, ensure translation columns for:
+
+- `label`
+- `image`
+- `audio`
+- `video`
+
 ## Intent Mapping
 
 ### `add <language> language`
@@ -99,6 +107,18 @@ Also support `media::image`, `media::audio`, and `media::video` when present.
 - Detect missing target-language values only.
 - Fill only empty target cells.
 - Do not overwrite existing translated cells.
+
+### Base Header Decision (Mandatory Prompt)
+
+When base headers are unlabeled columns (for example `label`, `hint`), ask user before applying translations:
+
+1. Keep base headers as-is (recommended)
+2. Convert base headers to source-language headers (for example `label` -> `label::English`)
+
+Then execute with:
+
+- `--base-language-mode preserve`
+- `--base-language-mode english`
 
 ## Translation Quality Rules
 
@@ -143,9 +163,10 @@ Before completion, verify:
 
 1. Target-language headers exist in both `survey` and `choices`.
 2. Header normalization did not corrupt any row values.
-3. `default_language` handling is explicit (`set`, `updated`, or `no_change`).
-4. Missing translation count is acceptable for the requested mode.
-5. No translated output changed `choices.name` codes.
-6. Placeholder parity is preserved in all translated cells.
+3. Language columns are positioned after their corresponding base columns.
+4. `default_language` handling is explicit (`set`, `updated`, or `no_change`).
+5. Missing translation count is acceptable for the requested mode.
+6. No translated output changed `choices.name` codes.
+7. Placeholder parity is preserved in all translated cells.
 
 

@@ -126,6 +126,7 @@ def check_cli_installation() -> bool:
             ("pyxform", "pyxform"),
             ("pdfplumber", "pdfplumber"),
             ("docx", "python-docx"),
+            ("deep_translator", "deep-translator"),
         ]
         missing_runtime = []
         for module_name, package_name in runtime_modules:

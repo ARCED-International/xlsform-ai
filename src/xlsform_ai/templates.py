@@ -27,6 +27,7 @@ PROJECT_RUNTIME_DEPENDENCIES = [
     "pyxform>=2.0.0",
     "pdfplumber>=0.11.0",
     "python-docx>=1.1.0",
+    "deep-translator>=1.11.4",
 ]
 
 
@@ -173,12 +174,12 @@ class TemplateManager:
             else:
                 print(
                     "[ERROR] Failed to install required runtime dependencies "
-                    "(openpyxl, pyxform, pdfplumber, python-docx)."
+                    "(openpyxl, pyxform, pdfplumber, python-docx, deep-translator)."
                 )
                 print(
                     "[ERROR] Run one of these commands and retry init:\n"
-                    "  python -m pip install openpyxl pyxform pdfplumber python-docx\n"
-                    "  py -3 -m pip install openpyxl pyxform pdfplumber python-docx"
+                    "  python -m pip install openpyxl pyxform pdfplumber python-docx deep-translator\n"
+                    "  py -3 -m pip install openpyxl pyxform pdfplumber python-docx deep-translator"
                 )
                 return False
 
@@ -224,7 +225,7 @@ class TemplateManager:
                         for cmd_file in shared_commands.glob("*.md"):
                             dest = agent_commands_dir / cmd_file.name
                             if not dest.exists() or overwrite:
-                                shutil.copy2(cmd_file, dest)
+                                self._copy_text_file_no_bom(cmd_file, dest)
 
                     # Copy shared skills (including xlsform-core and sub-agents)
                     shared_skills = shared_src / "skills"
@@ -247,7 +248,7 @@ class TemplateManager:
                             memory_path = project_path / memory_file
                             if not memory_path.exists() or overwrite:
                                 memory_path.parent.mkdir(parents=True, exist_ok=True)
-                                shutil.copy2(shared_memory, memory_path)
+                                self._copy_text_file_no_bom(shared_memory, memory_path)
 
                     print(f"[OK] Configured {agent} assistant")
 
@@ -382,6 +383,20 @@ class TemplateManager:
                 shutil.copytree(item, target)
             else:
                 shutil.copy2(item, target)
+
+    def _copy_text_file_no_bom(self, source_path: Path, destination_path: Path) -> None:
+        """
+        Copy text file using UTF-8 without BOM.
+
+        This prevents markdown frontmatter parsing issues in agent command files.
+        """
+        try:
+            text = source_path.read_text(encoding="utf-8-sig")
+            destination_path.parent.mkdir(parents=True, exist_ok=True)
+            destination_path.write_text(text, encoding="utf-8")
+        except Exception:
+            # Fall back to binary copy if text decoding fails.
+            shutil.copy2(source_path, destination_path)
 
     def _merge_config_with_defaults(self, defaults: dict, existing: dict) -> dict:
         """Merge existing config with defaults, preserving existing values."""
@@ -564,7 +579,7 @@ class TemplateManager:
             True if dependencies verified in at least one usable Python runtime.
         """
         verify_snippet = (
-            "import openpyxl,pyxform,pdfplumber,docx;"
+            "import openpyxl,pyxform,pdfplumber,docx,deep_translator;"
             "print('deps-ok')"
         )
 

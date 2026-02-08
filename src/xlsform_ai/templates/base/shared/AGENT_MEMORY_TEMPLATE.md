@@ -443,9 +443,10 @@ Task: Import 100 questions from PDF
 
 Force parallel processing:
 ```python
-# In scripts, use parallel parameter
-
-add_questions(questions, parallel=True)
+# Use command-level parallel workflows (import-agent/validation-agent).
+# Do not pass parallel=True to add_questions; that argument is unsupported.
+# Example command:
+/xlsform-import large_file.pdf
 ```
 
 Force sequential processing:
@@ -582,7 +583,7 @@ questions = [
     }
 ]
 
-add_questions(xlsx_path, questions)
+add_questions(questions, survey_file=xlsx_path)
 ```
 
 **Why:** Helper functions handle smart insertion, validation, and formatting.
@@ -615,7 +616,7 @@ Use `build_column_mapping()` from `form_structure` to locate columns like `const
 ```python
 try:
     # Make changes to XLSForm
-    add_questions(xlsx_path, questions)
+    add_questions(questions, survey_file=xlsx_path)
     print(f"SUCCESS: Added {len(questions)} questions")
 except Exception as e:
     print(f"ERROR: {e}")
@@ -780,7 +781,7 @@ questions = [
     }
 ]
 
-add_questions('survey.xlsx', questions)
+add_questions(questions, survey_file='survey.xlsx')
 
 logger = ActivityLogger()
 logger.log_action(
@@ -811,40 +812,59 @@ logger.log_action(
 
 1. Load skills: `/skill:xlsform-core`, `/skill:activity-logging`
 2. Do not create ad-hoc import scripts in project workspace. Use existing scripts first.
-3. Import parser:
-   - PDF: `from scripts.parse_pdf import extract_questions`
-   - Word: `from scripts.parse_docx import extract_questions`
-   - Excel: `from scripts.parse_xlsx import extract_questions`
+3. Run parser entrypoints directly (preferred, avoids import-path bugs):
+   - PDF: `python scripts/parse_pdf.py <source> --pages <range> [--auto-scale] --output <json>`
+   - Word: `python scripts/parse_docx.py <source> [--media-dir <dir> --media-prefix <prefix> --auto-scale] --output <json>`
+   - Excel: `python scripts/parse_xlsx.py <source> [--sheet <name>] --output <json>`
 4. For Word with images, ask user media destination in REPL (recommended: `./media/<source_stem>`)
-5. If user chooses auto-convert for frequency/Likert, parse with `auto_scale=True`.
-6. Parse file:
-   - PDF: `questions = extract_questions(source_path, pages, auto_scale=...)`
-   - DOCX with media: `extract_questions(source_path, media_dir=..., media_prefix=..., auto_scale=...)`
+5. If user chooses auto-convert for frequency/Likert, pass `--auto-scale`.
+6. Load parser JSON output and map payload to `add_questions` input format.
 7. Detect large file: If 10+ pages or 1MB+, auto-activate import-agent (parallel)
-8. Add survey rows via `add_questions(questions)` (ensure media headers are present)
+8. Add survey rows via `add_questions(questions, survey_file='survey.xlsx')` (ensure media headers are present)
 9. Add choices rows, including `media::image` for choice images when available
 10. Verify user-selected transforms were applied (for auto-convert, report converted count + sample names)
 11. Log action: `logger.log_action(action_type=\"import_pdf\"|\"import_docx\"|\"import_xlsx\", ...)`
 12. Validate: `/xlsform-validate`
 
+**FORBIDDEN in normal flow:**
+- `python - <<'PY' ... PY` (heredoc inline Python)
+- `python -c "..."` for parser orchestration
+- creating ad-hoc import scripts in project root
+
+Use parser script entrypoints directly unless explicit user-approved fallback is required.
+
 **Example:**
 
 ```python
 import sys
+import json
+import subprocess
 from pathlib import Path
 sys.path.insert(0, str(Path('scripts')))
 
-from parse_pdf import extract_questions
 from add_questions import add_questions
 from log_activity import ActivityLogger
 
-# Extract questions from PDF
-
-questions = extract_questions('questionnaire.pdf', pages='1-10')
+# Extract questions from PDF via script entrypoint
+subprocess.run(
+    [
+        sys.executable,
+        'scripts/parse_pdf.py',
+        'questionnaire.pdf',
+        '--pages',
+        '1-10',
+        '--output',
+        'tmp_import.json',
+    ],
+    check=True,
+)
+with open('tmp_import.json', 'r', encoding='utf-8') as fh:
+    payload = json.load(fh)
+questions = payload.get('questions', [])
 
 # Add to form
 
-add_questions('survey.xlsx', questions)
+add_questions(questions, survey_file='survey.xlsx')
 
 # Log activity
 
@@ -1648,16 +1668,14 @@ structure = form.structure  # Get parsed structure
 
 **Key Functions:**
 - `add_questions()` - Main function to add questions
-- `generate_field_name()` - Create valid names from labels
-- `detect_question_type()` - Auto-detect type from text
-- `find_smart_insertion_point()` - Find optimal row to insert
+- `get_best_practices()` - Suggest constraints/required flags from type/name/label
 
 **Usage:**
 ```python
 from scripts.add_questions import add_questions
 
 questions = [{'type': 'text', 'name': 'q1', 'label': 'Name'}]
-add_questions('survey.xlsx', questions)
+add_questions(questions, survey_file='survey.xlsx')
 ```
 
 #### validate_form.py
@@ -2117,22 +2135,31 @@ text      age_label   Age
 
 **Implementation:**
 ```xlsform
-type           name      label::english    label::espaÃ±ol     label::franÃ§ais
-text           name      What is your name? Â¿CÃ³mo te llamas?  Quel est votre nom?
-select_one     gender    What is your gender? Â¿CuÃ¡l es tu gÃ©nero? Quel est votre genre?
+type           name      label::English      label::Spanish      label::French
+text           name      What is your name?  Como te llamas?     Quel est votre nom?
+select_one     gender    What is your gender? Cual es tu genero? Quel est votre genre?
 ```
 
 **Settings sheet:**
 ```xlsform
 form_title        form_id            default_language
-Household Survey  household_survey   English (en)
+Household Survey  household_survey   English
 ```
 
 **Translation workflow:**
 1. Use `/skill:translation-agent`
-2. Add language columns: `label::language_code`
-3. Add translated labels
-4. Validate all translations
+2. Ask user whether to keep base headers as-is or convert base headers to English
+3. Add language columns after each base column (for example `label`, then `label::Bangla`)
+4. Add translated labels and choices
+5. Validate all translations
+
+**Base header decision options (mandatory prompt):**
+1. Keep base headers as-is (recommended)
+2. Convert base headers to source language (for example `label` -> `label::English`)
+
+Default language label format:
+- Use names without shortcode (for example `Bangla`, `English`)
+- Include shortcode only when explicitly requested
 
 **Reference:** `/skill:translation-agent`
 
@@ -2203,7 +2230,9 @@ Is task size â‰¥ threshold?
 
 **Force parallel:**
 ```python
-add_questions(questions, parallel=True)
+# Use command-level parallel workflows only.
+# Example:
+/xlsform-import large_file.pdf
 ```
 
 **Force sequential:**
@@ -2515,7 +2544,7 @@ ls -la survey.xlsx
 
 **Parallel validation:**
 - Automatically activates for 100+ questions
-- Manual activation: `add_questions(questions, parallel=True)`
+- Manual activation: use command-level import/validation workflows; `add_questions` has no `parallel` argument
 - Reduces validation time by ~50%
 
 ### Import/Export Performance

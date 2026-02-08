@@ -51,6 +51,12 @@ python scripts/translate_form.py "add Bangla language" --translation-map-file .x
 python scripts/translate_form.py "add Bangla language" --translator auto
 ```
 
+When user explicitly wants shortcode in headers/settings values:
+
+```bash
+python scripts/translate_form.py "add Bangla language" --include-language-code
+```
+
 ### 3. Translation Mode Rules
 
 - AI-first translation is the default approach:
@@ -74,6 +80,18 @@ python scripts/translate_form.py "add Bangla language" --translator auto
   - fill only missing target-language cells
   - preserve existing target-language values
 
+### 4.1 Base Header Decision (Mandatory Prompt)
+
+If source columns are unlabeled base columns (for example `label`, `hint`) ask user before writing:
+
+1. Keep base columns as-is (recommended)
+2. Convert base columns to source language form (for example `label` -> `label::English`)
+
+Then run with:
+
+- Preserve mode: `--base-language-mode preserve`
+- Convert mode: `--base-language-mode english`
+
 ### 5. Row-1 Header Safety Rules
 
 - Use row-1 header mapping for all reads/writes.
@@ -81,6 +99,7 @@ python scripts/translate_form.py "add Bangla language" --translator auto
 - Never reorder existing columns.
 - Never shift existing data values while adding/normalizing headers.
 - If duplicate language columns exist, merge safely and report conflicts.
+- Keep translation columns grouped after their base columns (for example `label`, then `label::Bangla`).
 
 ### 6. Required Translatable Column Coverage
 
@@ -95,12 +114,19 @@ For each requested language, ensure translated columns for these bases (where ap
 - `audio`
 - `video`
 
+Choices sheet must include translation columns for:
+
+- `label`
+- `image`
+- `audio`
+- `video`
+
 Header format:
 
-- `label::Spanish (es)`
-- `hint::Spanish (es)`
+- Default: `label::Bangla`, `hint::Bangla`
+- Optional shortcode mode: `label::Bangla (bn)`, `hint::Bangla (bn)`
 
-Use ASCII-friendly language display names by default (for example, `Bangla`, `Spanish`).
+Use ASCII-friendly language display names by default (for example, `Bangla`, `Spanish`) and do not append shortcodes unless explicitly requested.
 
 ### 7. "Other" Pattern Rule
 
