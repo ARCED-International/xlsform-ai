@@ -10,12 +10,15 @@ description: Document import specialist - processes PDF, Word, and text files to
 - [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
 - [MANDATORY] If an interactive question tool is available (`AskUserQuestion`, `request_user_input`, or client-native choice UI), use it.
 - [PREFERRED] In interactive-tool mode, ask all pending decisions in one interactive panel as separate questions, each with 2-4 mutually exclusive options.
+- [MANDATORY] Once interactive mode is available for a command/session, keep all subsequent required decisions in interactive mode unless the tool fails.
 - [MANDATORY] Put the recommended option first and include a one-line tradeoff.
 - [MANDATORY] Wait for explicit user selection before applying changes.
 - [FALLBACK] If no interactive tool is available, ask in plain REPL text with numbered options.
+- [FORBIDDEN] Do not switch from interactive prompts to plain-text follow-up decisions when interactive tools are still available.
 - [FORBIDDEN] Do not make silent decisions on required conflicts.
 - [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
 - Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.
+- [MANDATORY] Missing settings decisions (`form_title`/`form_id`) must use the same interactive protocol when tools are available.
 
 ### Interactive Decision Prompting (Preferred)
 
@@ -84,9 +87,11 @@ Identify form structure:
 
 - `[FORBIDDEN]` Do not create ad-hoc `.py` scripts in project workspace during import.
 - `[REQUIRED]` Use existing entrypoints: `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/add_questions.py`.
+- `[REQUIRED]` Use parser output JSON + `scripts/add_questions.py --from-json-file ...` for import mapping.
 - `[FORBIDDEN]` Do not use heredoc inline Python (for example `python - <<'PY' ... PY`) in normal import flow.
 - `[FORBIDDEN]` Do not orchestrate parser flow with inline `python -c` snippets.
-- Fallback scripts are allowed only after retry failure, explicit user approval, and temp-file cleanup.
+- `[FORBIDDEN]` Do not create temporary scripts in project root/current directory.
+- Fallback scripts are allowed only after retry failure, explicit user approval in interactive panel, creation outside workspace (OS temp), and cleanup.
 
 ### Phase 1: Document Analysis
 ```python

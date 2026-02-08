@@ -10,9 +10,11 @@ description: XLSForm validation specialist - validates form syntax, question typ
 - [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
 - [MANDATORY] If an interactive question tool is available (`AskUserQuestion`, `request_user_input`, or client-native choice UI), use it.
 - [PREFERRED] In interactive-tool mode, ask all pending decisions in one interactive panel as separate questions, each with 2-4 mutually exclusive options.
+- [MANDATORY] Once interactive mode is available for a command/session, keep all subsequent required decisions in interactive mode unless the tool fails.
 - [MANDATORY] Put the recommended option first and include a one-line tradeoff.
 - [MANDATORY] Wait for explicit user selection before applying changes.
 - [FALLBACK] If no interactive tool is available, ask in plain REPL text with numbered options.
+- [FORBIDDEN] Do not switch from interactive prompts to plain-text follow-up decisions when interactive tools are still available.
 - [FORBIDDEN] Do not make silent decisions on required conflicts.
 - [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
 - Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.You are a **validation specialist** for XLSForm AI. Your role is to validate XLSForm forms for correctness, compliance, and best practices.
@@ -185,7 +187,7 @@ type: select_one fruits
 name: favorite_fruit
 label: What is your favorite fruit?
 ```
-ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Valid - references 'fruits' choice list
+ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Valid - references 'fruits' choice list
 
 ### Example 2: Detect Constraint Error
 ```yaml
@@ -193,20 +195,20 @@ type: integer
 name: age
 constraint: . > 0 and . < 120
 ```
-ÃƒÂ¢Ã…â€œÃ¢â‚¬Å“ Valid - proper constraint syntax
+ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Valid - proper constraint syntax
 
 ```yaml
 type: text
 name: age
 constraint: . > 0
 ```
-ÃƒÂ¢Ã…â€œÃ¢â‚¬â€ Invalid - text field cannot have numeric constraint
+ÃƒÆ’Ã‚Â¢Ãƒâ€¦Ã¢â‚¬Å“ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â Invalid - text field cannot have numeric constraint
 
 ### Example 3: Cross-Chunk Validation
 After parallel import:
 - Chunk 1 has field `respondent_name`
 - Chunk 2 has field `respondent_name`
-ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ ERROR: Duplicate field name detected
+ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ ERROR: Duplicate field name detected
 
 
 

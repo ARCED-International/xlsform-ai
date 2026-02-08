@@ -224,7 +224,11 @@ class TemplateManager:
                     if shared_commands.exists():
                         for cmd_file in shared_commands.glob("*.md"):
                             dest = agent_commands_dir / cmd_file.name
-                            if not dest.exists() or overwrite:
+                            if (
+                                overwrite
+                                or not dest.exists()
+                                or self._command_file_needs_refresh(dest, cmd_file)
+                            ):
                                 self._copy_text_file_no_bom(cmd_file, dest)
 
                     # Copy shared skills (including xlsform-core and sub-agents)
@@ -397,6 +401,44 @@ class TemplateManager:
         except Exception:
             # Fall back to binary copy if text decoding fails.
             shutil.copy2(source_path, destination_path)
+
+    def _file_has_utf8_bom(self, path: Path) -> bool:
+        try:
+            with path.open("rb") as f:
+                prefix = f.read(3)
+            return prefix == b"\xef\xbb\xbf"
+        except Exception:
+            return False
+
+    def _command_file_needs_refresh(self, destination_path: Path, source_path: Path) -> bool:
+        """
+        Determine whether an existing command markdown file should be refreshed.
+
+        We refresh when destination likely has broken frontmatter parsing
+        symptoms (UTF-8 BOM or missing description while source has one).
+        """
+        if not destination_path.exists():
+            return True
+
+        if self._file_has_utf8_bom(destination_path):
+            return True
+
+        try:
+            source_text = source_path.read_text(encoding="utf-8-sig")
+            dest_text = destination_path.read_text(encoding="utf-8-sig")
+        except Exception:
+            return False
+
+        source_head = "\n".join(source_text.splitlines()[:30]).lower()
+        dest_head = "\n".join(dest_text.splitlines()[:30]).lower()
+
+        source_has_description = "description:" in source_head
+        dest_has_description = "description:" in dest_head
+
+        if source_has_description and not dest_has_description:
+            return True
+
+        return False
 
     def _merge_config_with_defaults(self, defaults: dict, existing: dict) -> dict:
         """Merge existing config with defaults, preserving existing values."""

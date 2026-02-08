@@ -9,12 +9,15 @@ description: Import questions from questionnaire files into an XLSForm (PDF/Word
 - [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
 - [MANDATORY] If an interactive question tool is available (`AskUserQuestion`, `request_user_input`, or client-native choice UI), use it.
 - [PREFERRED] In interactive-tool mode, ask all pending decisions in one interactive panel as separate questions, each with 2-4 mutually exclusive options.
+- [MANDATORY] Once interactive mode is available for a command/session, keep all subsequent required decisions in interactive mode unless the tool fails.
 - [MANDATORY] Put the recommended option first and include a one-line tradeoff.
 - [MANDATORY] Wait for explicit user selection before applying changes.
 - [FALLBACK] If no interactive tool is available, ask in plain REPL text with numbered options.
+- [FORBIDDEN] Do not switch from interactive prompts to plain-text follow-up decisions when interactive tools are still available.
 - [FORBIDDEN] Do not make silent decisions on required conflicts.
 - [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
 - Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.
+- [MANDATORY] Missing settings decisions (`form_title`/`form_id`) must follow the same interactive protocol and may not be asked as plain numbered text when interactive tools are available.
 
 ### Interactive Decision Prompting (Preferred)
 
@@ -37,12 +40,15 @@ Fallback when no interactive panel tool exists:
 
 - `[FORBIDDEN]` Do not create ad-hoc `.py` scripts in the project workspace for import.
 - `[REQUIRED]` Use existing entrypoints first: `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/add_questions.py`.
+- `[REQUIRED]` Use parser output JSON + `scripts/add_questions.py --from-json-file ...` instead of temporary transformation scripts.
 - `[FORBIDDEN]` Do not use heredoc inline Python (for example `python - <<'PY' ... PY`) in normal import flow.
 - `[FORBIDDEN]` Do not orchestrate parser flow with inline `python -c` snippets.
+- `[FORBIDDEN]` Do not create temporary scripts in project root/current directory (for example `temp_import_processor.py`).
 - Fallback script creation is allowed only if:
   1. existing entrypoints fail after retry,
-  2. user explicitly approves fallback in REPL,
-  3. fallback is created in temp directory and removed after run.
+  2. user explicitly approves fallback in interactive panel,
+  3. fallback script is created outside project workspace in OS temp directory,
+  4. fallback script is removed after run.
 
 ### 1. Use the Required Skills
 
@@ -185,16 +191,17 @@ Then pass the selected option to parser flags:
 - **Do NOT** use inline Python snippets for parser execution
 - **Do NOT** run heredoc Python blocks such as `python - <<'PY' ... PY`
 - **Do NOT** run parser orchestration via `python -c "..."` one-liners
+- **Do** map parser JSON directly using `add_questions.py --from-json-file` (no temporary transformation script)
 - **Do** call parser scripts directly:
 
 ```bash
-python scripts/parse_pdf.py <source> --pages <range> [--auto-scale]
-python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix> [--auto-scale]
-python scripts/parse_xlsx.py <source> --sheet <sheet_name>
+python scripts/parse_pdf.py <source> --pages <range> [--auto-scale] --output .xlsform-ai/tmp/import.json
+python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix> [--auto-scale] --output .xlsform-ai/tmp/import.json
+python scripts/parse_xlsx.py <source> --sheet <sheet_name> --output .xlsform-ai/tmp/import.json
+python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy <preserve|semantic>
 ```
 
-If debugging is needed, prefer a saved script file over heredoc-style one-liners in tool wrappers.
-If a fallback script is unavoidable, ask user first, create it only under temp directory, and delete it after execution.
+If debugging is needed, patch existing `scripts/*.py` entrypoints instead of creating throwaway wrappers.
 
 ### Cross-Platform Compatibility
 
