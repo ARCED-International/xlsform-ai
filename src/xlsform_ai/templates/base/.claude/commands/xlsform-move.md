@@ -16,15 +16,27 @@ arguments:
 
 ## Conflict Decision Protocol
 
-- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
-- [MANDATORY] Ask one decision at a time. Do not bundle multiple decisions in one prompt.
-- [MANDATORY] Each prompt must present 2-4 numbered options and one recommended option.
-- [MANDATORY] End with: `Reply with one option number only (e.g., 1).`
-- [MANDATORY] Wait for the user response before asking the next decision or making any change.
-- [FORBIDDEN] Do not ask combined free-text answers such as "Please select your preferences for each decision".
-- [FORBIDDEN] Do not assume defaults when a decision is required and the user has not answered.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first, wait for answer, then continue.
+- [MANDATORY] Use a sequential questioning loop (interactive): present EXACTLY ONE decision question at a time.
+- [MANDATORY] For each decision, format the prompt as:
+  - `**Question:** <single concrete decision>`
+  - `**Why it matters:** <one sentence>`
+  - `**Recommended:** Option [A] - <1-2 sentence reason>`
+  - Options as a Markdown table:
 
+| Option | Description |
+|--------|-------------|
+| A | <recommended option> |
+| B | <alternative option> |
+| C | <alternative option> (optional) |
+| Short | Provide a different short answer (<=5 words) (optional) |
+
+- [MANDATORY] End with a strict answer instruction:
+  - `Reply with one option only: A, B, C, or Short.`
+- [MANDATORY] Wait for the user reply before asking the next decision or making any edits.
+- [FORBIDDEN] Do not bundle multiple decisions in one message.
+- [FORBIDDEN] Do not ask for combined answers like "1, 1, keep current".
+- [FORBIDDEN] Do not proceed when a required decision is unresolved.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first and wait for reply.
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
 **CRITICAL: Use existing helper scripts - DO NOT write inline code**
@@ -101,7 +113,7 @@ Group structure:
   begin group demographics (row 5)
     text name (row 6)
     integer age (row 7)
-    Ã¢â€ Â income_question will go here
+    ÃƒÂ¢Ã¢â‚¬Â Ã‚Â income_question will go here
   end group demographics (row 8)
 
 Action: Insert at row 8, shift end_group down
@@ -208,7 +220,7 @@ Group after:
   begin group (row 5)
     name (row 6)
     age (row 7)
-    income (row 8) Ã¢â€ Â moved here
+    income (row 8) ÃƒÂ¢Ã¢â‚¬Â Ã‚Â moved here
   end group (row 9)
 ```
 
@@ -235,7 +247,7 @@ Result:
   begin group demographics (row 5)
     name (row 6)
   end group (row 7)
-  phone (row 8) Ã¢â€ Â moved here, outside groups
+  phone (row 8) ÃƒÂ¢Ã¢â‚¬Â Ã‚Â moved here, outside groups
   begin group contact_info (row 9)
     (empty or shifts)
   end group (row 10)
@@ -267,7 +279,7 @@ Result:
 
   New order:
     Row 2: first_name
-    Row 3: age_question Ã¢â€ Â moved here
+    Row 3: age_question ÃƒÂ¢Ã¢â‚¬Â Ã‚Â moved here
     Row 4: last_name
     ...
 ```
@@ -337,7 +349,7 @@ New group structure:
   begin group demographics (row 5)
     text name (row 6)
     integer age (row 7)
-    text income (row 8) Ã¢â€ Â moved here
+    text income (row 8) ÃƒÂ¢Ã¢â‚¬Â Ã‚Â moved here
   end group (row 9)
 ```
 

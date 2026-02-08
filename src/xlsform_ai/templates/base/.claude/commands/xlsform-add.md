@@ -19,15 +19,27 @@ arguments:
 
 ## Conflict Decision Protocol
 
-- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
-- [MANDATORY] Ask one decision at a time. Do not bundle multiple decisions in one prompt.
-- [MANDATORY] Each prompt must present 2-4 numbered options and one recommended option.
-- [MANDATORY] End with: `Reply with one option number only (e.g., 1).`
-- [MANDATORY] Wait for the user response before asking the next decision or making any change.
-- [FORBIDDEN] Do not ask combined free-text answers such as "Please select your preferences for each decision".
-- [FORBIDDEN] Do not assume defaults when a decision is required and the user has not answered.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first, wait for answer, then continue.
+- [MANDATORY] Use a sequential questioning loop (interactive): present EXACTLY ONE decision question at a time.
+- [MANDATORY] For each decision, format the prompt as:
+  - `**Question:** <single concrete decision>`
+  - `**Why it matters:** <one sentence>`
+  - `**Recommended:** Option [A] - <1-2 sentence reason>`
+  - Options as a Markdown table:
 
+| Option | Description |
+|--------|-------------|
+| A | <recommended option> |
+| B | <alternative option> |
+| C | <alternative option> (optional) |
+| Short | Provide a different short answer (<=5 words) (optional) |
+
+- [MANDATORY] End with a strict answer instruction:
+  - `Reply with one option only: A, B, C, or Short.`
+- [MANDATORY] Wait for the user reply before asking the next decision or making any edits.
+- [FORBIDDEN] Do not bundle multiple decisions in one message.
+- [FORBIDDEN] Do not ask for combined answers like "1, 1, keep current".
+- [FORBIDDEN] Do not proceed when a required decision is unresolved.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first and wait for reply.
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
 **CRITICAL: Use existing helper scripts - DO NOT write inline code**
@@ -235,15 +247,15 @@ label: <choice display text>
 
 When type is not specified, detect from description:
 
-- **"select one" / "choose one" / "radio"** Ã¢â€ â€™ `select_one`
-- **"select multiple" / "check all that apply" / "checkbox"** Ã¢â€ â€™ `select_multiple`
-- **"enter name" / "write" / "text"** Ã¢â€ â€™ `text`
-- **"age" / "number" / "how many"** Ã¢â€ â€™ `integer`
-- **"weight" / "height" / "price"** Ã¢â€ â€™ `decimal`
-- **"date" / "when"** Ã¢â€ â€™ `date`
-- **"location" / "GPS" / "coordinates"** Ã¢â€ â€™ `geopoint`
-- **"photo" / "picture" / "image"** Ã¢â€ â€™ `image`
-- **"yes/no" / "true or false"** Ã¢â€ â€™ `select_one yes_no` (reuse if exists)
+- **"select one" / "choose one" / "radio"** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `select_one`
+- **"select multiple" / "check all that apply" / "checkbox"** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `select_multiple`
+- **"enter name" / "write" / "text"** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `text`
+- **"age" / "number" / "how many"** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `integer`
+- **"weight" / "height" / "price"** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `decimal`
+- **"date" / "when"** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `date`
+- **"location" / "GPS" / "coordinates"** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `geopoint`
+- **"photo" / "picture" / "image"** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `image`
+- **"yes/no" / "true or false"** ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `select_one yes_no` (reuse if exists)
 
 ### Name Generation
 
@@ -254,10 +266,10 @@ When user doesn't specify a name:
 3. Ensure uniqueness by adding number suffix if needed
 
 **Examples:**
-- "What is your name?" Ã¢â€ â€™ `respondent_name`
-- "How old are you?" Ã¢â€ â€™ `age` or `respondent_age`
-- "Do you like pizza?" Ã¢â€ â€™ `likes_pizza`
-- "What is your gender?" Ã¢â€ â€™ `gender`
+- "What is your name?" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `respondent_name`
+- "How old are you?" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `age` or `respondent_age`
+- "Do you like pizza?" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `likes_pizza`
+- "What is your gender?" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ `gender`
 
 ### Choice List Handling
 
@@ -375,9 +387,9 @@ Added successfully! Both questions are now inside the household_member repeat.
 ### Adding to a Group or Repeat
 
 When user specifies a location:
-- "in the demographics group" Ã¢â€ â€™ find begin group, add inside
-- "after the name question" Ã¢â€ â€™ find name question, add after it
-- "in the household repeat" Ã¢â€ â€™ find begin repeat, add inside
+- "in the demographics group" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ find begin group, add inside
+- "after the name question" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ find name question, add after it
+- "in the household repeat" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ find begin repeat, add inside
 
 ### Importing from Files
 
@@ -408,16 +420,16 @@ Should I add all these questions? (You can specify which ones to include)
 ### Conditional Questions
 
 When user implies conditionality:
-- "Add age question if they're 18+" Ã¢â€ â€™ add with `relevant: ${previous} >= 18`
-- "Only show if they answered yes to previous" Ã¢â€ â€™ detect from context
+- "Add age question if they're 18+" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ add with `relevant: ${previous} >= 18`
+- "Only show if they answered yes to previous" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ detect from context
 
 Extract the condition and add to `relevant` column.
 
 ### Questions with Constraints
 
 When user mentions limits:
-- "Add age question (must be 0-120)" Ã¢â€ â€™ add with constraint
-- "Enter percentage (0-100)" Ã¢â€ â€™ add with constraint
+- "Add age question (must be 0-120)" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ add with constraint
+- "Enter percentage (0-100)" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ add with constraint
 
 Extract the constraint and:
 1. Add to `constraint` column

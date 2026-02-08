@@ -6,15 +6,27 @@ description: Import questions from questionnaire files into an XLSForm (PDF/Word
 
 ## Conflict Decision Protocol
 
-- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
-- [MANDATORY] Ask one decision at a time. Do not bundle multiple decisions in one prompt.
-- [MANDATORY] Each prompt must present 2-4 numbered options and one recommended option.
-- [MANDATORY] End with: `Reply with one option number only (e.g., 1).`
-- [MANDATORY] Wait for the user response before asking the next decision or making any change.
-- [FORBIDDEN] Do not ask combined free-text answers such as "Please select your preferences for each decision".
-- [FORBIDDEN] Do not assume defaults when a decision is required and the user has not answered.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first, wait for answer, then continue.
+- [MANDATORY] Use a sequential questioning loop (interactive): present EXACTLY ONE decision question at a time.
+- [MANDATORY] For each decision, format the prompt as:
+  - `**Question:** <single concrete decision>`
+  - `**Why it matters:** <one sentence>`
+  - `**Recommended:** Option [A] - <1-2 sentence reason>`
+  - Options as a Markdown table:
 
+| Option | Description |
+|--------|-------------|
+| A | <recommended option> |
+| B | <alternative option> |
+| C | <alternative option> (optional) |
+| Short | Provide a different short answer (<=5 words) (optional) |
+
+- [MANDATORY] End with a strict answer instruction:
+  - `Reply with one option only: A, B, C, or Short.`
+- [MANDATORY] Wait for the user reply before asking the next decision or making any edits.
+- [FORBIDDEN] Do not bundle multiple decisions in one message.
+- [FORBIDDEN] Do not ask for combined answers like "1, 1, keep current".
+- [FORBIDDEN] Do not proceed when a required decision is unresolved.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first and wait for reply.
 ### Sequential Decision Prompting (Required)
 
 When multiple decisions are needed (for example naming, auto-scale, media location), ask them sequentially:
@@ -315,9 +327,9 @@ Or:
 
 Or:
 
-Ã¢ËœÂ Option 1
-Ã¢ËœÂ Option 2
-Ã¢ËœÂ Option 3
+ÃƒÂ¢Ã‹Å“Ã‚Â Option 1
+ÃƒÂ¢Ã‹Å“Ã‚Â Option 2
+ÃƒÂ¢Ã‹Å“Ã‚Â Option 3
 ```
 
 ### Constraint Extraction
@@ -383,28 +395,30 @@ Do you want to import all questions, or would you like to:
 
 ## Interactive Confirmation
 
-Give the user options:
+Ask one decision at a time using the interactive Q/A format.
 
-```
-Import options:
-1. Import all questions as-is
-2. Select specific questions to import
-3. Review and edit each question
-4. Cancel import
+Example decision prompt:
 
-Choose option (1-4):
+```text
+**Question:** Which naming strategy should we use for imported fields?
+**Why it matters:** Numeric and duplicate-style names can create repeat/export ambiguity and harder maintenance.
+**Recommended:** Option [A] - Apply semantic renaming for long-term XLSForm clarity.
+
+| Option | Description |
+|--------|-------------|
+| A | Apply semantic renaming (recommended) |
+| B | Keep source names as-is |
+| C | Keep source names but only deduplicate collisions |
+| Short | Provide a different short answer (<=5 words) |
+
+Reply with one option only: A, B, C, or Short.
 ```
 
-If source includes embedded images, prompt media destination:
-```
-Image extraction options:
-1. Save to ./media/<source_stem> (recommended)
-2. Save beside source file
-3. Enter custom folder path
-4. Skip image extraction
+Then ask the next decision only after answer:
+- Frequency/Likert auto-conversion (`--auto-scale`)
+- Media destination (`./media/<source_stem>`, beside source, custom, or skip)
 
-Choose option (1-4):
-```
+Never request combined responses in one message.
 
 ### Option 2: Select Questions
 
@@ -412,7 +426,7 @@ Choose option (1-4):
 Available questions:
 [SUCCESS:] 1. What is your name? (text)
 [SUCCESS:] 2. What is your gender? (select_one)
-[ ] 3. How old are you? (integer) Ã¢â€ Â Skip
+[ ] 3. How old are you? (integer) ÃƒÂ¢Ã¢â‚¬Â Ã‚Â Skip
 [SUCCESS:] 4. Select your favorite fruits (select_multiple)
 ...
 

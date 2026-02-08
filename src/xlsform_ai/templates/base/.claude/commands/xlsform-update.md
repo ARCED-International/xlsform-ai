@@ -16,15 +16,27 @@ arguments:
 
 ## Conflict Decision Protocol
 
-- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
-- [MANDATORY] Ask one decision at a time. Do not bundle multiple decisions in one prompt.
-- [MANDATORY] Each prompt must present 2-4 numbered options and one recommended option.
-- [MANDATORY] End with: `Reply with one option number only (e.g., 1).`
-- [MANDATORY] Wait for the user response before asking the next decision or making any change.
-- [FORBIDDEN] Do not ask combined free-text answers such as "Please select your preferences for each decision".
-- [FORBIDDEN] Do not assume defaults when a decision is required and the user has not answered.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first, wait for answer, then continue.
+- [MANDATORY] Use a sequential questioning loop (interactive): present EXACTLY ONE decision question at a time.
+- [MANDATORY] For each decision, format the prompt as:
+  - `**Question:** <single concrete decision>`
+  - `**Why it matters:** <one sentence>`
+  - `**Recommended:** Option [A] - <1-2 sentence reason>`
+  - Options as a Markdown table:
 
+| Option | Description |
+|--------|-------------|
+| A | <recommended option> |
+| B | <alternative option> |
+| C | <alternative option> (optional) |
+| Short | Provide a different short answer (<=5 words) (optional) |
+
+- [MANDATORY] End with a strict answer instruction:
+  - `Reply with one option only: A, B, C, or Short.`
+- [MANDATORY] Wait for the user reply before asking the next decision or making any edits.
+- [FORBIDDEN] Do not bundle multiple decisions in one message.
+- [FORBIDDEN] Do not ask for combined answers like "1, 1, keep current".
+- [FORBIDDEN] Do not proceed when a required decision is unresolved.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first and wait for reply.
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
 **CRITICAL: Use existing helper scripts - DO NOT write inline code**
@@ -163,9 +175,9 @@ Action: Update label column
 [OK] Updated question: first_name
 
   Changes:
-    - label: "First Name" Ã¢â€ â€™ "Respondent First Name"
-    - required: no Ã¢â€ â€™ yes
-    - constraint: none Ã¢â€ â€™ regex(., '^[a-zA-Z\s\-\.']$')
+    - label: "First Name" ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ "Respondent First Name"
+    - required: no ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ yes
+    - constraint: none ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ regex(., '^[a-zA-Z\s\-\.']$')
 
   Row 2 updated
 ```
@@ -204,12 +216,12 @@ I'll make the name question required.
 Found: first_name (text) on row 2
 
 Proposed change:
-  required: no Ã¢â€ â€™ yes
+  required: no ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ yes
   required_message: "This field is required"
 
 [OK] Updated question: first_name
   Changes:
-    - required: no Ã¢â€ â€™ yes
+    - required: no ÃƒÂ¢Ã¢â‚¬Â Ã¢â‚¬â„¢ yes
     - required_message: added
 ```
 

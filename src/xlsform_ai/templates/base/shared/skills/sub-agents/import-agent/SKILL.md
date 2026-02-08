@@ -7,15 +7,27 @@ description: Document import specialist - processes PDF, Word, and text files to
 
 ## Conflict Decision Protocol
 
-- [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
-- [MANDATORY] Ask one decision at a time. Do not bundle multiple decisions in one prompt.
-- [MANDATORY] Each prompt must present 2-4 numbered options and one recommended option.
-- [MANDATORY] End with: `Reply with one option number only (e.g., 1).`
-- [MANDATORY] Wait for the user response before asking the next decision or making any change.
-- [FORBIDDEN] Do not ask combined free-text answers such as "Please select your preferences for each decision".
-- [FORBIDDEN] Do not assume defaults when a decision is required and the user has not answered.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first, wait for answer, then continue.
+- [MANDATORY] Use a sequential questioning loop (interactive): present EXACTLY ONE decision question at a time.
+- [MANDATORY] For each decision, format the prompt as:
+  - `**Question:** <single concrete decision>`
+  - `**Why it matters:** <one sentence>`
+  - `**Recommended:** Option [A] - <1-2 sentence reason>`
+  - Options as a Markdown table:
 
+| Option | Description |
+|--------|-------------|
+| A | <recommended option> |
+| B | <alternative option> |
+| C | <alternative option> (optional) |
+| Short | Provide a different short answer (<=5 words) (optional) |
+
+- [MANDATORY] End with a strict answer instruction:
+  - `Reply with one option only: A, B, C, or Short.`
+- [MANDATORY] Wait for the user reply before asking the next decision or making any edits.
+- [FORBIDDEN] Do not bundle multiple decisions in one message.
+- [FORBIDDEN] Do not ask for combined answers like "1, 1, keep current".
+- [FORBIDDEN] Do not proceed when a required decision is unresolved.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first and wait for reply.
 ### Sequential Decision Prompting (Required)
 
 If import needs several decisions, ask one at a time and wait for each answer before asking the next.
@@ -43,16 +55,16 @@ Identify and extract questions:
 
 ### 3. Question Type Detection
 Automatically determine appropriate XLSForm types:
-- **Multiple choice (single)** â†’ `select_one`
-- **Multiple choice (multiple)** â†’ `select_multiple`
-- **Yes/No** â†’ `select_one yes_no`
-- **Numeric (integer)** â†’ `integer`
-- **Numeric (decimal)** â†’ `decimal`
-- **Date** â†’ `date`
-- **Open-ended text** â†’ `text`
-- **Long text** â†’ `text` (with length constraint if needed)
-- **Ranking** â†’ `select_multiple` with note
-- **Grid/matrix** â†’ Multiple select_one questions
+- **Multiple choice (single)** Ã¢â€ â€™ `select_one`
+- **Multiple choice (multiple)** Ã¢â€ â€™ `select_multiple`
+- **Yes/No** Ã¢â€ â€™ `select_one yes_no`
+- **Numeric (integer)** Ã¢â€ â€™ `integer`
+- **Numeric (decimal)** Ã¢â€ â€™ `decimal`
+- **Date** Ã¢â€ â€™ `date`
+- **Open-ended text** Ã¢â€ â€™ `text`
+- **Long text** Ã¢â€ â€™ `text` (with length constraint if needed)
+- **Ranking** Ã¢â€ â€™ `select_multiple` with note
+- **Grid/matrix** Ã¢â€ â€™ Multiple select_one questions
 
 ### 4. Choice List Creation
 Generate choice lists for select questions:
@@ -101,6 +113,23 @@ Then pass the selection to parser flags:
 - `--media-prefix <prefix>`
 - `--no-images` (if skipping)
 
+Prompt format must be interactive and single-decision:
+
+```text
+**Question:** Where should extracted images be saved?
+**Why it matters:** Media paths are written into XLSForm and should match project structure.
+**Recommended:** Option [A] - Save under ./media/<source_stem> for portability.
+
+| Option | Description |
+|--------|-------------|
+| A | Save to ./media/<source_stem> (recommended) |
+| B | Save beside source file |
+| C | Enter custom folder path |
+| D | Skip image extraction |
+
+Reply with one option only: A, B, C, D, or Short.
+```
+
 ### Frequency/Likert Auto-Convert (User-Selected)
 
 If user chooses auto-convert for frequency/Likert questions:
@@ -135,17 +164,17 @@ When processing large documents in **parallel mode**:
 
 ### Chunk by Pages (PDF)
 ```
-Chunk 1: Pages 1-5      â†’ import-agent extracts questions
-Chunk 2: Pages 6-10     â†’ import-agent extracts questions
-Chunk 3: Pages 11-15    â†’ import-agent extracts questions
+Chunk 1: Pages 1-5      Ã¢â€ â€™ import-agent extracts questions
+Chunk 2: Pages 6-10     Ã¢â€ â€™ import-agent extracts questions
+Chunk 3: Pages 11-15    Ã¢â€ â€™ import-agent extracts questions
 ...
 Merge Phase: Combine all chunks, resolve conflicts
 ```
 
 ### Chunk by Questions (Large XLSForm)
 ```
-Chunk 1: Questions 1-50     â†’ Process
-Chunk 2: Questions 51-100   â†’ Process
+Chunk 1: Questions 1-50     Ã¢â€ â€™ Process
+Chunk 2: Questions 51-100   Ã¢â€ â€™ Process
 ...
 Merge Phase: Combine all chunks
 ```
@@ -280,7 +309,7 @@ list_name: age_groups, name: d_45_plus, label: 45+
 [Complexity Analysis]
 Questions: 100 (estimated)
 Pages: 25
-â†’ Triggers parallel mode (5 chunks)
+Ã¢â€ â€™ Triggers parallel mode (5 chunks)
 
 [Parallel Phase]
 Chunk 1 (pages 1-5): Found 18 questions
