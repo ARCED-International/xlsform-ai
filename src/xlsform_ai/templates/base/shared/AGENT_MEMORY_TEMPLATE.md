@@ -1,14 +1,15 @@
-﻿# XLSForm AI Project
+# XLSForm AI Project
 
 ## Conflict Decision Protocol
 
 - [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
-- Present 2-4 REPL options and ask the user to choose before proceeding.
-- Put the recommended option first and include a one-line tradeoff for each option.
-- Wait for explicit user selection before applying changes.
-- Only auto-decide when the user explicitly asked for automatic decisions.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
-- Do not create ad-hoc project scripts for decisions; use existing scripts first, fallback script only with user approval and temp cleanup.
+- [MANDATORY] Ask one decision at a time. Do not bundle multiple decisions in one prompt.
+- [MANDATORY] Each prompt must present 2-4 numbered options and one recommended option.
+- [MANDATORY] End with: `Reply with one option number only (e.g., 1).`
+- [MANDATORY] Wait for the user response before asking the next decision or making any change.
+- [FORBIDDEN] Do not ask combined free-text answers such as "Please select your preferences for each decision".
+- [FORBIDDEN] Do not assume defaults when a decision is required and the user has not answered.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first, wait for answer, then continue.- Do not create ad-hoc project scripts for decisions; use existing scripts first, fallback script only with user approval and temp cleanup.
 - If user picks an option, execute that exact option and verify result before reporting completion.
 
 
@@ -2756,6 +2757,7 @@ ARCED International is a Global Research & Learning Studio. We partner with inst
 With 12+ years of evidence-led execution, serving 40+ countries, and impacting 5M+ lives, we develop purpose-built platforms that deliver clarity to research and learning teams.
 
 Learn more at: https://arced-international.com
+
 
 
 

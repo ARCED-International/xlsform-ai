@@ -7,12 +7,31 @@ description: Import questions from questionnaire files into an XLSForm (PDF/Word
 ## Conflict Decision Protocol
 
 - [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
-- Present 2-4 REPL options and ask the user to choose before proceeding.
-- Put the recommended option first and include a one-line tradeoff for each option.
-- Wait for explicit user selection before applying changes.
-- Only auto-decide when the user explicitly asked for automatic decisions.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
+- [MANDATORY] Ask one decision at a time. Do not bundle multiple decisions in one prompt.
+- [MANDATORY] Each prompt must present 2-4 numbered options and one recommended option.
+- [MANDATORY] End with: `Reply with one option number only (e.g., 1).`
+- [MANDATORY] Wait for the user response before asking the next decision or making any change.
+- [FORBIDDEN] Do not ask combined free-text answers such as "Please select your preferences for each decision".
+- [FORBIDDEN] Do not assume defaults when a decision is required and the user has not answered.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first, wait for answer, then continue.
 
+### Sequential Decision Prompting (Required)
+
+When multiple decisions are needed (for example naming, auto-scale, media location), ask them sequentially:
+
+1. Ask Decision 1 and wait for answer.
+2. Apply/store Decision 1.
+3. Ask Decision 2 and wait for answer.
+4. Continue until all decisions are answered.
+
+Prompt format:
+
+```text
+Decision: <title>
+1. <option 1> (Recommended) - <one-line tradeoff>
+2. <option 2> - <one-line tradeoff>
+Reply with one option number only (e.g., 1).
+```
 
 ## Implementation Protocol
 
@@ -296,9 +315,9 @@ Or:
 
 Or:
 
-â˜ Option 1
-â˜ Option 2
-â˜ Option 3
+Ã¢ËœÂ Option 1
+Ã¢ËœÂ Option 2
+Ã¢ËœÂ Option 3
 ```
 
 ### Constraint Extraction
@@ -393,7 +412,7 @@ Choose option (1-4):
 Available questions:
 [SUCCESS:] 1. What is your name? (text)
 [SUCCESS:] 2. What is your gender? (select_one)
-[ ] 3. How old are you? (integer) â† Skip
+[ ] 3. How old are you? (integer) Ã¢â€ Â Skip
 [SUCCESS:] 4. Select your favorite fruits (select_multiple)
 ...
 
@@ -656,6 +675,7 @@ Run /xlsform-validate now to check the form.
 3. **Reuse choice lists** when possible (yes_no, gender, etc.)
 4. **Validate after import** to catch any issues
 5. **Preserve original file** for reference
+
 
 
 

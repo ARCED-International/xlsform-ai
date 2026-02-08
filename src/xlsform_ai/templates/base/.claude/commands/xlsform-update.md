@@ -17,12 +17,13 @@ arguments:
 ## Conflict Decision Protocol
 
 - [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
-- Present 2-4 REPL options and ask the user to choose before proceeding.
-- Put the recommended option first and include a one-line tradeoff for each option.
-- Wait for explicit user selection before applying changes.
-- Only auto-decide when the user explicitly asked for automatic decisions.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
-
+- [MANDATORY] Ask one decision at a time. Do not bundle multiple decisions in one prompt.
+- [MANDATORY] Each prompt must present 2-4 numbered options and one recommended option.
+- [MANDATORY] End with: `Reply with one option number only (e.g., 1).`
+- [MANDATORY] Wait for the user response before asking the next decision or making any change.
+- [FORBIDDEN] Do not ask combined free-text answers such as "Please select your preferences for each decision".
+- [FORBIDDEN] Do not assume defaults when a decision is required and the user has not answered.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first, wait for answer, then continue.
 
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
@@ -162,9 +163,9 @@ Action: Update label column
 [OK] Updated question: first_name
 
   Changes:
-    - label: "First Name" â†’ "Respondent First Name"
-    - required: no â†’ yes
-    - constraint: none â†’ regex(., '^[a-zA-Z\s\-\.']$')
+    - label: "First Name" Ã¢â€ â€™ "Respondent First Name"
+    - required: no Ã¢â€ â€™ yes
+    - constraint: none Ã¢â€ â€™ regex(., '^[a-zA-Z\s\-\.']$')
 
   Row 2 updated
 ```
@@ -203,12 +204,12 @@ I'll make the name question required.
 Found: first_name (text) on row 2
 
 Proposed change:
-  required: no â†’ yes
+  required: no Ã¢â€ â€™ yes
   required_message: "This field is required"
 
 [OK] Updated question: first_name
   Changes:
-    - required: no â†’ yes
+    - required: no Ã¢â€ â€™ yes
     - required_message: added
 ```
 
@@ -250,6 +251,7 @@ Warning: Relevance "${occupation} = 'Engineer'" may create circular dependency.
 Question 'occupation' comes after this question. This could cause issues.
 Consider reordering or using a different field.
 ```
+
 
 
 

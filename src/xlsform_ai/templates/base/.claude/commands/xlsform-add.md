@@ -20,12 +20,13 @@ arguments:
 ## Conflict Decision Protocol
 
 - [MANDATORY] If there is ambiguity, conflict, or multiple valid actions, do not decide silently.
-- Present 2-4 REPL options and ask the user to choose before proceeding.
-- Put the recommended option first and include a one-line tradeoff for each option.
-- Wait for explicit user selection before applying changes.
-- Only auto-decide when the user explicitly asked for automatic decisions.
-- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask user whether to keep source names or apply semantic renaming.
-
+- [MANDATORY] Ask one decision at a time. Do not bundle multiple decisions in one prompt.
+- [MANDATORY] Each prompt must present 2-4 numbered options and one recommended option.
+- [MANDATORY] End with: `Reply with one option number only (e.g., 1).`
+- [MANDATORY] Wait for the user response before asking the next decision or making any change.
+- [FORBIDDEN] Do not ask combined free-text answers such as "Please select your preferences for each decision".
+- [FORBIDDEN] Do not assume defaults when a decision is required and the user has not answered.
+- Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), ask naming decision first, wait for answer, then continue.
 
 ## MANDATORY IMPLEMENTATION REQUIREMENT
 
@@ -234,15 +235,15 @@ label: <choice display text>
 
 When type is not specified, detect from description:
 
-- **"select one" / "choose one" / "radio"** â†’ `select_one`
-- **"select multiple" / "check all that apply" / "checkbox"** â†’ `select_multiple`
-- **"enter name" / "write" / "text"** â†’ `text`
-- **"age" / "number" / "how many"** â†’ `integer`
-- **"weight" / "height" / "price"** â†’ `decimal`
-- **"date" / "when"** â†’ `date`
-- **"location" / "GPS" / "coordinates"** â†’ `geopoint`
-- **"photo" / "picture" / "image"** â†’ `image`
-- **"yes/no" / "true or false"** â†’ `select_one yes_no` (reuse if exists)
+- **"select one" / "choose one" / "radio"** Ã¢â€ â€™ `select_one`
+- **"select multiple" / "check all that apply" / "checkbox"** Ã¢â€ â€™ `select_multiple`
+- **"enter name" / "write" / "text"** Ã¢â€ â€™ `text`
+- **"age" / "number" / "how many"** Ã¢â€ â€™ `integer`
+- **"weight" / "height" / "price"** Ã¢â€ â€™ `decimal`
+- **"date" / "when"** Ã¢â€ â€™ `date`
+- **"location" / "GPS" / "coordinates"** Ã¢â€ â€™ `geopoint`
+- **"photo" / "picture" / "image"** Ã¢â€ â€™ `image`
+- **"yes/no" / "true or false"** Ã¢â€ â€™ `select_one yes_no` (reuse if exists)
 
 ### Name Generation
 
@@ -253,10 +254,10 @@ When user doesn't specify a name:
 3. Ensure uniqueness by adding number suffix if needed
 
 **Examples:**
-- "What is your name?" â†’ `respondent_name`
-- "How old are you?" â†’ `age` or `respondent_age`
-- "Do you like pizza?" â†’ `likes_pizza`
-- "What is your gender?" â†’ `gender`
+- "What is your name?" Ã¢â€ â€™ `respondent_name`
+- "How old are you?" Ã¢â€ â€™ `age` or `respondent_age`
+- "Do you like pizza?" Ã¢â€ â€™ `likes_pizza`
+- "What is your gender?" Ã¢â€ â€™ `gender`
 
 ### Choice List Handling
 
@@ -374,9 +375,9 @@ Added successfully! Both questions are now inside the household_member repeat.
 ### Adding to a Group or Repeat
 
 When user specifies a location:
-- "in the demographics group" â†’ find begin group, add inside
-- "after the name question" â†’ find name question, add after it
-- "in the household repeat" â†’ find begin repeat, add inside
+- "in the demographics group" Ã¢â€ â€™ find begin group, add inside
+- "after the name question" Ã¢â€ â€™ find name question, add after it
+- "in the household repeat" Ã¢â€ â€™ find begin repeat, add inside
 
 ### Importing from Files
 
@@ -407,16 +408,16 @@ Should I add all these questions? (You can specify which ones to include)
 ### Conditional Questions
 
 When user implies conditionality:
-- "Add age question if they're 18+" â†’ add with `relevant: ${previous} >= 18`
-- "Only show if they answered yes to previous" â†’ detect from context
+- "Add age question if they're 18+" Ã¢â€ â€™ add with `relevant: ${previous} >= 18`
+- "Only show if they answered yes to previous" Ã¢â€ â€™ detect from context
 
 Extract the condition and add to `relevant` column.
 
 ### Questions with Constraints
 
 When user mentions limits:
-- "Add age question (must be 0-120)" â†’ add with constraint
-- "Enter percentage (0-100)" â†’ add with constraint
+- "Add age question (must be 0-120)" Ã¢â€ â€™ add with constraint
+- "Enter percentage (0-100)" Ã¢â€ â€™ add with constraint
 
 Extract the constraint and:
 1. Add to `constraint` column
@@ -462,6 +463,7 @@ Did you mean:
 
 Please confirm the correction.
 ```
+
 
 
 
