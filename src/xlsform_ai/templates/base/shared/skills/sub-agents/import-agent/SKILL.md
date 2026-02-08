@@ -105,6 +105,7 @@ Identify form structure:
 - `[REQUIRED]` Use parser output JSON + `scripts/add_questions.py --from-json-file ...` for import mapping.
 - `[FORBIDDEN]` Do not use heredoc inline Python (for example `python - <<'PY' ... PY`) in normal import flow.
 - `[FORBIDDEN]` Do not orchestrate parser flow with inline `python -c` snippets.
+- `[FORBIDDEN]` Do not use ad-hoc `python -c` snippets for settings checks, JSON inspection, or workbook diagnostics during import.
 - `[FORBIDDEN]` Do not create temporary scripts in project root/current directory.
 - Fallback scripts are allowed only after retry failure, explicit user approval in interactive panel, creation outside workspace (OS temp), and cleanup.
 

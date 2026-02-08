@@ -302,7 +302,10 @@ def _ensure_version_formula(sheet, header_map: Dict[str, int], explicit_version:
         header_map["version"] = version_col
 
     cell = sheet.cell(row=2, column=version_col)
-    target_value = explicit_version if explicit_version is not None else VERSION_FORMULA
+    explicit_clean = None
+    if explicit_version is not None:
+        explicit_clean = str(explicit_version).strip()
+    target_value = explicit_clean if explicit_clean else VERSION_FORMULA
     current = cell.value
     if current != target_value:
         cell.value = target_value

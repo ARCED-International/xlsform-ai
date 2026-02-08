@@ -68,6 +68,7 @@ If you write inline Python code for file operations, you have failed this comman
 - `[REQUIRED]` Use parser output JSON + `scripts/add_questions.py --from-json-file ...` instead of temporary transformation scripts.
 - `[FORBIDDEN]` Do not use heredoc inline Python (for example `python - <<'PY' ... PY`) in normal import flow.
 - `[FORBIDDEN]` Do not orchestrate parser flow with inline `python -c` snippets.
+- `[FORBIDDEN]` Do not use ad-hoc `python -c` snippets for settings checks, JSON inspection, or workbook diagnostics during import.
 - `[FORBIDDEN]` Do not create temporary scripts in project root/current directory (for example `temp_import_processor.py`).
 - Fallback script creation is allowed only if:
   1. existing entrypoints fail after retry,

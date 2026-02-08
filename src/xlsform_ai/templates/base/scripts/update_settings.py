@@ -51,6 +51,14 @@ def main():
 
     args = parser.parse_args()
 
+    # Treat empty-string arguments as not provided.
+    if args.title is not None and str(args.title).strip() == "":
+        args.title = None
+    if args.form_id is not None and str(args.form_id).strip() == "":
+        args.form_id = None
+    if args.version is not None and str(args.version).strip() == "":
+        args.version = None
+
     if args.title is None and args.form_id is None and args.version is None and not args.ensure_version_formula:
         print("Error: Provide --title and/or --id and/or --version (or --ensure-version-formula).")
         sys.exit(1)

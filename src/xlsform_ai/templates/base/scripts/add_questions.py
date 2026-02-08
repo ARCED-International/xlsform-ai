@@ -865,6 +865,7 @@ def add_questions(
             existing_by_list: Dict[str, Dict[str, int]] = {}
             list_col = choices_column_map["list_name"]
             name_col_choices = choices_column_map["name"]
+            last_data_row = 1
             for row_idx in range(2, ws_choices.max_row + 1):
                 list_val = ws_choices.cell(row_idx, list_col).value
                 name_val = ws_choices.cell(row_idx, name_col_choices).value
@@ -873,8 +874,11 @@ def add_questions(
                 list_name = str(list_val).strip()
                 choice_name = _normalize_choice_name(name_val, "")
                 existing_by_list.setdefault(list_name, {})[choice_name] = row_idx
+                if row_idx > last_data_row:
+                    last_data_row = row_idx
 
-            append_row = ws_choices.max_row + 1
+            # Append after last actual data row, not worksheet max_row (which can be large due formatting).
+            append_row = max(last_data_row + 1, 2)
             for list_name, choice_items in choice_batches.items():
                 for choice_item in choice_items:
                     choice_name = _normalize_choice_name(choice_item.get("name"), choice_item.get("label"))
@@ -989,6 +993,11 @@ if __name__ == "__main__":
     )
     parser.add_argument('--file', '-f',
                        help='Override XLSForm file name (default: use config or survey.xlsx)')
+    parser.add_argument(
+        '--survey-file',
+        dest='survey_file_compat',
+        help='Backward-compatible alias for --file',
+    )
 
     args = parser.parse_args()
 
@@ -1007,9 +1016,10 @@ if __name__ == "__main__":
             print("ERROR: Provide question JSON as positional argument or use --from-json-file")
             sys.exit(1)
 
+        survey_file_arg = args.file or args.survey_file_compat
         result = add_questions(
             payload,
-            survey_file=args.file,
+            survey_file=survey_file_arg,
             name_strategy=args.name_strategy,
         )
 

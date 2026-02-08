@@ -838,6 +838,7 @@ logger.log_action(
 **FORBIDDEN in normal flow:**
 - `python - <<'PY' ... PY` (heredoc inline Python)
 - `python -c "..."` for parser orchestration
+- ad-hoc `python -c` for settings checks, JSON inspection, or workbook diagnostics during import
 - creating ad-hoc import scripts in project root
 - creating temporary scripts such as `temp_import_processor.py` in working directory
 

@@ -463,7 +463,9 @@ def main() -> None:
         "count": len(questions),
         "questions": questions,
     }
-    json_output = json.dumps(output, ensure_ascii=False, indent=2)
+    # Use ASCII-safe JSON so downstream tools that open files without UTF-8
+    # encoding on Windows do not fail with cp1252 decode errors.
+    json_output = json.dumps(output, ensure_ascii=True, indent=2)
 
     if args.output:
         output_path = Path(args.output).resolve()
