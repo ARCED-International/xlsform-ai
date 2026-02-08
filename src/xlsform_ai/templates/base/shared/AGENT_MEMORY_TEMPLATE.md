@@ -14,6 +14,8 @@
 - [FORBIDDEN] Do not ask open-ended combined preference text when structured options are possible.
 - Example: if imported names raise warnings (e.g., q308_phq1, fiq_1), collect the required naming decision via interactive options and wait for selection.
 - [MANDATORY] If `settings.form_title`, `settings.form_id`, or `settings.version` is missing, ask an interactive settings-bootstrap question with suggested values before write operations.
+- [FORBIDDEN] During `/xlsform-import`, do not use ad-hoc `python -c` diagnostics or temporary workspace scripts.
+- [MANDATORY] During `/xlsform-import`, use only `scripts/settings_status.py` and `scripts/import_summary.py` for settings/JSON diagnostics.
 
 This is an XLSForm project with AI-assisted development capabilities using multi-agent architecture.
 
@@ -759,25 +761,38 @@ print(f"  File: {xlsx_path}")
 **Protocol:**
 
 1. Load skills: `/skill:xlsform-core`, `/skill:activity-logging`
-2. Import: `from scripts.add_questions import add_questions`
-3. Prepare questions list with type, name, label
-4. Add to form: `add_questions(questions)`
+2. Import helper: `from scripts.add_questions import add_questions`
+3. Prepare question payload with `type`, `name`, and `label`
+4. Apply changes via `add_questions(...)` or `python scripts/add_questions.py ...`
 5. Log action: `logger.log_action(action_type="add_questions", ...)`
 6. Validate: `/xlsform-validate`
 
 **Example:**
 
 ```bash
-python scripts/parse_pdf.py questionnaire.pdf --pages 1-10 --output .xlsform-ai/tmp/import.json
-python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy semantic --file survey.xlsx
+python scripts/add_questions.py '[{"type":"text","name":"respondent_name","label":"What is your name?"}]' --file survey.xlsx
 python scripts/validate_form.py survey.xlsx --json
 ```
 
-DOCX with images example:
-```bash
-python scripts/parse_docx.py questionnaire.docx --media-dir media/questionnaire --media-prefix questionnaire --auto-scale --output .xlsform-ai/tmp/import.json
-python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy semantic --file survey.xlsx
-```
+### /xlsform-import Protocol
+
+**Purpose:** Import questions from PDF/Word/Excel into the active XLSForm.
+
+**Protocol:**
+1. Load skills: `/skill:xlsform-core`, `/skill:activity-logging`
+2. Check settings safely: `python scripts/settings_status.py --file survey.xlsx --source <source> --json`
+3. Parse source to JSON: `python scripts/parse_*.py ... --output .xlsform-ai/tmp/import.json`
+4. Summarize parse output: `python scripts/import_summary.py --file .xlsform-ai/tmp/import.json --json`
+5. Ask interactive decision panel for pending conflicts (naming, auto-scale, media path, settings bootstrap)
+6. Import directly: `python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy semantic --file survey.xlsx`
+7. Validate: `python scripts/validate_form.py survey.xlsx --json`
+
+**Import safety rules:**
+- Never use ad-hoc `python -c` snippets for JSON/workbook diagnostics.
+- Never create temporary scripts in project workspace for import flow.
+- Use existing entrypoints only (`settings_status.py`, parser scripts, `import_summary.py`, `add_questions.py`).
+- For settings bootstrap updates, use `python scripts/update_settings.py ... --ensure-version-formula --file survey.xlsx` and never write settings cells inline.
+- Never pass `--version` unless the user explicitly requests a literal/custom version value.
 
 **Parallel threshold:** 10+ pages or 1MB+ file size
 

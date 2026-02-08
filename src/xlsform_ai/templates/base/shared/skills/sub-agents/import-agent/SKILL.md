@@ -52,6 +52,9 @@ Settings write safety:
 - Update only fields user approved.
 - Never overwrite non-empty `version` unless explicitly requested.
 - Preserve unrelated settings values.
+- If user selects `Set all now`, call: `python scripts/update_settings.py --title "<suggested_title>" --id "<suggested_id>" --ensure-version-formula --file survey.xlsx`
+- If user selects `Set version only`, call: `python scripts/update_settings.py --ensure-version-formula --file survey.xlsx`
+- Do not pass `--version` unless user explicitly requests a literal/custom version value.
 
 You are an **import specialist** for XLSForm AI. Your role is to extract questions from documents (PDF, Word, Excel) and convert them to valid XLSForm format.
 
@@ -106,7 +109,7 @@ Identify form structure:
 ### Strict Script Policy
 
 - `[FORBIDDEN]` Do not create ad-hoc `.py` scripts in project workspace during import.
-- `[REQUIRED]` Use existing entrypoints: `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/add_questions.py`.
+- `[REQUIRED]` Use existing entrypoints: `scripts/settings_status.py`, `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/import_summary.py`, `scripts/add_questions.py`.
 - `[REQUIRED]` Use parser output JSON + `scripts/add_questions.py --from-json-file ...` for import mapping.
 - `[FORBIDDEN]` Do not use heredoc inline Python (for example `python - <<'PY' ... PY`) in normal import flow.
 - `[FORBIDDEN]` Do not orchestrate parser flow with inline `python -c` snippets.
@@ -116,11 +119,12 @@ Identify form structure:
 
 ### Phase 1: Document Analysis
 ```python
-1. Read document
-2. Detect question patterns
-3. Estimate page count and question count
-4. Determine chunking strategy (if parallel)
-5. If images are present, ask user where media files should be saved
+1. Check settings safely with scripts/settings_status.py (no inline workbook probing)
+2. Read document
+3. Detect question patterns
+4. Estimate page count and question count
+5. Determine chunking strategy (if parallel)
+6. If images are present, ask user where media files should be saved
 ```
 
 ### Media Destination Prompt (REPL)
@@ -158,9 +162,10 @@ In text fallback mode, ask for one option label (A/B/C/D).
 
 If user chooses auto-convert for frequency/Likert questions:
 1. Re-run parser with `--auto-scale`.
-2. Apply converted output to survey/choices.
-3. Verify converted count (text -> select_one).
-4. Report converted count + sample variable names.
+2. Summarize parser output with `scripts/import_summary.py --file .xlsform-ai/tmp/import.json --json`.
+3. Apply converted output to survey/choices.
+4. Verify converted count (text -> select_one).
+5. Report converted count + sample variable names.
 
 Never claim conversion completed without verification.
 
@@ -184,7 +189,7 @@ For each chunk (pages or questions):
 
 ### Naming constraints during import
 
-- Semantic question names should be concise and readable (target <=32 chars).
+- Semantic question names should be concise and readable (target <=20 chars, hard cap <=32).
 - Choice `list_name` values should be compact (target <=24 chars) and stable.
 - Avoid long sentence-like identifiers; prefer intent-focused stems.
 - Avoid leading/trailing numeric base names and avoid numeric-only suffix disambiguation.

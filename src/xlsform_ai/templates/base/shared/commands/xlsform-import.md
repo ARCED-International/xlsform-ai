@@ -36,6 +36,12 @@ Fallback when no interactive panel tool exists:
 
 Before importing, check row-2 values in `settings` for `form_title`, `form_id`, and `version`.
 
+Use this entrypoint for the check (do not use inline workbook probing):
+
+```bash
+python scripts/settings_status.py --file survey.xlsx --source <source> --json
+```
+
 - If `form_title` or `form_id` is empty, ask a structured interactive question to set them before import.
 - Always suggest values:
   - Suggested `form_title`: derived from source file stem in title case.
@@ -53,6 +59,9 @@ Settings write safety:
 - Only write columns the user approved in the decision.
 - Do not overwrite existing non-empty `version` unless the user explicitly asks to replace it.
 - Do not modify unrelated settings columns/values.
+- If user selects `Set all now`: run `python scripts/update_settings.py --title "<suggested_title>" --id "<suggested_id>" --ensure-version-formula --file survey.xlsx`
+- If user selects `Set version only`: run `python scripts/update_settings.py --ensure-version-formula --file survey.xlsx`
+- Never pass `--version` unless the user explicitly requests a literal/custom version value.
 
 ## Implementation Protocol
 
@@ -61,7 +70,7 @@ Settings write safety:
 ### Strict Script Policy
 
 - `[FORBIDDEN]` Do not create ad-hoc `.py` scripts in the project workspace for import.
-- `[REQUIRED]` Use existing entrypoints first: `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/add_questions.py`.
+- `[REQUIRED]` Use existing entrypoints first: `scripts/settings_status.py`, `scripts/parse_pdf.py`, `scripts/parse_docx.py`, `scripts/parse_xlsx.py`, `scripts/import_summary.py`, `scripts/add_questions.py`.
 - `[REQUIRED]` Use parser output JSON + `scripts/add_questions.py --from-json-file ...` instead of temporary transformation scripts.
 - `[FORBIDDEN]` Do not use heredoc inline Python (for example `python - <<'PY' ... PY`) in normal import flow.
 - `[FORBIDDEN]` Do not orchestrate parser flow with inline `python -c` snippets.
@@ -108,13 +117,16 @@ Consult these files for patterns and best practices before writing changes:
 Run these entrypoints directly (no inline Python wrappers):
 
 ```bash
+python scripts/settings_status.py --file survey.xlsx --source <source> --json
 python scripts/parse_pdf.py <source> --pages <range> [--auto-scale] --output .xlsform-ai/tmp/import.json
 python scripts/parse_docx.py <source> [--media-dir <dir> --media-prefix <prefix> --auto-scale] --output .xlsform-ai/tmp/import.json
 python scripts/parse_xlsx.py <source> [--sheet <sheet_name>] --output .xlsform-ai/tmp/import.json
+python scripts/import_summary.py --file .xlsform-ai/tmp/import.json --json
 python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy semantic --file survey.xlsx
 ```
 
 `add_questions.py` already handles activity logging and safe column mapping.
+`settings_status.py` and `import_summary.py` are the only approved diagnostics for import flow.
 
 ### 3. Log and Validate
 
@@ -171,6 +183,11 @@ python scripts/parse_xlsx.py <source> --sheet <sheet_name>
 ### 2. Execute Parser
 
 Run the appropriate script and capture its output.
+Do not inspect parser JSON with ad-hoc snippets. Use:
+
+```bash
+python scripts/import_summary.py --file .xlsform-ai/tmp/import.json
+```
 
 ### 2.1 Media Extraction Options (Ask in REPL)
 
@@ -191,15 +208,19 @@ Then pass the selected option to parser flags:
 
 - **Do NOT** create ad-hoc scripts in project workspace (e.g., `import_fathers_survey.py`)
 - **Do NOT** use inline Python snippets for parser execution
+- **Do NOT** use inline Python snippets for parser-output inspection or settings checks
 - **Do NOT** run heredoc Python blocks such as `python - <<'PY' ... PY`
 - **Do NOT** run parser orchestration via `python -c "..."` one-liners
 - **Do** map parser JSON directly using `add_questions.py --from-json-file` (no temporary transformation script)
+- **Do** run `settings_status.py` before import and `import_summary.py` after parse
 - **Do** call parser scripts directly:
 
 ```bash
+python scripts/settings_status.py --file survey.xlsx --source <source> --json
 python scripts/parse_pdf.py <source> --pages <range> [--auto-scale] --output .xlsform-ai/tmp/import.json
 python scripts/parse_docx.py <source> --media-dir <dir> --media-prefix <prefix> [--auto-scale] --output .xlsform-ai/tmp/import.json
 python scripts/parse_xlsx.py <source> --sheet <sheet_name> --output .xlsform-ai/tmp/import.json
+python scripts/import_summary.py --file .xlsform-ai/tmp/import.json --json
 python scripts/add_questions.py --from-json-file .xlsform-ai/tmp/import.json --name-strategy semantic
 ```
 
