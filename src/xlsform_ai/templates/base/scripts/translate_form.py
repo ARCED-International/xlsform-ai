@@ -344,6 +344,120 @@ def _count_non_empty_values(sheet, col: int) -> int:
     return count
 
 
+def _detect_text_language_code(text: str) -> Optional[str]:
+    value = str(text or "").strip()
+    if not value:
+        return None
+
+    has_latin = False
+    has_cyrillic = False
+    has_arabic = False
+    has_bengali = False
+    has_devanagari = False
+
+    for ch in value:
+        cp = ord(ch)
+        if 0x0980 <= cp <= 0x09FF:
+            has_bengali = True
+        elif 0x0600 <= cp <= 0x06FF:
+            has_arabic = True
+        elif 0x0900 <= cp <= 0x097F:
+            has_devanagari = True
+        elif 0x0400 <= cp <= 0x04FF:
+            has_cyrillic = True
+        elif ("A" <= ch <= "Z") or ("a" <= ch <= "z") or (0x00C0 <= cp <= 0x024F):
+            has_latin = True
+
+    if has_bengali:
+        return "bn"
+    if has_arabic:
+        return "ar"
+    if has_devanagari:
+        # Could be Hindi/Nepali; use a stable default for prompting.
+        return "hi"
+    if has_cyrillic:
+        # Generic cyrillic fallback (unsupported registry entries should still render as code).
+        return "ru"
+    if has_latin:
+        # Latin script can still be non-English, but treat as English fallback suggestion.
+        return "en"
+    return None
+
+
+def _render_language_label_from_code(code: Optional[str]) -> str:
+    if not code:
+        return "Unknown"
+    meta = LANGUAGE_REGISTRY.get(code)
+    if meta:
+        return str(meta["display"])
+    return str(code)
+
+
+def _analyze_base_language_state(sheet, sheet_name: str, categories: List[str]) -> Dict[str, object]:
+    entries = _collect_headers(sheet)
+    category_analysis: Dict[str, Dict[str, object]] = {}
+    aggregate_counts: Dict[str, int] = {}
+
+    for category in categories:
+        base_entries = [entry for entry in entries if (not entry.is_translation and entry.category == category)]
+        translated_entries = [entry for entry in entries if (entry.is_translation and entry.category == category)]
+        if not base_entries:
+            continue
+
+        # Decision prompt is needed only when the category has bare columns and no language-tagged columns.
+        if translated_entries:
+            continue
+
+        detected_counts: Dict[str, int] = {}
+        non_empty_cells = 0
+        for entry in base_entries:
+            for row_idx in range(2, sheet.max_row + 1):
+                value = sheet.cell(row=row_idx, column=entry.col).value
+                if not _cell_has_value(value):
+                    continue
+                non_empty_cells += 1
+                detected = _detect_text_language_code(str(value))
+                if detected:
+                    detected_counts[detected] = detected_counts.get(detected, 0) + 1
+
+        if detected_counts:
+            recommended_code = sorted(
+                detected_counts.items(),
+                key=lambda item: (-item[1], item[0]),
+            )[0][0]
+        else:
+            # Empty columns: default recommendation is English.
+            recommended_code = "en"
+
+        aggregate_counts[recommended_code] = aggregate_counts.get(recommended_code, 0) + max(non_empty_cells, 1)
+        category_analysis[category] = {
+            "bare_headers": [entry.raw for entry in sorted(base_entries, key=lambda entry: entry.col)],
+            "translated_headers": [],
+            "non_empty_cells": non_empty_cells,
+            "detected_language_counts": detected_counts,
+            "recommended_source_language_code": recommended_code,
+            "recommended_source_language": _render_language_label_from_code(recommended_code),
+            "is_empty": non_empty_cells == 0,
+        }
+
+    if aggregate_counts:
+        recommended_code = sorted(
+            aggregate_counts.items(),
+            key=lambda item: (-item[1], item[0]),
+        )[0][0]
+    else:
+        recommended_code = "en"
+
+    return {
+        "sheet": sheet_name,
+        "decision_required": bool(category_analysis),
+        "recommended_source_language_code": recommended_code,
+        "recommended_source_language": _render_language_label_from_code(recommended_code),
+        "categories": category_analysis,
+        "aggregate_counts": aggregate_counts,
+    }
+
+
 def _choose_base_header(entries: List[HeaderEntry], category: str) -> str:
     aliases = TRANSLATABLE_CATEGORY_BASES[category]
     base_entries = [e for e in entries if (not e.is_translation and e.category == category)]
@@ -443,6 +557,39 @@ def _merge_translation_columns(
     return {"merged": merged, "conflicts": conflicts}
 
 
+def _merge_and_delete_column(
+    sheet,
+    entries: List[HeaderEntry],
+    src_col: int,
+    dst_col: int,
+    sheet_name: str,
+    category: str,
+    dry_run: bool,
+) -> Dict[str, object]:
+    if src_col == dst_col:
+        return {"dst_col": dst_col, "merged": 0, "conflicts": []}
+
+    merge_result = _merge_translation_columns(
+        sheet=sheet,
+        src_col=src_col,
+        dst_col=dst_col,
+        sheet_name=sheet_name,
+        category=category,
+        dry_run=dry_run,
+    )
+
+    if not dry_run:
+        sheet.delete_cols(src_col, 1)
+    _shift_entries_for_delete(entries, src_col)
+
+    adjusted_dst_col = dst_col - 1 if src_col < dst_col else dst_col
+    return {
+        "dst_col": adjusted_dst_col,
+        "merged": int(merge_result["merged"]),
+        "conflicts": list(merge_result["conflicts"]),
+    }
+
+
 def ensure_language_columns(
     sheet,
     sheet_name: str,
@@ -478,19 +625,90 @@ def ensure_language_columns(
             added_headers.append(base_header)
 
         # Optional conversion of bare source headers (e.g., label) -> label::English.
-        if base_language_mode == "english" and not base_entry.is_translation:
+        if base_language_mode == "english":
+            base_header = base_entry.base_raw
             source_header = _canonical_translation_header(
-                base_header=base_entry.base_raw,
+                base_header=base_header,
                 language=source_language,
                 include_language_code=include_language_code,
             )
-            if not _header_equals(base_entry.raw, source_header):
-                if not dry_run:
-                    sheet.cell(row=1, column=base_entry.col, value=source_header)
-                renamed_headers.append(f"{base_entry.raw} -> {source_header}")
-                updated = _parse_header_entry(source_header, base_entry.col)
-                entries = [updated if entry.col == base_entry.col else entry for entry in entries]
-                base_entry = updated
+
+            source_candidates = sorted(
+                [
+                    entry
+                    for entry in entries
+                    if (
+                        entry.is_translation
+                        and entry.category == category
+                        and entry.language_code == source_language.code
+                        and _header_equals(entry.base_raw, base_header)
+                    )
+                ],
+                key=lambda entry: entry.col,
+            )
+            source_exact = [entry for entry in source_candidates if _header_equals(entry.raw, source_header)]
+
+            if source_exact:
+                canonical_source_col = source_exact[0].col
+            elif source_candidates:
+                canonical_source_col = source_candidates[0].col
+                if not _header_equals(source_candidates[0].raw, source_header):
+                    if not dry_run:
+                        sheet.cell(row=1, column=canonical_source_col, value=source_header)
+                    renamed_headers.append(f"{source_candidates[0].raw} -> {source_header}")
+                    updated = _parse_header_entry(source_header, canonical_source_col)
+                    entries = [updated if entry.col == canonical_source_col else entry for entry in entries]
+            else:
+                canonical_source_col = base_entry.col
+                if not _header_equals(base_entry.raw, source_header):
+                    if not dry_run:
+                        sheet.cell(row=1, column=canonical_source_col, value=source_header)
+                    renamed_headers.append(f"{base_entry.raw} -> {source_header}")
+                    updated = _parse_header_entry(source_header, canonical_source_col)
+                    entries = [updated if entry.col == canonical_source_col else entry for entry in entries]
+
+            # Merge any duplicate source-language or bare-base columns into canonical source column.
+            while True:
+                duplicate_source_or_base = [
+                    entry
+                    for entry in entries
+                    if (
+                        entry.col != canonical_source_col
+                        and entry.category == category
+                        and _header_equals(entry.base_raw, base_header)
+                        and (
+                            (entry.is_translation and entry.language_code == source_language.code)
+                            or (not entry.is_translation)
+                        )
+                    )
+                ]
+                if not duplicate_source_or_base:
+                    break
+
+                duplicate = sorted(duplicate_source_or_base, key=lambda entry: entry.col)[0]
+                merge_result = _merge_and_delete_column(
+                    sheet=sheet,
+                    entries=entries,
+                    src_col=duplicate.col,
+                    dst_col=canonical_source_col,
+                    sheet_name=sheet_name,
+                    category=category,
+                    dry_run=dry_run,
+                )
+                canonical_source_col = int(merge_result["dst_col"])
+                merged_values += int(merge_result["merged"])
+                header_conflicts.extend(merge_result["conflicts"])
+                renamed_headers.append(
+                    f"merged duplicate source column for {category} into {source_header}"
+                )
+
+            matching = [entry for entry in entries if entry.col == canonical_source_col]
+            if matching:
+                base_entry = matching[0]
+            else:
+                fallback_header = sheet.cell(row=1, column=canonical_source_col).value or source_header
+                base_entry = _parse_header_entry(str(fallback_header), canonical_source_col)
+                entries.append(base_entry)
 
         base_header = base_entry.base_raw
         expected_header = _canonical_translation_header(
@@ -587,25 +805,34 @@ def ensure_language_columns(
 
         target_columns[category] = canonical_col
 
-        duplicate_candidates = [
-            entry
-            for entry in entries
-            if (
-                entry.is_translation
-                and entry.category == category
-                and entry.language_code == language.code
-                and entry.col != canonical_col
-            )
-        ]
+        duplicate_candidates = sorted(
+            [
+                entry
+                for entry in entries
+                if (
+                    entry.is_translation
+                    and entry.category == category
+                    and entry.language_code == language.code
+                    and entry.col != canonical_col
+                )
+            ],
+            key=lambda entry: entry.col,
+        )
         for duplicate in duplicate_candidates:
-            merge_result = _merge_translation_columns(
+            # Entry indices shift after each delete; skip stale references.
+            if not any(entry.col == duplicate.col for entry in entries):
+                continue
+            merge_result = _merge_and_delete_column(
                 sheet=sheet,
+                entries=entries,
                 src_col=duplicate.col,
                 dst_col=canonical_col,
                 sheet_name=sheet_name,
                 category=category,
                 dry_run=dry_run,
             )
+            canonical_col = int(merge_result["dst_col"])
+            target_columns[category] = canonical_col
             merged_values += int(merge_result["merged"])
             header_conflicts.extend(merge_result["conflicts"])
 
@@ -850,6 +1077,13 @@ def translate_sheet(
     include_language_code: bool,
     base_language_mode: str,
 ) -> Dict[str, object]:
+    categories = _categories_for_sheet(sheet_name)
+    base_language_analysis = _analyze_base_language_state(
+        sheet=sheet,
+        sheet_name=sheet_name,
+        categories=categories,
+    )
+
     result = {
         "sheet": sheet_name,
         "headers_added": [],
@@ -866,9 +1100,17 @@ def translate_sheet(
         "runtime_backend": "none",
         "warnings": [],
         "errors": [],
+        "base_language_analysis": base_language_analysis,
     }
 
-    categories = _categories_for_sheet(sheet_name)
+    if base_language_analysis.get("decision_required") and base_language_mode == "preserve":
+        recommended_source = str(base_language_analysis.get("recommended_source_language", "English"))
+        result["warnings"].append(
+            f"{sheet_name}: base headers without language detected. "
+            f"Ask user to keep base headers or convert to source-language headers "
+            f"(recommended source: {recommended_source}; "
+            f"use --source-language \"{recommended_source}\" --base-language-mode english)."
+        )
 
     header_state = ensure_language_columns(
         sheet=sheet,
@@ -1097,6 +1339,13 @@ def build_report(
     warnings: List[str] = []
     errors: List[str] = []
     header_conflicts: List[str] = []
+    base_language_decision = {
+        "decision_required": False,
+        "recommended_source_language_code": source_language.code,
+        "recommended_source_language": source_language.display_name,
+        "sheets": {},
+    }
+    base_language_counts: Dict[str, int] = {}
 
     summary = {
         "headers_added": 0,
@@ -1121,6 +1370,20 @@ def build_report(
             "added_headers": added_headers,
             "renamed_headers": renamed_headers,
         }
+        base_analysis = payload.get("base_language_analysis")
+        if isinstance(base_analysis, dict):
+            base_language_decision["sheets"][sheet_name] = base_analysis
+            if bool(base_analysis.get("decision_required")):
+                base_language_decision["decision_required"] = True
+            aggregate_counts = base_analysis.get("aggregate_counts", {})
+            if isinstance(aggregate_counts, dict):
+                for code, count in aggregate_counts.items():
+                    try:
+                        parsed_count = int(count)
+                    except Exception:
+                        parsed_count = 0
+                    if parsed_count > 0:
+                        base_language_counts[str(code)] = base_language_counts.get(str(code), 0) + parsed_count
         summary["headers_added"] += len(added_headers)
         summary["headers_renamed"] += len(renamed_headers)
         summary["merged_values"] += int(payload.get("merged_values", 0))
@@ -1144,6 +1407,14 @@ def build_report(
             "Some target cells are still pending translation. Re-run with an AI translation map "
             "or enable runtime fallback."
         )
+
+    if base_language_counts:
+        recommended_code = sorted(
+            base_language_counts.items(),
+            key=lambda item: (-item[1], item[0]),
+        )[0][0]
+        base_language_decision["recommended_source_language_code"] = recommended_code
+        base_language_decision["recommended_source_language"] = _render_language_label_from_code(recommended_code)
 
     # Keep output concise: deduplicate repeated warnings/errors while preserving order.
     warnings = list(dict.fromkeys(warnings))
@@ -1172,6 +1443,7 @@ def build_report(
         },
         "header_changes": header_changes,
         "header_conflicts": header_conflicts,
+        "base_language_decision": base_language_decision,
         "settings_changes": {
             "default_language": settings_changes.get("status", "no_change"),
             "header_added": settings_changes.get("header_added", False),
@@ -1201,6 +1473,10 @@ def print_structured_report(report: Dict[str, object]) -> None:
     print("translation_runtime:")
     print(f"  backend: {report['translation_runtime']['backend']}")
     print(f"  ai_map_entries: {report['translation_runtime']['ai_map_entries']}")
+    print("base_language_decision:")
+    print(f"  decision_required: {str(report['base_language_decision']['decision_required']).lower()}")
+    print(f"  recommended_source_language: {report['base_language_decision']['recommended_source_language']}")
+    print(f"  recommended_source_language_code: {report['base_language_decision']['recommended_source_language_code']}")
     print("settings_changes:")
     print(f"  default_language: {report['settings_changes']['default_language']}")
     print(f"  header_added: {str(report['settings_changes']['header_added']).lower()}")
@@ -1477,6 +1753,14 @@ def main() -> int:
                     "runtime_backend": "none",
                     "warnings": [f"Sheet '{sheet_name}' not found, skipped."],
                     "errors": [],
+                    "base_language_analysis": {
+                        "sheet": sheet_name,
+                        "decision_required": False,
+                        "recommended_source_language_code": "en",
+                        "recommended_source_language": "English",
+                        "categories": {},
+                        "aggregate_counts": {},
+                    },
                 }
                 continue
 
@@ -1497,6 +1781,14 @@ def main() -> int:
                 "runtime_backend": "none",
                 "warnings": [],
                 "errors": [],
+                "base_language_analysis": {
+                    "sheet": sheet_name,
+                    "decision_required": False,
+                    "recommended_source_language_code": source_language.code,
+                    "recommended_source_language": source_language.display_name,
+                    "categories": {},
+                    "aggregate_counts": {},
+                },
             }
 
             for target_language in target_languages:
@@ -1526,6 +1818,9 @@ def main() -> int:
                 aggregate["cells_missing_source"] += int(translated["cells_missing_source"])
                 aggregate["warnings"].extend(translated["warnings"])
                 aggregate["errors"].extend(translated["errors"])
+                analysis = translated.get("base_language_analysis")
+                if isinstance(analysis, dict):
+                    aggregate["base_language_analysis"] = analysis
 
             sheet_results[sheet_name] = aggregate
 

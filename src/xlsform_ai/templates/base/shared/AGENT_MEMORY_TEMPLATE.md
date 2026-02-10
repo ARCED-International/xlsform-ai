@@ -2078,6 +2078,15 @@ Household Survey  household_survey   English
 1. Keep base headers as-is (recommended)
 2. Convert base headers to source language (for example `label` -> `label::English`)
 
+Decision recommendation rules:
+- Run `python scripts/translate_form.py "<instruction>" --dry-run --json` first.
+- Use `base_language_decision` from JSON:
+  - mixed values: recommend majority detected language
+  - empty/undetected values: recommend English
+
+If convert mode is chosen:
+- Do not keep duplicate bare base headers (`label`, `hint`, etc.) once canonical source-language headers exist.
+
 Default language label format:
 - Use names without shortcode (for example `Bangla`, `English`)
 - Include shortcode only when explicitly requested

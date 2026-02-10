@@ -126,10 +126,26 @@ When base headers are unlabeled columns (for example `label`, `hint`), ask user 
 1. Keep base headers as-is (recommended)
 2. Convert base headers to source-language headers (for example `label` -> `label::English`)
 
+Determine whether a decision is required from preflight JSON:
+
+```bash
+python scripts/translate_form.py "<instruction>" --dry-run --json
+```
+
+Use `base_language_decision`:
+- If `decision_required: true`, ask user explicitly.
+- Use majority-detected language recommendation when mixed.
+- If empty/undetected, recommend English.
+
 Then execute with:
 
 - `--base-language-mode preserve`
 - `--base-language-mode english`
+- If converting to a non-default source language, pass `--source-language "<LanguageName>"`.
+
+If user selects convert mode:
+- Do not keep duplicate bare base headers (`label`, `hint`, etc.) when language-tagged source headers exist.
+- Merge values into canonical source-language headers.
 
 ## Translation Quality Rules
 

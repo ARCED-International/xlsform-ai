@@ -37,6 +37,8 @@ Strict execution rules:
 - Do not use inline `python -c` workbook diagnostics.
 - Do not create temporary workspace scripts for translation tasks.
 - Do not use `Workbook.get(...)`; use `workbook["sheet_name"]` with existence checks.
+- Run preflight with `--dry-run --json` and use `base_language_decision` to ask whether bare base headers should be preserved or converted.
+- In convert mode, keep canonical language-tagged source headers and do not keep duplicate bare base headers.
 
 Default language label behavior:
 

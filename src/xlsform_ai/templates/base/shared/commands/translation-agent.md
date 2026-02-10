@@ -25,6 +25,8 @@ Strict execution rules:
 - Use `--dry-run --json` for inspection/pre-checks.
 - Do not run inline `python -c` workbook diagnostics.
 - Do not create temporary workspace scripts for translation tasks.
+- Use `base_language_decision` from dry-run JSON to ask whether unlabeled base headers should be preserved or converted.
+- If convert is selected, keep canonical source-language headers and do not keep duplicate bare base headers.
 
 Run:
 

@@ -101,7 +101,20 @@ python scripts/translate_form.py "<instruction>" --dry-run --json
 
 ### 4.1 Base Header Decision (Mandatory Prompt)
 
-If source columns are unlabeled base columns (for example `label`, `hint`) ask user before writing:
+If source columns are unlabeled base columns (for example `label`, `hint`) ask user before writing.
+Detect this through preflight only:
+
+```bash
+python scripts/translate_form.py "<instruction>" --dry-run --json
+```
+
+Use `base_language_decision` in the JSON output:
+- If `decision_required: true`, prompt user.
+- Recommendation rules:
+  - If non-empty cells are mixed, use the majority detected language.
+  - If cells are empty/undetected, recommend English.
+
+Decision options:
 
 1. Keep base columns as-is (recommended)
 2. Convert base columns to source language form (for example `label` -> `label::English`)
@@ -110,6 +123,11 @@ Then run with:
 
 - Preserve mode: `--base-language-mode preserve`
 - Convert mode: `--base-language-mode english`
+- If converting to a non-default source language, pass it explicitly (for example `--source-language Bangla`).
+
+If user selects convert mode:
+- Do not keep duplicate bare base columns (`label`, `hint`, etc.) when converted language-tagged columns exist.
+- Merge values and keep only canonical language-tagged source headers.
 
 ### 5. Row-1 Header Safety Rules
 
